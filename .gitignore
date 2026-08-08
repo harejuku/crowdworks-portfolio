@@ -1,0 +1,12 @@
+# 掲載用の下書き。冒頭に自分用の方針メモが入っており、公開すると発注者に読まれる。
+# このリポジトリは GitHub Pages で全世界に配信されるので、絶対にコミットしないこと。
+実績まとめ_下書き.txt
+
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+node_modules/
