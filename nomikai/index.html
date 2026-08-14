@@ -204,6 +204,18 @@ label.small {
   font-weight: 600;
   cursor: pointer;
 }
+.add.sub {
+  margin-top: 0.4rem;
+  padding: 0.55rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--sub);
+}
+
+dialog textarea { min-height: 6rem; }
+dialog .checks { max-height: 40vh; overflow-y: auto; margin-bottom: 0.3rem; }
+dialog .field-row { margin-top: 0.45rem; }
+dialog .hint { margin: 0 0 0.6rem; }
 
 /* ---- 割る人 ---- */
 details.target { margin-top: 0.45rem; }
@@ -368,11 +380,13 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
   <section id="tab-p">
     <p class="hint">
       「わり勘」か「定額（会費）」かを人ごとに選びます。定額で集めたお金は特定の項目ではなく
-      <b>支出全体</b>に充てられ、残りをわり勘の人だけで割ります。
+      <b>支出全体</b>に充てられ、残りをわり勘の人だけで割ります。<br />
+      おごる人は<b>定額の 0円</b>にしてください。
     </p>
     <div class="card" id="settings"></div>
     <div id="pRows"></div>
     <button class="add" id="addP">＋ 参加者を追加</button>
+    <button class="add sub" id="bulkPBtn">＋ 同じ条件の人をまとめて追加</button>
   </section>
 
   <section id="tab-x" hidden>
@@ -392,6 +406,7 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
     </p>
     <div id="yRows"></div>
     <button class="add" id="addY">＋ 支払いを追加</button>
+    <button class="add sub" id="bulkYBtn">＋ 同じ払い方の人をまとめて追加</button>
   </section>
 
   <section id="tab-r" hidden>
@@ -412,6 +427,54 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
     入力はこの端末の中だけに保存されます（どこにも送られません）。
     端末を変えるときは「書き出す」でファイルを持っていってください。
   </p>
+</dialog>
+
+<dialog id="bulkP">
+  <h2>同じ条件の人をまとめて追加</h2>
+  <p class="hint">
+    「わり勘・係数1の人が5人」のように、負担のしかたが同じ人をいちどに登録します。
+  </p>
+  <label class="small">名前</label>
+  <!-- ⚠ 例に実在の人の名前を書かないこと。このファイルは公開される（2026-08-14 に一度入れてしまった） -->
+  <textarea id="bulkPNames" rows="5" placeholder="改行か「、」で区切ってください&#10;例）さとう、たなか、すずき"></textarea>
+  <div class="field-row" style="margin-top:0.5rem">
+    <label class="small">負担</label>
+    <select id="bulkPKind">
+      <option value="split">わり勘</option>
+      <option value="fixed">定額（会費）</option>
+    </select>
+  </div>
+  <div class="field-row">
+    <label class="small" id="bulkPValLabel">係数</label>
+    <input id="bulkPVal" type="text" inputmode="decimal" value="1" />
+  </div>
+  <button id="bulkPAdd">この条件で追加する</button>
+  <button id="bulkPCancel">やめる</button>
+</dialog>
+
+<dialog id="bulkY">
+  <h2>同じ払い方の人をまとめて追加</h2>
+  <p class="hint">
+    「3,000円ずつを幹事に手渡した人が4人」のように、金額・項目・渡した先が同じ支払いを
+    いちどに登録します。
+  </p>
+  <div class="field-row">
+    <label class="small">金額</label>
+    <input id="bulkYAmt" type="text" inputmode="numeric" placeholder="3000" />
+    <span class="unit">円</span>
+  </div>
+  <div class="field-row">
+    <label class="small">何に</label>
+    <select id="bulkYItem"></select>
+  </div>
+  <div class="field-row">
+    <label class="small">渡した先</label>
+    <select id="bulkYTo"></select>
+  </div>
+  <label class="small">払った人（複数選べます）</label>
+  <div class="checks" id="bulkYWho"></div>
+  <button id="bulkYAdd">この払い方で追加する</button>
+  <button id="bulkYCancel">やめる</button>
 </dialog>
 
 <input type="file" id="file" accept="application/json,.json" hidden />
@@ -630,7 +693,9 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
             "　" +
             yen(e.amount) +
             "円" +
-            (e.target === "" ? "" : "（" + e.target + " で割る）");
+            (e.target === ""
+              ? ""
+              : "（" + e.target.split("、").join("・") + " で割る）");
     }
 
     /* --- 参加者の行ごと（F=立替額 / G=負担額 / H=差引） --- */
@@ -645,8 +710,8 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
       pm.itemName = itemName;
       pm.text =
         pm.amount < 0
-          ? itemName + "のおつり" + yen(-pm.amount) + "円受取"
-          : itemName + yen(pm.amount) + "円支払い";
+          ? (itemName ? itemName + "のおつり " : "おつり ") + yen(-pm.amount) + "円 受取"
+          : (itemName ? itemName + " " : "") + yen(pm.amount) + "円 支払い";
     }
 
     var collected = 0; // C14 集金合計（丸めた後）
@@ -711,24 +776,24 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
           pr.name +
           "：" +
           (pr.detail === "" ? "支払いなし" : pr.detail) +
-          (pr.localReceived > 0 ? "＋" + yen(pr.localReceived) + "円を回収" : "") +
-          "→" +
+          (pr.localReceived > 0 ? "、" + yen(pr.localReceived) + "円 を回収" : "") +
+          " → " +
           (pr.balance < 0
-            ? yen(-pr.balance) + "円追加で支払い"
+            ? yen(-pr.balance) + "円 お支払いください"
             : pr.balance > 0
-            ? yen(pr.balance) + "円バック"
+            ? yen(pr.balance) + "円 お返しします"
             : "精算なし");
       } else {
         pr.shareLine =
           "・" +
           pr.name +
-          " " +
+          "　" +
           yen(pr.fixed) +
           "円" +
           (pr.balance < 0
             ? "（未回収）"
             : pr.balance > 0
-            ? "（" + yen(pr.balance) + "円 多く預かり）"
+            ? "（" + yen(pr.balance) + "円 多めにお預かり）"
             : "");
       }
 
@@ -816,56 +881,74 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
       return x.fixed === null;
     });
 
+    /* 人に送る文。順序（【精算】→支出→回収→精算額→一人ずつ）は岸本さんが実物で
+     * 確定させたもので、変えない。2026-08-14 に言い回しだけ整えた（身内向けの
+     * くだけた調子を、誰に送っても差し支えない調子へ）。
+     *
+     * ⚠ 検算の結果はここに入れない。「要確認：…」という内部向けの文言が、
+     *   そのまま参加者に送られてしまうため。検算は画面側で知らせる。
+     */
+    var eventName = str(meta.name);
+    var rounded = round0(splitTotal / Math.max(splitCount, 1)) !== perPerson;
+
     var lines = [];
-    lines.push("【精算】");
+    lines.push("【精算】" + (eventName ? " " + eventName : ""));
     lines.push(
-      (allCoefOne === 1 ? "１人：" : "係数1.0あたり：") +
+      (allCoefOne === 1 ? "1人あたり " : "係数1.0あたり ") +
         yen(perPerson) +
-        "円でよきですか" +
+        "円 です。" +
         (allCoefOne === 1 ? "" : "（係数によって人ごとに変わります）")
     );
-    lines.push("");
     lines.push("");
     lines.push("■ 支出　合計 " + yen(expenseTotal) + "円");
     expenseLines.forEach(function (x) {
       lines.push(x.shareLine);
     });
+
+    if (fixedPeople.length) {
+      lines.push("");
+      lines.push("■ 会費　合計 " + yen(fixedTotal) + "円");
+      fixedPeople.forEach(function (x) {
+        lines.push(x.shareLine);
+      });
+    }
+
     lines.push("");
-    lines.push("■ 回収　合計 " + yen(fixedTotal) + "円");
-    lines.push("");
-    fixedPeople.forEach(function (x) {
-      lines.push(x.shareLine);
-    });
-    lines.push("");
-    lines.push(
-      "■ 精算額　" + yen(expenseTotal) + "ー" + yen(fixedTotal) + "＝" + yen(splitTotal) + "円"
-    );
+    lines.push("■ 精算額");
+    if (fixedPeople.length) {
+      lines.push(
+        "支出 " +
+          yen(expenseTotal) +
+          "円 − 会費 " +
+          yen(fixedTotal) +
+          "円 ＝ " +
+          yen(splitTotal) +
+          "円"
+      );
+    }
     lines.push(
       yen(splitTotal) +
-        "円÷" +
+        "円 ÷ " +
         splitCount +
-        "人＝１人" +
+        "人 ＝ 1人あたり " +
         yen(perPerson) +
         "円" +
-        (round0(splitTotal / Math.max(splitCount, 1)) === perPerson
-          ? ""
-          : "（" + yen(roundUnit) + "円単位に切り上げ）")
+        (rounded ? "（" + yen(roundUnit) + "円単位に切り上げ）" : "")
     );
+
     lines.push("");
     lines.push("■ 一人ずつの精算");
     splitPeople.forEach(function (x) {
       lines.push(x.shareLine);
     });
+
     lines.push("");
-    lines.push(
-      "※ 支払い・受け取りは " +
-        organizer +
-        " とやりとりしてください。" +
-        (surplus > 0
-          ? "切り上げで出た " + yen(surplus) + "円 は " + organizer + " の手元に残ります。"
-          : "")
-    );
-    lines.push(banner);
+    lines.push("※ 受け渡しは " + organizer + " までお願いします。");
+    if (surplus > 0) {
+      lines.push(
+        "※ 切り上げで出た " + yen(surplus) + "円 は " + organizer + " がお預かりします。"
+      );
+    }
 
     /* --- 入力の警告（検算6本とは別枠。xlsxには無い） ---
      * xlsxでは係数が空欄だと、その人の負担が黙って0円になり、検算6本のどれにも出ない。
@@ -1164,10 +1247,11 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
       var row = el("div", "field-row");
       row.appendChild(el("label", "small", "負担"));
       var kind = el("select");
+      // 「無料」は区分として持たない（2026-08-14）。定額の 0円 で同じことができ、
+      // 選択肢が1つ減るぶん迷わない。engine 側は今も 0円 を「無料」として扱う。
       [
         ["split", "わり勘"],
-        ["fixed", "定額（会費）"],
-        ["free", "無料（おごり）"]
+        ["fixed", "定額（会費）"]
       ].forEach(function (o) {
         kind.appendChild(opt(o[0], o[1], (p.kind || "split") === o[0]));
       });
@@ -1510,7 +1594,10 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
       box.appendChild(t);
     }
 
-    var btn = el("button", "copy", "共有用の文をコピー");
+    // 検算が合っていない状態のまま人へ送ってしまわないよう、ボタン自身に出す。
+    // （共有用の文からは検算の結果を外したので、ここで言わないと誰も気づけない）
+    var label = ok ? "共有用の文をコピー" : "⚠ 検算が合っていませんが、コピーする";
+    var btn = el("button", "copy", label);
     btn.addEventListener("click", function () {
       copyText(r.shareText).then(function (done) {
         if (!done) {
@@ -1530,7 +1617,7 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
           : "下の文を選びました。長押し（右クリック）でコピーしてください";
         btn.classList.toggle("done", done);
         setTimeout(function () {
-          btn.textContent = "共有用の文をコピー";
+          btn.textContent = label;
           btn.classList.remove("done");
         }, 3000);
       });
@@ -1623,6 +1710,149 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
     recalc();
   }
 
+  /* 古い保存データを今の形に直す。
+   * 「無料（おごり）」の区分をやめたので、定額の0円へ置き換える（負担額は変わらない）。 */
+  function migrate() {
+    var changed = false;
+    Object.keys(book.events).forEach(function (id) {
+      (book.events[id].state.participants || []).forEach(function (p) {
+        if (p.kind === "free") {
+          p.kind = "fixed";
+          p.fixed = 0;
+          changed = true;
+        }
+      });
+    });
+    if (changed) save();
+  }
+
+  /* ================= まとめて追加 ================= */
+
+  function openBulkP() {
+    $("#bulkPNames").value = "";
+    $("#bulkPKind").value = "split";
+    syncBulkPKind();
+    $("#bulkP").showModal();
+  }
+
+  function syncBulkPKind() {
+    var fixed = $("#bulkPKind").value === "fixed";
+    $("#bulkPValLabel").textContent = fixed ? "会費" : "係数";
+    var v = $("#bulkPVal");
+    v.placeholder = fixed ? "3000" : "1";
+    v.value = fixed ? "" : "1";
+    v.inputMode = fixed ? "numeric" : "decimal";
+  }
+
+  function addBulkP() {
+    var raw = $("#bulkPNames").value;
+    var list = raw
+      .split(/[\n\r、,，・/／]/)
+      .map(function (s) {
+        return s.trim();
+      })
+      .filter(Boolean);
+    if (!list.length) {
+      alert("名前が1つも読み取れませんでした。改行か「、」で区切って入れてください。");
+      return;
+    }
+    var kind = $("#bulkPKind").value;
+    var v = $("#bulkPVal").value.trim();
+    list.forEach(function (n) {
+      state.participants.push({
+        name: n,
+        kind: kind,
+        coef: kind === "split" ? (v === "" ? 1 : Number(v)) : 1,
+        fixed: kind === "fixed" ? (v === "" ? "" : Number(v)) : ""
+      });
+    });
+    save();
+    $("#bulkP").close();
+    renderAll();
+  }
+
+  function openBulkY() {
+    if (!names().length) {
+      alert("先に参加者を入れてください。");
+      return;
+    }
+    $("#bulkYAmt").value = "";
+
+    var itm = $("#bulkYItem");
+    itm.innerHTML = "";
+    itm.appendChild(opt("", "指定なし", true));
+    state.expenses.forEach(function (e, idx) {
+      if ((e.item || "").trim()) itm.appendChild(opt(String(idx + 1), e.item, false));
+    });
+
+    var to = $("#bulkYTo");
+    to.innerHTML = "";
+    to.appendChild(opt("", "店に払った", true));
+    names().forEach(function (n) {
+      to.appendChild(opt(n, n + " に手渡し", false));
+    });
+
+    // ⚠ 開くたびにチェックを白紙に戻す。前回の選択が残っていると、
+    //   続けて別の支払いを足すときに同じ人をもう一度登録してしまう（金額だけ変えた場合など）。
+    //   一方 renderBulkYWho() は「渡した先」を変えた時にも呼ばれ、そこでは選択を保つのが正しい。
+    $("#bulkYWho").innerHTML = "";
+    renderBulkYWho();
+    $("#bulkY").showModal();
+  }
+
+  function renderBulkYWho() {
+    var box = $("#bulkYWho");
+    var to = $("#bulkYTo").value;
+    var kept = {};
+    box.querySelectorAll("input[type=checkbox]").forEach(function (cb) {
+      kept[cb.value] = cb.checked;
+    });
+    box.innerHTML = "";
+    names().forEach(function (n) {
+      if (n === to) return; // 自分に手渡すことはない
+      var lab = el("label");
+      var cb = el("input");
+      cb.type = "checkbox";
+      cb.value = n;
+      cb.checked = !!kept[n];
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(n));
+      box.appendChild(lab);
+    });
+  }
+
+  function addBulkY() {
+    var who = [];
+    $("#bulkYWho")
+      .querySelectorAll("input[type=checkbox]")
+      .forEach(function (cb) {
+        if (cb.checked) who.push(cb.value);
+      });
+    if (!who.length) {
+      alert("払った人を1人以上選んでください。");
+      return;
+    }
+    var amt = $("#bulkYAmt").value.trim();
+    if (amt === "") {
+      alert("金額を入れてください。");
+      return;
+    }
+    var itemNo = $("#bulkYItem").value === "" ? null : Number($("#bulkYItem").value);
+    var to = $("#bulkYTo").value;
+    who.forEach(function (n) {
+      state.payments.push({
+        itemNo: itemNo,
+        who: n,
+        amount: Number(amt),
+        to: to,
+        memo: ""
+      });
+    });
+    save();
+    $("#bulkY").close();
+    renderAll();
+  }
+
   /* ================= タブ ================= */
 
   function showTab(key) {
@@ -1640,6 +1870,7 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
   function boot() {
     book = loadBook();
     state = book.events[book.current].state;
+    migrate();
 
     $("#eventName").addEventListener("input", function () {
       state.meta.name = this.value;
@@ -1671,6 +1902,20 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
       });
       save();
       renderAll();
+    });
+
+    $("#bulkPBtn").addEventListener("click", openBulkP);
+    $("#bulkPKind").addEventListener("change", syncBulkPKind);
+    $("#bulkPAdd").addEventListener("click", addBulkP);
+    $("#bulkPCancel").addEventListener("click", function () {
+      $("#bulkP").close();
+    });
+
+    $("#bulkYBtn").addEventListener("click", openBulkY);
+    $("#bulkYTo").addEventListener("change", renderBulkYWho);
+    $("#bulkYAdd").addEventListener("click", addBulkY);
+    $("#bulkYCancel").addEventListener("click", function () {
+      $("#bulkY").close();
     });
 
     ["p", "x", "y", "r"].forEach(function (k) {
