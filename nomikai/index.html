@@ -1,0 +1,1782 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="referrer" content="no-referrer" />
+<title>飲み会精算</title>
+<!--
+  自動生成ファイル。手で直さないでください（node build.mjs で作り直すと消えます）。
+  直すのは engine.js / ui.js / style.css / app.html です。
+  計算の正しさは _検証/parity.mjs が本物のExcelと突き合わせて確かめています。
+-->
+<style>
+/* 飲み会精算 ── 画面。スマホの縦持ちが基準（店で・帰りの電車で入力できること） */
+
+:root {
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --ink: #1c1c1e;
+  --sub: #6b6b70;
+  --line: #d8d8dc;
+  --accent: #1f3864;
+  --accent-ink: #ffffff;
+  --ok-bg: #e2efda;
+  --ok-ink: #1e5631;
+  --ng-bg: #fce4e4;
+  --ng-ink: #9c0006;
+  --warn-bg: #fff4d6;
+  --warn-ink: #7a5600;
+  --plus: #1e5631;
+  --minus: #9c0006;
+  --field: #fffdf5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16171a;
+    --card: #212226;
+    --ink: #ececf0;
+    --sub: #a0a0a8;
+    --line: #3a3b41;
+    --accent: #7aa2e3;
+    --accent-ink: #10131a;
+    --ok-bg: #1f3a26;
+    --ok-ink: #a7e0b6;
+    --ng-bg: #4a2226;
+    --ng-ink: #ffb3b8;
+    --warn-bg: #453718;
+    --warn-ink: #f0d79a;
+    --plus: #7fd39a;
+    --minus: #ff9aa1;
+    --field: #2a2b31;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic",
+    "Noto Sans JP", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  padding-bottom: 5.5rem;
+}
+
+/* ---- ヘッダー ---- */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 0.6rem 0.8rem 0;
+}
+
+.head-top { display: flex; gap: 0.5rem; align-items: center; }
+
+#eventName {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  color: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 0.25rem 0.1rem;
+}
+#eventName::placeholder { color: rgba(255, 255, 255, 0.55); }
+#eventName:focus { outline: none; border-bottom-color: currentColor; }
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+nav.tabs { display: flex; margin-top: 0.5rem; }
+nav.tabs button {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.55rem 0.2rem;
+  cursor: pointer;
+}
+nav.tabs button[aria-selected="true"] {
+  color: var(--accent-ink);
+  border-bottom-color: var(--accent-ink);
+}
+nav.tabs .badge {
+  display: inline-block;
+  min-width: 1.25em;
+  margin-left: 0.15em;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* ---- 本文 ---- */
+main { padding: 0.8rem; max-width: 44rem; margin: 0 auto; }
+section[hidden] { display: none; }
+
+.hint {
+  color: var(--sub);
+  font-size: 0.82rem;
+  margin: 0 0 0.7rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+
+.card-head {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.45rem;
+}
+
+.grow { flex: 1; min-width: 0; }
+
+input, select, textarea, button { font-family: inherit; font-size: 1rem; }
+
+input[type="text"], input[type="number"], select, textarea {
+  background: var(--field);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.5rem 0.55rem;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.del {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--sub);
+  border-radius: 8px;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: none;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.field-row { display: flex; gap: 0.45rem; align-items: center; }
+.field-row + .field-row { margin-top: 0.45rem; }
+
+label.small {
+  color: var(--sub);
+  font-size: 0.78rem;
+  flex: none;
+  width: 4.5rem;
+}
+
+.unit { color: var(--sub); font-size: 0.85rem; flex: none; }
+
+.add {
+  width: 100%;
+  background: var(--card);
+  border: 1px dashed var(--line);
+  color: var(--accent);
+  border-radius: 12px;
+  padding: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- 割る人 ---- */
+details.target { margin-top: 0.45rem; }
+details.target > summary {
+  cursor: pointer;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  background: var(--field);
+  font-size: 0.9rem;
+}
+details.target > summary::-webkit-details-marker { display: none; }
+details.target > summary .who { font-weight: 600; }
+.checks {
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 0.5rem;
+}
+.checks label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0.15rem;
+  font-size: 0.92rem;
+}
+.checks input[type="checkbox"] { width: 1.15rem; height: 1.15rem; flex: none; }
+.checks .muted { color: var(--sub); font-size: 0.8rem; }
+
+/* ---- 結果 ---- */
+.banner {
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.banner.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.banner.ng { background: var(--ng-bg); color: var(--ng-ink); }
+.banner.warn {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  font-weight: 500;
+}
+
+.sum {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.sum div {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+}
+.sum dt { color: var(--sub); font-size: 0.75rem; }
+.sum dd { margin: 0.1rem 0 0; font-size: 1.15rem; font-weight: 700; }
+
+.people { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.people th, .people td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem 0.35rem;
+  text-align: right;
+}
+.people th { color: var(--sub); font-size: 0.75rem; font-weight: 600; }
+.people th:first-child, .people td:first-child { text-align: left; }
+.people .plus { color: var(--plus); font-weight: 700; }
+.people .minus { color: var(--minus); font-weight: 700; }
+.people .how { color: var(--sub); font-size: 0.78rem; text-align: left; }
+
+#shareText {
+  min-height: 16rem;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.copy {
+  width: 100%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: 12px;
+  padding: 0.85rem;
+  font-size: 1.02rem;
+  font-weight: 700;
+  margin: 0.6rem 0;
+  cursor: pointer;
+}
+.copy.done { background: var(--ok-ink); }
+
+details.checkList summary {
+  cursor: pointer;
+  color: var(--sub);
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+}
+.checkline {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.checkline .v { flex: none; font-variant-numeric: tabular-nums; }
+.checkline.ng { color: var(--ng-ink); font-weight: 700; }
+
+/* ---- 下の帯 ---- */
+footer.status {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  padding: 0.55rem 0.8rem calc(0.55rem + env(safe-area-inset-bottom));
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-top: 1px solid var(--line);
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+}
+footer.status.ng { background: var(--ng-bg); color: var(--ng-ink); }
+footer.status .amount { float: right; font-variant-numeric: tabular-nums; }
+
+.empty { color: var(--sub); font-size: 0.88rem; padding: 1.2rem 0; text-align: center; }
+
+dialog {
+  border: none;
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--ink);
+  padding: 1rem;
+  width: min(22rem, 92vw);
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+dialog button { width: 100%; margin-top: 0.5rem; padding: 0.7rem; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
+dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
+
+</style>
+</head>
+<body>
+<header>
+  <div class="head-top">
+    <input id="eventName" type="text" placeholder="飲み会名（例：8月の同期会）" />
+    <button id="menuBtn" class="icon-btn" title="メニュー">≡</button>
+  </div>
+  <nav class="tabs">
+    <button id="btn-p" aria-selected="true">参加者<span class="badge" id="badgeP"></span></button>
+    <button id="btn-x">支出<span class="badge" id="badgeX"></span></button>
+    <button id="btn-y">支払い<span class="badge" id="badgeY"></span></button>
+    <button id="btn-r">結果</button>
+  </nav>
+</header>
+
+<main>
+  <section id="tab-p">
+    <p class="hint">
+      「わり勘」か「定額（会費）」かを人ごとに選びます。定額で集めたお金は特定の項目ではなく
+      <b>支出全体</b>に充てられ、残りをわり勘の人だけで割ります。
+    </p>
+    <div class="card" id="settings"></div>
+    <div id="pRows"></div>
+    <button class="add" id="addP">＋ 参加者を追加</button>
+  </section>
+
+  <section id="tab-x" hidden>
+    <p class="hint">
+      何にいくら使ったかを入れます。<b>割り方が違うものは行を分けてください</b>
+      （例：お肉代15,000円のうち10,000円は全員、5,000円は3人だけ → 2行に分ける）。
+    </p>
+    <div id="xRows"></div>
+    <button class="add" id="addX">＋ 支出を追加</button>
+  </section>
+
+  <section id="tab-y" hidden>
+    <p class="hint">
+      誰がその場でいくら出したかを入れます。1つの項目を何人で払ってもかまいません。<br />
+      ・おつりを受け取ったら、その額を<b>マイナス</b>でもう1行（例：-3000）<br />
+      ・会費を店ではなく<b>誰かに手渡した</b>ときは「渡した先」にその人を選びます
+    </p>
+    <div id="yRows"></div>
+    <button class="add" id="addY">＋ 支払いを追加</button>
+  </section>
+
+  <section id="tab-r" hidden>
+    <div id="result"></div>
+  </section>
+</main>
+
+<footer class="status" id="status"></footer>
+
+<dialog id="menu">
+  <h2>メニュー</h2>
+  <button id="mNew">新しい飲み会を作る</button>
+  <button id="mSwitch">前の飲み会を開く</button>
+  <button id="mExport">この飲み会を書き出す（バックアップ）</button>
+  <button id="mImport">書き出したファイルを読み込む</button>
+  <button id="mClose">閉じる</button>
+  <p class="hint" style="margin-top:0.8rem">
+    入力はこの端末の中だけに保存されます（どこにも送られません）。
+    端末を変えるときは「書き出す」でファイルを持っていってください。
+  </p>
+</dialog>
+
+<input type="file" id="file" accept="application/json,.json" hidden />
+
+<script>
+/* 飲み会精算 ── 計算エンジン
+ *
+ * 元は「飲み会精算シート.xlsx」の数式。ここへ移したのは **仕様であって数式ではない**。
+ * xlsx側の数式には Googleスプレッドシートの制約（TEXTJOIN/XLOOKUP が使えない等）への
+ * 回避策が大量に入っているが、JSでは不要なので持ち込まない。
+ *
+ * ただし「答えの出し方」は1つでも変えてはいけない。演算の順序まで xlsx に合わせてある
+ * （α＝C11/C9 を先に出し、係数1あたり＝(金額×α)÷割る係数、負担＝係数×Σ… の順）。
+ * ここを変えると浮動小数の最下位桁がずれて、突合（_検証/parity.mjs）が落ちる。
+ *
+ * 仕様の正は ~/Desktop/飲み会精算シート/①つくりかたと設計.txt。
+ */
+(function (root, factory) {
+  var api = factory();
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.NomikaiEngine = api;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  /* ===== Excel と同じ振る舞いをする小道具 ===== */
+
+  // ROUND(x,0)：0から遠い方へ丸める（JSの Math.round は負の .5 で挙動が違う）
+  function round0(x) {
+    return x < 0 ? -Math.round(-x) : Math.round(x);
+  }
+
+  // CEILING(x, unit)：Excel/Googleと同じ。unit>0 で負の数は0側へ寄る
+  function ceiling(x, unit) {
+    if (!unit) return 0;
+    var q = x / unit;
+    // 割り切れるはずの値が 44.00000000000001 になるのを防ぐ
+    var r = Math.round(q);
+    if (Math.abs(q - r) < 1e-9) q = r;
+    return Math.ceil(q) * unit;
+  }
+
+  // TEXT(x,"#,##0")：整数に丸めて3桁区切り
+  function yen(x) {
+    var n = round0(Number(x) || 0);
+    var s = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return (n < 0 ? "-" : "") + s;
+  }
+
+  /* ===== 「割る人」の名前あわせ =====
+   * 「谷」が「谷川」に誤ヒットしないよう、前後を「、」で囲んで完全一致させる。
+   * 区切りは 、 , ， ・ / を受け付ける。
+   */
+  var SEPARATORS = ["，", ",", "・", "/", "／", "、"];
+
+  function normalizeSep(s) {
+    var t = String(s == null ? "" : s);
+    var list = [",", "，", "・", "/"];
+    for (var i = 0; i < list.length; i++) t = t.split(list[i]).join("、");
+    return t;
+  }
+
+  // 前後を「、」で囲み、重なった区切りを1回だけ潰す（xlsxのSUBSTITUTEと同じ挙動）
+  function wrapped(s) {
+    return ("、" + normalizeSep(s) + "、").split("、、").join("、");
+  }
+
+  function isMember(name, target) {
+    if (!name) return false;
+    return wrapped(target).indexOf("、" + name + "、") >= 0;
+  }
+
+  // 「割る人」に何人書かれているか
+  function tokenCount(s) {
+    var w = wrapped(s);
+    return w.split("、").length - 1 - 1;
+  }
+
+  /* ===== 入力の下ごしらえ ===== */
+
+  function str(v) {
+    return v == null ? "" : String(v).trim();
+  }
+
+  function num(v) {
+    if (v === "" || v == null) return null;
+    var n = Number(String(v).replace(/[,，\s]/g, ""));
+    return isFinite(n) ? n : null;
+  }
+
+  function blankState() {
+    return {
+      meta: { name: "", date: "", organizer: "", roundUnit: 100 },
+      participants: [],
+      expenses: [],
+      payments: []
+    };
+  }
+
+  /* ===== 本体 ===== */
+
+  function settle(state) {
+    var meta = state.meta || {};
+    var roundUnit = num(meta.roundUnit);
+    if (roundUnit == null) roundUnit = 100;
+    var organizer = str(meta.organizer);
+
+    // --- 参加者 ---
+    // fixed が null＝わり勘 / 数値＝定額（0は「無料」）
+    var people = (state.participants || [])
+      .map(function (p) {
+        return {
+          name: str(p.name),
+          coef: num(p.coef) === null ? 0 : num(p.coef), // 空欄は0（xlsx準拠）。UI側は既定1
+          coefBlank: num(p.coef) === null,
+          fixed: num(p.fixed)
+        };
+      })
+      .filter(function (p) {
+        return p.name !== "";
+      });
+
+    // --- 支出 ---
+    var expenses = (state.expenses || []).map(function (e, i) {
+      return {
+        no: i + 1,
+        item: str(e.item),
+        amount: num(e.amount) === null ? 0 : num(e.amount),
+        amountBlank: num(e.amount) === null,
+        target: str(e.target),
+        memo: str(e.memo)
+      };
+    });
+
+    // --- 支払い ---
+    var payments = (state.payments || [])
+      .map(function (y) {
+        return {
+          itemNo: num(y.itemNo),
+          who: str(y.who),
+          amount: num(y.amount) === null ? 0 : num(y.amount),
+          to: str(y.to),
+          memo: str(y.memo)
+        };
+      })
+      .filter(function (y) {
+        return y.who !== "";
+      });
+
+    /* --- 設定シートの集計（C9〜C20） --- */
+
+    var expenseTotal = 0; // C9  支出の合計
+    for (var i = 0; i < expenses.length; i++) expenseTotal += expenses[i].amount;
+
+    var fixedTotal = 0; // C10 うち定額で集める分
+    var coefTotal = 0; // C12 わり勘の人の係数合計
+    var splitCount = 0; // C18 わり勘の人数
+    var allCoefOne = 1; // C20
+    for (var j = 0; j < people.length; j++) {
+      var p = people[j];
+      if (p.fixed !== null) {
+        fixedTotal += p.fixed;
+      } else {
+        coefTotal += p.coef;
+        splitCount += 1;
+        if (p.coef !== 1) allCoefOne = 0;
+      }
+    }
+
+    var splitTotal = expenseTotal - fixedTotal; // C11 わり勘で割る分
+    var alpha = expenseTotal === 0 ? 0 : splitTotal / expenseTotal; // C13 按分率
+
+    /* --- 支出の行ごと（F=割る係数 / G=係数1あたり） --- */
+
+    for (var k = 0; k < expenses.length; k++) {
+      var e = expenses[k];
+      if (e.amountBlank) {
+        e.splitCoef = 0;
+      } else if (e.target === "") {
+        e.splitCoef = coefTotal;
+      } else {
+        var s = 0;
+        for (var m = 0; m < people.length; m++) {
+          var q = people[m];
+          if (q.fixed === null && isMember(q.name, e.target)) s += q.coef;
+        }
+        e.splitCoef = s;
+      }
+      e.perCoef =
+        e.amountBlank || e.splitCoef === 0 ? 0 : (e.amount * alpha) / e.splitCoef;
+
+      // K：『割る人』に名簿と一致しない名前が混ざっている
+      if (e.target === "") {
+        e.nameError = 0;
+      } else {
+        var hit = 0;
+        for (var n2 = 0; n2 < people.length; n2++) {
+          if (isMember(people[n2].name, e.target)) hit += 1;
+        }
+        e.nameError = hit !== tokenCount(e.target) ? 1 : 0;
+      }
+
+      // H：この項目への支払い（受取人のある行＝店に渡っていないので除く）
+      var paid = 0;
+      for (var y = 0; y < payments.length; y++) {
+        var pay = payments[y];
+        if (pay.itemNo === e.no && pay.to === "") paid += pay.amount;
+      }
+      e.paidToItem = paid;
+      e.diff = e.item === "" || paid === 0 ? 0 : paid - e.amount;
+
+      e.shareLine =
+        e.item === ""
+          ? ""
+          : "・" +
+            e.item +
+            "　" +
+            yen(e.amount) +
+            "円" +
+            (e.target === "" ? "" : "（" + e.target + " で割る）");
+    }
+
+    /* --- 参加者の行ごと（F=立替額 / G=負担額 / H=差引） --- */
+
+    // 支払い1行ぶんの文（項目名＋金額）。おつりはマイナスで書かれる
+    for (var t = 0; t < payments.length; t++) {
+      var pm = payments[t];
+      var itemName = "";
+      if (pm.itemNo !== null && expenses[pm.itemNo - 1]) {
+        itemName = expenses[pm.itemNo - 1].item;
+      }
+      pm.itemName = itemName;
+      pm.text =
+        pm.amount < 0
+          ? itemName + "のおつり" + yen(-pm.amount) + "円受取"
+          : itemName + yen(pm.amount) + "円支払い";
+    }
+
+    var collected = 0; // C14 集金合計（丸めた後）
+    for (var a = 0; a < people.length; a++) {
+      var pp = people[a];
+
+      // F 立替額＝出した合計 − 現地で他人から受け取った合計
+      var out = 0;
+      var got = 0; // M 現地回収
+      var lines = [];
+      for (var b = 0; b < payments.length; b++) {
+        var py = payments[b];
+        if (py.who === pp.name) {
+          out += py.amount;
+          lines.push(py.text);
+        }
+        if (py.to === pp.name) got += py.amount;
+      }
+      pp.advanced = out - got;
+      pp.localReceived = got;
+      pp.detail = lines.join("、");
+
+      // G 負担額
+      if (pp.fixed !== null) {
+        pp.burden = pp.fixed;
+        pp.raw = pp.fixed;
+      } else {
+        var acc = 0;
+        for (var c = 0; c < expenses.length; c++) {
+          var ex = expenses[c];
+          var weight =
+            (ex.target === "" ? 1 : 0) + (isMember(pp.name, ex.target) ? 1 : 0);
+          acc += ex.perCoef * weight;
+        }
+        pp.raw = pp.coef * acc;
+        pp.burden = roundUnit <= 1 ? round0(pp.raw) : ceiling(pp.raw, roundUnit);
+      }
+      collected += pp.burden;
+
+      pp.balance = pp.advanced - pp.burden; // H 差引
+      pp.kind = pp.fixed === null ? "わり勘" : pp.fixed === 0 ? "無料" : "定額";
+    }
+
+    var surplus = collected - expenseTotal; // C15 余り
+    var perPerson = splitCount === 0 ? 0 : (collected - fixedTotal) / splitCount; // C19
+
+    var localCollected = 0; // C17 現地で回収したお金
+    var payAll = 0;
+    for (var d = 0; d < payments.length; d++) {
+      payAll += payments[d].amount;
+      if (payments[d].to !== "") localCollected += payments[d].amount;
+    }
+    var toVenue = payAll - localCollected; // 店に渡ったお金
+
+    /* --- 一人ずつの文（共有用に載る） --- */
+
+    for (var f = 0; f < people.length; f++) {
+      var pr = people[f];
+      if (pr.fixed === null) {
+        pr.shareLine =
+          "・" +
+          pr.name +
+          "：" +
+          (pr.detail === "" ? "支払いなし" : pr.detail) +
+          (pr.localReceived > 0 ? "＋" + yen(pr.localReceived) + "円を回収" : "") +
+          "→" +
+          (pr.balance < 0
+            ? yen(-pr.balance) + "円追加で支払い"
+            : pr.balance > 0
+            ? yen(pr.balance) + "円バック"
+            : "精算なし");
+      } else {
+        pr.shareLine =
+          "・" +
+          pr.name +
+          " " +
+          yen(pr.fixed) +
+          "円" +
+          (pr.balance < 0
+            ? "（未回収）"
+            : pr.balance > 0
+            ? "（" + yen(pr.balance) + "円 多く預かり）"
+            : "");
+      }
+
+      // 参加者シートI列「精算のしかた」
+      if (organizer === "") {
+        pr.howTo = "※ 設定シートで幹事を選んでください";
+      } else if (pr.name === organizer) {
+        pr.howTo =
+          "― 幹事（全員と精算すると実質の負担は " +
+          yen(pr.burden - surplus) +
+          "円。集金の余り " +
+          yen(surplus) +
+          "円 が手元に残るため）";
+      } else if (pr.balance > 0) {
+        pr.howTo = organizer + " から " + yen(pr.balance) + "円 受け取る";
+      } else if (pr.balance < 0) {
+        pr.howTo = organizer + " へ " + yen(-pr.balance) + "円 支払う";
+      } else {
+        pr.howTo = "精算なし";
+      }
+    }
+
+    /* --- 検算6本（すべて0が正常） --- */
+
+    var sumAdvanced = 0;
+    var sumBalance = 0;
+    for (var g = 0; g < people.length; g++) {
+      sumAdvanced += people[g].advanced;
+      sumBalance += people[g].balance;
+    }
+    var allocated = 0;
+    var nameErrorRows = 0;
+    var diffRows = 0;
+    for (var h = 0; h < expenses.length; h++) {
+      allocated += expenses[h].splitCoef * expenses[h].perCoef;
+      nameErrorRows += expenses[h].nameError;
+      if (expenses[h].diff !== 0) diffRows += 1;
+    }
+
+    var checks = [
+      { id: 1, label: "店に渡ったお金 − 支出の合計", value: toVenue - expenseTotal, unit: "円" },
+      { id: 2, label: "名簿に無い人の支払い・受け渡し", value: sumAdvanced - toVenue, unit: "円" },
+      { id: 3, label: "差引の合計 ＋ 余り", value: sumBalance + surplus, unit: "円" },
+      { id: 4, label: "誰にも割り当たっていない金額", value: splitTotal - allocated, unit: "円" },
+      { id: 5, label: "『割る人』の名前が一致しない行", value: nameErrorRows, unit: "行" },
+      { id: 6, label: "項目ごとの支払いが金額と合わない行", value: diffRows, unit: "行" }
+    ];
+    for (var v = 0; v < checks.length; v++) {
+      var ck = checks[v];
+      ck.ok = ck.unit === "円" ? round0(ck.value) === 0 : ck.value === 0;
+    }
+
+    var ng = checks.filter(function (x) {
+      return !x.ok;
+    });
+    var banner;
+    if (ng.length === 0) {
+      banner = "OK：支出・支払い・割り当てはすべて合っています";
+    } else {
+      banner = "要確認：";
+      if (!checks[0].ok)
+        banner +=
+          "店に渡ったお金が支出の合計と違います（おつり・現地回収の書き漏れ／入力もれ）。";
+      if (!checks[1].ok)
+        banner += "『払った人』か『受取人』が空欄か、参加者一覧に無い名前です。";
+      if (!checks[3].ok)
+        banner +=
+          "『割る人』の名前が1つも一致しない行があり、その金額が誰にも割り当たっていません。";
+      if (!checks[4].ok)
+        banner +=
+          "『割る人』に参加者一覧と一致しない名前があります（支出シートの赤いセル）。";
+      if (!checks[5].ok)
+        banner += "項目ごとの支払い合計が金額と一致しない行があります（支出シートの赤いセル）。";
+    }
+
+    /* --- 共有用テキスト --- */
+
+    var expenseLines = expenses.filter(function (x) {
+      return x.item !== "";
+    });
+    var fixedPeople = people.filter(function (x) {
+      return x.fixed !== null;
+    });
+    var splitPeople = people.filter(function (x) {
+      return x.fixed === null;
+    });
+
+    var lines = [];
+    lines.push("【精算】");
+    lines.push(
+      (allCoefOne === 1 ? "１人：" : "係数1.0あたり：") +
+        yen(perPerson) +
+        "円でよきですか" +
+        (allCoefOne === 1 ? "" : "（係数によって人ごとに変わります）")
+    );
+    lines.push("");
+    lines.push("");
+    lines.push("■ 支出　合計 " + yen(expenseTotal) + "円");
+    expenseLines.forEach(function (x) {
+      lines.push(x.shareLine);
+    });
+    lines.push("");
+    lines.push("■ 回収　合計 " + yen(fixedTotal) + "円");
+    lines.push("");
+    fixedPeople.forEach(function (x) {
+      lines.push(x.shareLine);
+    });
+    lines.push("");
+    lines.push(
+      "■ 精算額　" + yen(expenseTotal) + "ー" + yen(fixedTotal) + "＝" + yen(splitTotal) + "円"
+    );
+    lines.push(
+      yen(splitTotal) +
+        "円÷" +
+        splitCount +
+        "人＝１人" +
+        yen(perPerson) +
+        "円" +
+        (round0(splitTotal / Math.max(splitCount, 1)) === perPerson
+          ? ""
+          : "（" + yen(roundUnit) + "円単位に切り上げ）")
+    );
+    lines.push("");
+    lines.push("■ 一人ずつの精算");
+    splitPeople.forEach(function (x) {
+      lines.push(x.shareLine);
+    });
+    lines.push("");
+    lines.push(
+      "※ 支払い・受け取りは " +
+        organizer +
+        " とやりとりしてください。" +
+        (surplus > 0
+          ? "切り上げで出た " + yen(surplus) + "円 は " + organizer + " の手元に残ります。"
+          : "")
+    );
+    lines.push(banner);
+
+    /* --- 入力の警告（検算6本とは別枠。xlsxには無い） ---
+     * xlsxでは係数が空欄だと、その人の負担が黙って0円になり、検算6本のどれにも出ない。
+     * 実際に起きても誰も気づけないので、ここで名指しする。
+     */
+    var warnings = [];
+    var blankCoef = people.filter(function (x) {
+      return x.fixed === null && (x.coefBlank || x.coef === 0);
+    });
+    if (blankCoef.length) {
+      warnings.push(
+        "係数が空欄か0の人がいます（" +
+          blankCoef
+            .map(function (x) {
+              return x.name;
+            })
+            .join("、") +
+          "）。この人の負担は0円になります。わり勘なら 1 を入れてください。"
+      );
+    }
+    var seen = {};
+    var dup = [];
+    people.forEach(function (x) {
+      if (seen[x.name] && dup.indexOf(x.name) < 0) dup.push(x.name);
+      seen[x.name] = true;
+    });
+    if (dup.length) {
+      warnings.push(
+        "同じ名前の人がいます（" +
+          dup.join("、") +
+          "）。「佐藤（兄）」のように区別してください。"
+      );
+    }
+    if (organizer !== "" && !people.some(function (x) { return x.name === organizer; })) {
+      warnings.push("幹事「" + organizer + "」が参加者一覧にありません。");
+    }
+    var unknown = [];
+    payments.forEach(function (y) {
+      [y.who, y.to].forEach(function (nm) {
+        if (nm !== "" && !people.some(function (x) { return x.name === nm; })) {
+          if (unknown.indexOf(nm) < 0) unknown.push(nm);
+        }
+      });
+    });
+    if (unknown.length) {
+      warnings.push("参加者一覧に無い名前が「支払い」にあります（" + unknown.join("、") + "）。");
+    }
+
+    return {
+      totals: {
+        expenseTotal: expenseTotal,
+        fixedTotal: fixedTotal,
+        splitTotal: splitTotal,
+        coefTotal: coefTotal,
+        alpha: alpha,
+        collected: collected,
+        surplus: surplus,
+        headcount: people.length,
+        localCollected: localCollected,
+        splitCount: splitCount,
+        perPerson: perPerson,
+        allCoefOne: allCoefOne,
+        toVenue: toVenue
+      },
+      participants: people,
+      expenses: expenses,
+      payments: payments,
+      checks: checks,
+      banner: banner,
+      warnings: warnings,
+      shareText: lines.join("\n"),
+      shareLines: lines
+    };
+  }
+
+  return {
+    settle: settle,
+    blankState: blankState,
+    yen: yen,
+    round0: round0,
+    ceiling: ceiling,
+    isMember: isMember,
+    tokenCount: tokenCount,
+    wrapped: wrapped,
+    SEPARATORS: SEPARATORS
+  };
+});
+
+</script>
+<script>
+/* 飲み会精算 ── 画面
+ *
+ * 計算には一切関与しない。答えを出すのは engine.js だけで、ここは入力を集めて渡し、
+ * 返ってきたものを並べるだけ。（engine.js は本物のExcelと突合してあるので、
+ * 画面をいくら直しても答えは変わらない、という状態を保つ）
+ *
+ * xlsx より良くしてある点：
+ *   ・『割る人』『払った人』『受取人』を名簿からの選択にした
+ *     → 名前の打ち間違いが原理的に起きない（検算②⑤が発火しなくなる）
+ *   ・名前を直すと、支出の『割る人』と支払いの人名も追いかけて直る
+ *   ・係数の空欄を警告する（xlsxでは黙って負担0円になり、検算6本のどれにも出ない）
+ */
+(function () {
+  "use strict";
+
+  var E = window.NomikaiEngine;
+  var KEY = "nomikai.v1";
+  var LS = window.localStorage;
+
+  var state, book, saveTimer;
+
+  /* ================= 保存 ================= */
+
+  function newId() {
+    return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function blank() {
+    var d = new Date();
+    var iso =
+      d.getFullYear() +
+      "-" +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(d.getDate()).padStart(2, "0");
+    return {
+      meta: { name: "", date: iso, organizer: "", roundUnit: 100 },
+      participants: [],
+      expenses: [],
+      payments: []
+    };
+  }
+
+  function loadBook() {
+    try {
+      var b = JSON.parse(LS.getItem(KEY) || "null");
+      if (b && b.events && b.current && b.events[b.current]) return b;
+    } catch (e) {}
+    var id = newId();
+    var fresh = { events: {}, current: id };
+    fresh.events[id] = { id: id, state: blank(), updatedAt: Date.now() };
+    return fresh;
+  }
+
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      book.events[book.current].state = state;
+      book.events[book.current].updatedAt = Date.now();
+      try {
+        LS.setItem(KEY, JSON.stringify(book));
+      } catch (e) {
+        alert("保存できませんでした（端末の空き容量を確認してください）");
+      }
+    }, 250);
+  }
+
+  /* ================= 小道具 ================= */
+
+  function $(sel, root) {
+    return (root || document).querySelector(sel);
+  }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function opt(value, label, selected) {
+    var o = el("option", null, label);
+    o.value = value;
+    if (selected) o.selected = true;
+    return o;
+  }
+  function names() {
+    return state.participants
+      .map(function (p) {
+        return (p.name || "").trim();
+      })
+      .filter(Boolean);
+  }
+  function splitNames(target) {
+    return names().filter(function (n) {
+      return E.isMember(n, target);
+    });
+  }
+
+  /* 画面の入力 → engine が読む形（区分を fixed に畳む） */
+  function toEngine() {
+    return {
+      meta: state.meta,
+      participants: state.participants.map(function (p) {
+        var fixed = null;
+        if (p.kind === "free") fixed = 0;
+        else if (p.kind === "fixed") fixed = p.fixed === "" || p.fixed == null ? null : p.fixed;
+        return { name: p.name, coef: p.coef, fixed: fixed };
+      }),
+      expenses: state.expenses,
+      payments: state.payments
+    };
+  }
+
+  /* ================= 参加者 ================= */
+
+  function renderSettings() {
+    var box = $("#settings");
+    box.innerHTML = "";
+
+    var r1 = el("div", "field-row");
+    r1.appendChild(el("label", "small", "幹事"));
+    var sel = el("select");
+    sel.appendChild(opt("", "― 選ぶ ―", !state.meta.organizer));
+    names().forEach(function (n) {
+      sel.appendChild(opt(n, n, n === state.meta.organizer));
+    });
+    sel.addEventListener("change", function () {
+      state.meta.organizer = sel.value;
+      save();
+      recalc();
+    });
+    r1.appendChild(sel);
+    box.appendChild(r1);
+
+    var r2 = el("div", "field-row");
+    r2.appendChild(el("label", "small", "丸め単位"));
+    var ru = el("select");
+    [
+      [1, "切り上げなし（1円単位）"],
+      [10, "10円単位に切り上げ"],
+      [100, "100円単位に切り上げ"],
+      [500, "500円単位に切り上げ"],
+      [1000, "1,000円単位に切り上げ"]
+    ].forEach(function (o) {
+      ru.appendChild(opt(o[0], o[1], Number(state.meta.roundUnit) === o[0]));
+    });
+    ru.addEventListener("change", function () {
+      state.meta.roundUnit = Number(ru.value);
+      save();
+      recalc();
+    });
+    r2.appendChild(ru);
+    box.appendChild(r2);
+
+    var r3 = el("div", "field-row");
+    r3.appendChild(el("label", "small", "開催日"));
+    var dt = el("input");
+    dt.type = "date";
+    dt.value = state.meta.date || "";
+    dt.addEventListener("change", function () {
+      state.meta.date = dt.value;
+      save();
+    });
+    r3.appendChild(dt);
+    box.appendChild(r3);
+  }
+
+  function renderParticipants() {
+    var box = $("#pRows");
+    box.innerHTML = "";
+    if (!state.participants.length) {
+      box.appendChild(el("p", "empty", "まだ誰もいません。下のボタンで足してください。"));
+    }
+    state.participants.forEach(function (p, i) {
+      var card = el("div", "card");
+
+      var head = el("div", "card-head");
+      var nm = el("input", "grow");
+      nm.type = "text";
+      nm.placeholder = "名前";
+      nm.value = p.name || "";
+      nm.addEventListener("focus", function () {
+        nm.dataset.prev = nm.value;
+      });
+      nm.addEventListener("input", function () {
+        p.name = nm.value;
+        save();
+        recalc();
+      });
+      nm.addEventListener("change", function () {
+        renameEverywhere(nm.dataset.prev || "", nm.value.trim());
+        nm.dataset.prev = nm.value;
+        renderAll();
+      });
+      head.appendChild(nm);
+
+      var del = el("button", "del", "×");
+      del.title = "削除";
+      del.addEventListener("click", function () {
+        state.participants.splice(i, 1);
+        save();
+        renderAll();
+      });
+      head.appendChild(del);
+      card.appendChild(head);
+
+      var row = el("div", "field-row");
+      row.appendChild(el("label", "small", "負担"));
+      var kind = el("select");
+      [
+        ["split", "わり勘"],
+        ["fixed", "定額（会費）"],
+        ["free", "無料（おごり）"]
+      ].forEach(function (o) {
+        kind.appendChild(opt(o[0], o[1], (p.kind || "split") === o[0]));
+      });
+      kind.addEventListener("change", function () {
+        p.kind = kind.value;
+        save();
+        renderParticipants();
+        recalc();
+      });
+      row.appendChild(kind);
+      card.appendChild(row);
+
+      if ((p.kind || "split") === "split") {
+        var r2 = el("div", "field-row");
+        r2.appendChild(el("label", "small", "係数"));
+        var cf = el("input");
+        cf.type = "text";
+        cf.inputMode = "decimal";
+        cf.value = p.coef == null ? "" : String(p.coef);
+        cf.placeholder = "1";
+        cf.addEventListener("input", function () {
+          p.coef = cf.value === "" ? "" : Number(cf.value);
+          save();
+          recalc();
+        });
+        r2.appendChild(cf);
+        r2.appendChild(el("span", "unit", "倍（通常1／飲まない人0.5）"));
+        card.appendChild(r2);
+      } else if (p.kind === "fixed") {
+        var r3 = el("div", "field-row");
+        r3.appendChild(el("label", "small", "会費"));
+        var fx = el("input");
+        fx.type = "text";
+        fx.inputMode = "numeric";
+        fx.value = p.fixed == null ? "" : String(p.fixed);
+        fx.placeholder = "3000";
+        fx.addEventListener("input", function () {
+          p.fixed = fx.value === "" ? "" : Number(fx.value);
+          save();
+          recalc();
+        });
+        r3.appendChild(fx);
+        r3.appendChild(el("span", "unit", "円"));
+        card.appendChild(r3);
+      }
+
+      box.appendChild(card);
+    });
+  }
+
+  /* 名前を直したら、支出の『割る人』・支払いの人名・幹事も追いかけて直す */
+  function renameEverywhere(oldName, newName) {
+    if (!oldName || oldName === newName) return;
+    state.expenses.forEach(function (e) {
+      if (!e.target) return;
+      var list = splitNamesRaw(e.target).map(function (n) {
+        return n === oldName ? newName : n;
+      });
+      e.target = list.filter(Boolean).join("、");
+    });
+    state.payments.forEach(function (y) {
+      if (y.who === oldName) y.who = newName;
+      if (y.to === oldName) y.to = newName;
+    });
+    if (state.meta.organizer === oldName) state.meta.organizer = newName;
+    save();
+  }
+
+  function splitNamesRaw(target) {
+    return String(target || "")
+      .replace(/[,，・/／]/g, "、")
+      .split("、")
+      .map(function (s) {
+        return s.trim();
+      })
+      .filter(Boolean);
+  }
+
+  /* ================= 支出 ================= */
+
+  function renderExpenses() {
+    var box = $("#xRows");
+    box.innerHTML = "";
+    if (!state.expenses.length) {
+      box.appendChild(el("p", "empty", "何にいくら使ったかを足してください。"));
+    }
+    state.expenses.forEach(function (e, i) {
+      var card = el("div", "card");
+
+      var head = el("div", "card-head");
+      var it = el("input", "grow");
+      it.type = "text";
+      it.placeholder = "項目名（例：居酒屋）";
+      it.value = e.item || "";
+      it.addEventListener("input", function () {
+        e.item = it.value;
+        save();
+        recalc();
+      });
+      head.appendChild(it);
+      var del = el("button", "del", "×");
+      del.addEventListener("click", function () {
+        state.expenses.splice(i, 1);
+        state.payments.forEach(function (y) {
+          if (y.itemNo === i + 1) y.itemNo = null;
+          else if (y.itemNo > i + 1) y.itemNo -= 1;
+        });
+        save();
+        renderAll();
+      });
+      head.appendChild(del);
+      card.appendChild(head);
+
+      var r = el("div", "field-row");
+      r.appendChild(el("label", "small", "金額"));
+      var am = el("input");
+      am.type = "text";
+      am.inputMode = "numeric";
+      am.value = e.amount == null ? "" : String(e.amount);
+      am.placeholder = "39000";
+      am.addEventListener("input", function () {
+        e.amount = am.value === "" ? "" : Number(am.value);
+        save();
+        recalc();
+      });
+      r.appendChild(am);
+      r.appendChild(el("span", "unit", "円"));
+      card.appendChild(r);
+
+      card.appendChild(targetPicker(e));
+      box.appendChild(card);
+    });
+  }
+
+  function targetPicker(e) {
+    var d = el("details", "target");
+    var chosen = splitNames(e.target);
+    var sm = el("summary");
+    sm.appendChild(document.createTextNode("割る人："));
+    sm.appendChild(
+      el("span", "who", e.target ? chosen.join("・") || e.target : "わり勘の人 全員")
+    );
+    d.appendChild(sm);
+
+    var wrap = el("div", "checks");
+    var eng = toEngine();
+    state.participants.forEach(function (p, idx) {
+      var nm = (p.name || "").trim();
+      if (!nm) return;
+      var lab = el("label");
+      var cb = el("input");
+      cb.type = "checkbox";
+      cb.checked = E.isMember(nm, e.target);
+      cb.addEventListener("change", function () {
+        var list = splitNames(e.target);
+        if (cb.checked) {
+          if (list.indexOf(nm) < 0) list.push(nm);
+        } else {
+          list = list.filter(function (x) {
+            return x !== nm;
+          });
+        }
+        // 全員にチェックが付いたら「全員（空欄）」に戻す
+        var splitAll = eng.participants.filter(function (q) {
+          return q.fixed === null && q.name;
+        }).length;
+        var chosenSplit = list.filter(function (x) {
+          var q = eng.participants.find(function (z) {
+            return z.name === x;
+          });
+          return q && q.fixed === null;
+        }).length;
+        e.target = list.length === 0 || (chosenSplit === splitAll && list.length === splitAll)
+          ? ""
+          : list.join("、");
+        save();
+        renderExpenses();
+        recalc();
+      });
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(nm));
+      if (eng.participants[idx] && eng.participants[idx].fixed !== null) {
+        lab.appendChild(el("span", "muted", "（定額なので按分されません）"));
+      }
+      wrap.appendChild(lab);
+    });
+    if (!names().length) {
+      wrap.appendChild(el("p", "muted", "先に参加者を入れてください。"));
+    }
+    wrap.appendChild(
+      el("p", "muted", "誰も選ばなければ「わり勘の人 全員」で割ります。")
+    );
+    d.appendChild(wrap);
+    return d;
+  }
+
+  /* ================= 支払い ================= */
+
+  function renderPayments() {
+    var box = $("#yRows");
+    box.innerHTML = "";
+    if (!state.payments.length) {
+      box.appendChild(
+        el("p", "empty", "誰がその場でいくら出したかを足してください。")
+      );
+    }
+    state.payments.forEach(function (y, i) {
+      var card = el("div", "card");
+
+      var head = el("div", "card-head");
+      var who = el("select", "grow");
+      who.appendChild(opt("", "― 払った人 ―", !y.who));
+      names().forEach(function (n) {
+        who.appendChild(opt(n, n, n === y.who));
+      });
+      who.addEventListener("change", function () {
+        y.who = who.value;
+        save();
+        recalc();
+      });
+      head.appendChild(who);
+      var del = el("button", "del", "×");
+      del.addEventListener("click", function () {
+        state.payments.splice(i, 1);
+        save();
+        renderAll();
+      });
+      head.appendChild(del);
+      card.appendChild(head);
+
+      var r1 = el("div", "field-row");
+      r1.appendChild(el("label", "small", "金額"));
+      var am = el("input");
+      am.type = "text";
+      am.inputMode = "numeric";
+      am.value = y.amount == null ? "" : String(y.amount);
+      am.placeholder = "10000";
+      am.addEventListener("input", function () {
+        y.amount = am.value === "" ? "" : Number(am.value);
+        save();
+        recalc();
+      });
+      r1.appendChild(am);
+      r1.appendChild(el("span", "unit", "円"));
+      card.appendChild(r1);
+
+      var r2 = el("div", "field-row");
+      r2.appendChild(el("label", "small", "何に"));
+      var itm = el("select");
+      itm.appendChild(opt("", "指定なし", !y.itemNo));
+      state.expenses.forEach(function (e, idx) {
+        if (!(e.item || "").trim()) return;
+        itm.appendChild(opt(String(idx + 1), e.item, Number(y.itemNo) === idx + 1));
+      });
+      itm.addEventListener("change", function () {
+        y.itemNo = itm.value === "" ? null : Number(itm.value);
+        save();
+        recalc();
+      });
+      r2.appendChild(itm);
+      card.appendChild(r2);
+
+      var r3 = el("div", "field-row");
+      r3.appendChild(el("label", "small", "渡した先"));
+      var to = el("select");
+      to.appendChild(opt("", "店に払った", !y.to));
+      names().forEach(function (n) {
+        if (n === y.who) return;
+        to.appendChild(opt(n, n + " に手渡し", n === y.to));
+      });
+      to.addEventListener("change", function () {
+        y.to = to.value;
+        save();
+        recalc();
+      });
+      r3.appendChild(to);
+      card.appendChild(r3);
+
+      box.appendChild(card);
+    });
+  }
+
+  /* ================= 結果 ================= */
+
+  function renderResult(r) {
+    var box = $("#result");
+    box.innerHTML = "";
+
+    var ok = r.checks.every(function (c) {
+      return c.ok;
+    });
+    box.appendChild(el("div", "banner " + (ok ? "ok" : "ng"), r.banner));
+    r.warnings.forEach(function (w) {
+      box.appendChild(el("div", "banner warn", "⚠ " + w));
+    });
+
+    var sum = el("div", "sum");
+    [
+      ["支出の合計", E.yen(r.totals.expenseTotal) + "円"],
+      ["定額で集める分", E.yen(r.totals.fixedTotal) + "円"],
+      [
+        r.totals.allCoefOne ? "わり勘 1人あたり" : "係数1.0あたり",
+        E.yen(r.totals.perPerson) + "円"
+      ],
+      ["余り（幹事の手元）", E.yen(r.totals.surplus) + "円"]
+    ].forEach(function (o) {
+      var d = el("div");
+      d.appendChild(el("dt", null, o[0]));
+      d.appendChild(el("dd", null, o[1]));
+      sum.appendChild(d);
+    });
+    box.appendChild(sum);
+
+    if (r.participants.length) {
+      var t = el("table", "people");
+      var thead = el("thead");
+      var htr = el("tr");
+      ["名前", "立替", "負担", "差引"].forEach(function (h) {
+        htr.appendChild(el("th", null, h));
+      });
+      thead.appendChild(htr);
+      t.appendChild(thead);
+      var tb = el("tbody");
+      r.participants.forEach(function (p) {
+        var tr = el("tr");
+        tr.appendChild(el("td", null, p.name));
+        tr.appendChild(el("td", null, E.yen(p.advanced)));
+        tr.appendChild(el("td", null, E.yen(p.burden)));
+        var b = el("td", p.balance > 0 ? "plus" : p.balance < 0 ? "minus" : null);
+        b.textContent = (p.balance > 0 ? "+" : "") + E.yen(p.balance);
+        tr.appendChild(b);
+        tb.appendChild(tr);
+        var tr2 = el("tr");
+        var td = el("td", "how", p.howTo);
+        td.colSpan = 4;
+        tr2.appendChild(td);
+        tb.appendChild(tr2);
+      });
+      t.appendChild(tb);
+      box.appendChild(t);
+    }
+
+    var btn = el("button", "copy", "共有用の文をコピー");
+    btn.addEventListener("click", function () {
+      copyText(r.shareText).then(function (done) {
+        if (!done) {
+          // コピーを断られる場合がある（端末の設定など）。
+          // 黙って失敗させず、下の文を選択済みにして手でコピーできる状態にする。
+          var ta = document.getElementById("shareText");
+          if (ta) {
+            ta.focus();
+            ta.select();
+            try {
+              ta.setSelectionRange(0, r.shareText.length);
+            } catch (e) {}
+          }
+        }
+        btn.textContent = done
+          ? "コピーしました"
+          : "下の文を選びました。長押し（右クリック）でコピーしてください";
+        btn.classList.toggle("done", done);
+        setTimeout(function () {
+          btn.textContent = "共有用の文をコピー";
+          btn.classList.remove("done");
+        }, 3000);
+      });
+    });
+    box.appendChild(btn);
+
+    var ta = el("textarea");
+    ta.id = "shareText";
+    ta.readOnly = true;
+    ta.value = r.shareText;
+    box.appendChild(ta);
+
+    var det = el("details", "checkList");
+    det.appendChild(el("summary", null, "検算6本（すべて0が正常）"));
+    r.checks.forEach(function (c, i) {
+      var line = el("div", "checkline" + (c.ok ? "" : " ng"));
+      line.appendChild(el("span", null, "①②③④⑤⑥"[i] + " " + c.label));
+      line.appendChild(
+        el("span", "v", (c.unit === "円" ? E.yen(c.value) : c.value) + c.unit)
+      );
+      det.appendChild(line);
+    });
+    box.appendChild(det);
+  }
+
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(t).then(
+        function () {
+          return true;
+        },
+        function () {
+          return legacyCopy(t);
+        }
+      );
+    }
+    return Promise.resolve(legacyCopy(t));
+  }
+
+  function legacyCopy(t) {
+    var ta = document.createElement("textarea");
+    ta.value = t;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "0";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, t.length);
+    var ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  /* ================= 再計算・描画 ================= */
+
+  function recalc() {
+    var r = E.settle(toEngine());
+    renderResult(r);
+
+    var f = $("#status");
+    var ok = r.checks.every(function (c) {
+      return c.ok;
+    });
+    f.classList.toggle("ng", !ok);
+    f.innerHTML = "";
+    f.appendChild(
+      document.createTextNode(ok ? "検算OK" : "要確認：検算が合っていません")
+    );
+    var amt = el("span", "amount");
+    amt.textContent =
+      (r.totals.allCoefOne ? "1人 " : "係数1.0 ") + E.yen(r.totals.perPerson) + "円";
+    f.appendChild(amt);
+
+    $("#badgeP").textContent = state.participants.length || "";
+    $("#badgeX").textContent = state.expenses.length || "";
+    $("#badgeY").textContent = state.payments.length || "";
+    return r;
+  }
+
+  function renderAll() {
+    $("#eventName").value = state.meta.name || "";
+    renderSettings();
+    renderParticipants();
+    renderExpenses();
+    renderPayments();
+    recalc();
+  }
+
+  /* ================= タブ ================= */
+
+  function showTab(key) {
+    ["p", "x", "y", "r"].forEach(function (k) {
+      $("#tab-" + k).hidden = k !== key;
+      $("#btn-" + k).setAttribute("aria-selected", String(k === key));
+    });
+    try {
+      LS.setItem("nomikai.tab", key);
+    } catch (e) {}
+  }
+
+  /* ================= 立ち上げ ================= */
+
+  function boot() {
+    book = loadBook();
+    state = book.events[book.current].state;
+
+    $("#eventName").addEventListener("input", function () {
+      state.meta.name = this.value;
+      book.events[book.current].name = this.value;
+      save();
+    });
+
+    $("#addP").addEventListener("click", function () {
+      state.participants.push({ name: "", kind: "split", coef: 1, fixed: "" });
+      save();
+      renderAll();
+      var box = $("#pRows");
+      var last = box.querySelectorAll("input[type=text]");
+      if (last.length) last[last.length - 1].focus();
+    });
+    $("#addX").addEventListener("click", function () {
+      state.expenses.push({ item: "", amount: "", target: "", memo: "" });
+      save();
+      renderAll();
+    });
+    $("#addY").addEventListener("click", function () {
+      var last = state.payments[state.payments.length - 1];
+      state.payments.push({
+        itemNo: last ? last.itemNo : null,
+        who: "",
+        amount: "",
+        to: "",
+        memo: ""
+      });
+      save();
+      renderAll();
+    });
+
+    ["p", "x", "y", "r"].forEach(function (k) {
+      $("#btn-" + k).addEventListener("click", function () {
+        showTab(k);
+      });
+    });
+
+    $("#menuBtn").addEventListener("click", function () {
+      $("#menu").showModal();
+    });
+    $("#mNew").addEventListener("click", function () {
+      if (!confirm("新しい飲み会を作ります。今の内容は残ります。")) return;
+      var id = newId();
+      book.events[id] = { id: id, state: blank(), updatedAt: Date.now() };
+      book.current = id;
+      state = book.events[id].state;
+      save();
+      $("#menu").close();
+      renderAll();
+      showTab("p");
+    });
+    $("#mSwitch").addEventListener("click", function () {
+      var list = Object.keys(book.events)
+        .map(function (id) {
+          return book.events[id];
+        })
+        .sort(function (a, b) {
+          return b.updatedAt - a.updatedAt;
+        });
+      var msg = list
+        .map(function (e, i) {
+          return (
+            i +
+            1 +
+            ". " +
+            (e.state.meta.name || "（名前なし）") +
+            "  " +
+            (e.state.meta.date || "")
+          );
+        })
+        .join("\n");
+      var pick = prompt("開く飲み会の番号を入れてください:\n\n" + msg, "1");
+      var idx = Number(pick) - 1;
+      if (list[idx]) {
+        book.current = list[idx].id;
+        state = list[idx].state;
+        save();
+        $("#menu").close();
+        renderAll();
+      }
+    });
+    $("#mExport").addEventListener("click", function () {
+      var blob = new Blob([JSON.stringify(state, null, 1)], {
+        type: "application/json"
+      });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download =
+        (state.meta.name || "飲み会精算") + "_" + (state.meta.date || "") + ".json";
+      a.click();
+      setTimeout(function () {
+        URL.revokeObjectURL(a.href);
+      }, 1000);
+      $("#menu").close();
+    });
+    $("#mImport").addEventListener("click", function () {
+      $("#file").click();
+    });
+    $("#file").addEventListener("change", function () {
+      var f = this.files[0];
+      if (!f) return;
+      var fr = new FileReader();
+      fr.onload = function () {
+        try {
+          var s = JSON.parse(fr.result);
+          if (!s.participants) throw new Error("形式が違います");
+          var id = newId();
+          book.events[id] = { id: id, state: s, updatedAt: Date.now() };
+          book.current = id;
+          state = s;
+          save();
+          $("#menu").close();
+          renderAll();
+        } catch (e) {
+          alert("読み込めませんでした：" + e.message);
+        }
+      };
+      fr.readAsText(f);
+      this.value = "";
+    });
+    $("#mClose").addEventListener("click", function () {
+      $("#menu").close();
+    });
+
+    renderAll();
+    showTab(LS.getItem("nomikai.tab") || "p");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+
+</script>
+</body>
+</html>
