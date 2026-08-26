@@ -198,13 +198,25 @@ export function buildSeed(): Tables {
     },
     {
       id: 143, school_id: SCHOOL, title: '国語 漢字・語句・古典',
-      category: 'standard', target_tags: ['教科_国語'],
+      category: 'standard', target_tags: ['教科_国語', '中2'],
       deprecated_target_student_id: null, youtube_url: null, filter_keyword: null,
       excluded_question_ids: [], question_limit: 10, clear_time_limit: 150, max_miss_count: 3,
       challenge_limit_per_day: null, clear_deadline: null, prerequisite_course_ids: [],
-      quiz_settings: { mode: 'selection', option_count: '4', source_tags: ['教科_国語'], ranking_display: 'time' },
+      quiz_settings: { mode: 'selection', option_count: '4', source_tags: ['教科_国語', '中2'], ranking_display: 'time' },
       is_active: true, created_at: new Date(Date.UTC(2026, 4, 8)).toISOString(),
       target_student_ids: [], fixed_question_ids: idOf(KOKUGO), is_deleted: false, lock_after_clears: 0,
+    },
+    // 4段構成に入れた12問を、単体でも練習できるコース。
+    // グループに入れたコースは自習エリアに並ばないので、中2の棚が空にならないよう別に置く
+    {
+      id: 144, school_id: SCHOOL, title: '中2 社会 江戸時代 一問一答',
+      category: 'standard', target_tags: ['教科_社会', '中2'],
+      deprecated_target_student_id: null, youtube_url: null, filter_keyword: null,
+      excluded_question_ids: [], question_limit: 12, clear_time_limit: 150, max_miss_count: 3,
+      challenge_limit_per_day: null, clear_deadline: null, prerequisite_course_ids: [],
+      quiz_settings: { mode: 'selection', option_count: '4', source_tags: ['教科_社会', '中2'], ranking_display: 'time' },
+      is_active: true, created_at: new Date(Date.UTC(2026, 4, 9)).toISOString(),
+      target_student_ids: [], fixed_question_ids: edoIds, is_deleted: false, lock_after_clears: 0,
     },
   ];
 
@@ -284,6 +296,7 @@ export function buildSeed(): Tables {
     141: ['そうた', 'はると', 'たいち'],
     142: ['そうた', 'はると', 'のぞみ'],
     143: ['あかり', 'ゆい', 'けんと'],
+    144: ['たいち', 'のぞみ', 'けんと'],
   };
 
   Object.keys(reached).forEach((k) => {
