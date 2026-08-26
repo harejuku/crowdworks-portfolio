@@ -40,6 +40,18 @@ const files = execSync('git ls-files -z --cached --others --exclude-standard', {
   .filter((f) => existsSync(f) && statSync(f).isFile())
   .filter((f) => !/\.(woff2?|ttf|otf|eot|png|jpe?g|gif|webp|ico|pdf|zip|mp4)$/i.test(f));
 
+/* 電話番号は「区切り方が違うだけの同じ番号」で素通りする。
+   2026-08-26 に踏んだ：置き換え表には国内表記で載っていたのに、構造化データ
+   （JSON-LD の telephone）は国際表記だったため、そのまま公開されていた。
+   数字だけを取り出して照合すれば、区切り・国番号の違いをまたいで見つかる。
+   国番号を付けると先頭の0が落ちるので、0を外した形でも探す。 */
+const digitsOf = (s) => s.replace(/[^0-9]/g, '');
+const phoneNeedles = needles
+  .filter((n) => /^[0-9+][0-9+\-() ]{7,}$/.test(n))
+  .map((n) => ({ shown: n, digits: digitsOf(n) }))
+  .filter((p) => p.digits.length >= 9)
+  .flatMap((p) => [p, { shown: p.shown, digits: p.digits.replace(/^0/, '') }]);
+
 const hits = [];
 for (const f of files) {
   const text = readFileSync(f, 'latin1');           // バイナリでも落ちない読み方
@@ -49,6 +61,14 @@ for (const f of files) {
     const asBytes = Buffer.from(n, 'utf8').toString('latin1');
     if (lower.includes(n.toLowerCase()) || text.includes(asBytes)) {
       hits.push([f.replace(ROOT + '/', ''), n]);
+    }
+  }
+  if (phoneNeedles.length) {
+    const digitsText = digitsOf(text);
+    for (const p of phoneNeedles) {
+      if (digitsText.includes(p.digits) && !hits.some(([g, n]) => g === f.replace(ROOT + '/', '') && n === p.shown)) {
+        hits.push([f.replace(ROOT + '/', ''), `${p.shown}（区切りを無視した一致）`]);
+      }
     }
   }
 }

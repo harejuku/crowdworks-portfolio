@@ -42,7 +42,8 @@ if (!REPO || !existsSync(REPO)) {
 const DROP = [
   'src/app/api',                      // サーバー側の窓口。静的なページには置けない
   'src/app/actions',                  // 同上（フォームの送信先）
-  'src/app/admin/billing',            // 請求。サーバーで組み立てる画面
+  'src/app/admin/billing',            // 請求。サーバーで組み立てる画面なので外し、
+                                      // overlay 側の「ブラウザの中で組み立てる版」を置く（③で入る）
   'src/app/admin/lesson-prep',        // 授業準備。入口は予約管理タブに移っている
   'src/app/admin/materials',          // 手書き教材の管理。サーバーで組み立てる画面
   'src/app/admin/subsidy',            // 助成カード。外部サービスとの突合が要る

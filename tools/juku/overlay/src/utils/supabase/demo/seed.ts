@@ -9,6 +9,8 @@
    ------------------------------------------------------------------ */
 import { ALL, EDO, CHIRI, KAGAKU, SUUGAKU, KOKUGO, EITANGO, type Q } from './questions';
 import type { Tables, Row } from './engine';
+// 世帯（ごきょうだい）は請求と地続きなので、請求側の架空データと同じ場所で持つ
+import { HOUSEHOLDS } from './sheets';
 
 export const SCHOOL = 'demo';
 export const SCHOOL_NAME = 'そら塾';
@@ -494,7 +496,11 @@ export function buildSeed(): Tables {
     unit_topics: [],
     unit_materials: [],
     quiz_assets: [],
-    households: [],
+    // ごきょうだいの予約URL・請求URLを1本にまとめるための世帯（請求画面が読む）
+    households: HOUSEHOLDS.map((h, i) => ({
+      id: `hh${i + 1}`, school_id: SCHOOL, token: h.token,
+      members: h.members, is_active: true, created_at: iso(120),
+    })),
     setsugekka_menus: [],
     setsugekka_assets: [],
     setsugekka_owners: [],

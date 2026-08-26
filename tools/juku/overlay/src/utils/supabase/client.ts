@@ -7,3 +7,6 @@ import { createDemoClient } from './demo';
 export function createClient(): any {
   return createDemoClient();
 }
+
+// service role 版（admin.ts）からも同じ偽Supabaseを使う
+export { createDemoClient } from './demo';
