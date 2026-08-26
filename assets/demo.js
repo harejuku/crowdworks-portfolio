@@ -87,7 +87,7 @@
     bar.className = 'ss-bar';
     bar.innerHTML =
       '<div class="ss-bar-in">' +
-        '<a class="ss-home" href="' + home + '">◀ 体験版いちらん</a>' +
+        '<a class="ss-home" href="' + home + '">◀ 体験版一覧</a>' +
         '<span class="ss-note">' + note + '</span>' +
         '<span class="ss-spacer"></span>' +
         (opts.about ? '<button type="button" class="ss-about">しくみ</button>' : '') +
