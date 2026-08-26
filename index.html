@@ -4,37 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>学習塾向け 統合管理システム — 操作できるデモ</title>
+<link rel="icon" href="assets/favicon.svg">
+<title>つくったものを、そのまま触れます</title>
 </head>
 <body>
 <style>
 /* ------------------------------------------------------------------
-   配色。紙（かみ）＝背景、墨（すみ）＝文字、罫（けい）＝罫線、
-   朱（しゅ）＝書き手の赤入れ、藍（あい）＝画面の操作案内。
-   朱と藍で役割を分けているのは、「システムの説明」と「自分の注記」を
-   読む側が区別できるようにするため。
-   ダークは :root を丸ごと差し替えるだけにして、個々の指定は触らない。
+   紙（かみ）＝背景、墨（すみ）＝文字、朱（しゅ）＝見出しの差し色、
+   藍（あい）＝操作できるものの目じるし。
+   下層の「開発の中身」と同じ配色にして、1つのサイトとして読めるようにしている。
    ------------------------------------------------------------------ */
 :root{
-  --kami:#f6f3ec;
-  --men:#fffefb;
-  --men-2:#f0ede5;
-  --sumi:#1f2328;
-  --sumi-2:#5a6069;
-  --sumi-3:#8b9199;
-  --kei:#d9d3c6;
-  --kei-2:#e8e3d8;
-  --shu:#b3352b;
-  --shu-usu:#f8eeec;
-  --ai:#1d4e79;
-  --ai-usu:#eaf1f7;
+  --kami:#f6f3ec; --men:#fffefb; --men-2:#f0ede5;
+  --sumi:#1f2328; --sumi-2:#59616a; --sumi-3:#8b9199;
+  --kei:#ded8cb; --kei-2:#eae5da;
+  --shu:#b3352b; --shu-usu:#f8eeec;
+  --ai:#1d4e79; --ai-usu:#eaf1f7;
   --midori:#1f6b4d;
-  --kohaku:#a0680b;
-  --murasaki:#5b3fa8;
-  --teal:#008080;
-  --teal-fuka:#005c5c;
-  --app-kami:#f0f8ff;
-  --moji-on-iro:#ffffff;
 }
 @media (prefers-color-scheme:dark){
   :root{
@@ -43,1229 +29,292 @@
     --kei:#333b45; --kei-2:#282f38;
     --shu:#e8776a; --shu-usu:#2b1c1a;
     --ai:#86b2d9; --ai-usu:#16222d;
-    --midori:#43a67f; --kohaku:#cf9a3c; --murasaki:#9986e6;
-    --teal:#2bb3ab; --teal-fuka:#1a807a;
-    --app-kami:#0d1b26;
-    --moji-on-iro:#12161a;
+    --midori:#43a67f;
   }
-}
-:root[data-theme="dark"]{
-  --kami:#14161a; --men:#1c2026; --men-2:#242a32;
-  --sumi:#e8e4db; --sumi-2:#a5abb3; --sumi-3:#767d86;
-  --kei:#333b45; --kei-2:#282f38;
-  --shu:#e8776a; --shu-usu:#2b1c1a;
-  --ai:#86b2d9; --ai-usu:#16222d;
-  --midori:#43a67f; --kohaku:#cf9a3c; --murasaki:#9986e6;
-  --teal:#2bb3ab; --teal-fuka:#1a807a;
-  --app-kami:#0d1b26;
-  --moji-on-iro:#12161a;
-}
-:root[data-theme="light"]{
-  --kami:#f6f3ec; --men:#fffefb; --men-2:#f0ede5;
-  --sumi:#1f2328; --sumi-2:#5a6069; --sumi-3:#8b9199;
-  --kei:#d9d3c6; --kei-2:#e8e3d8;
-  --shu:#b3352b; --shu-usu:#f8eeec;
-  --ai:#1d4e79; --ai-usu:#eaf1f7;
-  --midori:#1f6b4d; --kohaku:#a0680b; --murasaki:#5b3fa8;
-  --teal:#008080; --teal-fuka:#005c5c;
-  --app-kami:#f0f8ff;
-  --moji-on-iro:#ffffff;
 }
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
   margin:0;background:var(--kami);color:var(--sumi);
-  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic Medium","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
-  font-size:15px;line-height:1.85;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+  font-size:15.5px;line-height:1.85;
 }
 p{margin:0}
-h1,h2,h3,h4{margin:0;font-weight:700;line-height:1.5}
+h1,h2,h3{margin:0;font-weight:700;line-height:1.45}
+a{color:inherit}
 .mincho{font-family:"Hiragino Mincho ProN","Hiragino Mincho Pro","Yu Mincho",YuMincho,"Noto Serif JP",serif}
-.tnum{font-variant-numeric:tabular-nums}
-:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+:focus-visible{outline:2px solid var(--ai);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
 
-/* ---------- 上部の帯。架空データである断りを常時見せるためだけに置く ---------- */
-.topbar{
-  position:sticky;top:0;z-index:40;background:var(--kami);
-  border-bottom:1px solid var(--kei);
-}
-.topbar-in{
-  max-width:1120px;margin:0 auto;padding:9px 20px;
-  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
-  font-size:12px;color:var(--sumi-2);
-}
-.topbar-in .t{font-weight:700;color:var(--sumi)}
-.topbar-in .fic{margin-left:auto;color:var(--shu);font-weight:700;white-space:nowrap}
+.wrap{max-width:1000px;margin:0 auto;padding:0 22px}
 
-/* ---------- 台紙 ---------- */
-.sheet{max-width:1120px;margin:0 auto;padding:0 20px;display:grid;grid-template-columns:1fr}
-@media (min-width:980px){.sheet{grid-template-columns:186px 1fr;gap:40px;align-items:start}}
-/* grid の子は既定 min-width:auto。中身（横に伸びる表）が列幅を押し広げて
-   ページごと横スクロールするので、両列とも 0 に落とす。 */
-.sheet>*{min-width:0}
-
-/* ---------- 目次 ----------
-   上の帯は文字量で高さが変わる（狭い画面では2行になる）。
-   固定値で top を決めると帯の下にもぐるので、実測値を --bar に入れて使う。 */
-.toc{position:sticky;top:var(--bar,38px);z-index:30;background:var(--kami);padding:9px 0 10px}
-@media (min-width:980px){.toc{top:calc(var(--bar,40px) + 24px);padding:38px 0 0;background:transparent}}
-.toc-h{display:none}
-@media (min-width:980px){
-  .toc-h{display:block;font-size:12px;color:var(--sumi-3);letter-spacing:.3em;margin-bottom:10px;padding-left:16px}
+/* ---------- 見出し ---------- */
+header{padding:56px 0 8px}
+header .eyebrow{
+  font-size:12px;letter-spacing:.24em;color:var(--sumi-3);margin-bottom:16px;
 }
-.toc ul{list-style:none;margin:0;padding:0 0 3px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-.toc ul::-webkit-scrollbar{display:none}
-@media (min-width:980px){.toc ul{flex-direction:column;overflow:visible;gap:0}}
-.toc button{
-  appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
-  color:var(--sumi-2);white-space:nowrap;padding:6px 12px 6px 16px;position:relative;
-  display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;font-size:13.5px;
+header h1{
+  font-size:clamp(27px,5.4vw,42px);line-height:1.35;letter-spacing:.01em;
 }
-.toc button:hover{color:var(--sumi)}
-.toc button .kan{font-size:11.5px;color:var(--sumi-3)}
-.toc button[aria-current="true"]{color:var(--sumi);font-weight:700}
-.toc button[aria-current="true"] .kan{color:var(--shu)}
-/* 現在地は塗りつぶしではなく、左の余白に朱の点を打つ */
-.toc button[aria-current="true"]::before{
-  content:"";position:absolute;left:4px;top:calc(50% - 2.5px);
-  width:5px;height:5px;border-radius:50%;background:var(--shu);
+header h1 .em{
+  background:linear-gradient(transparent 64%, var(--shu-usu) 64%);
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;
 }
-.toc-note{display:none}
-@media (min-width:980px){
-  .toc-note{
-    display:block;margin-top:20px;padding:0 16px;border-top:1px solid var(--kei);
-    padding-top:14px;font-size:11.5px;line-height:1.9;color:var(--sumi-3);
-  }
+header .sub{
+  margin-top:20px;max-width:640px;font-size:15.5px;color:var(--sumi-2);
 }
 
-/* ---------- 本文 ---------- */
-main{padding:22px 0 80px}
-/* ノートの朱罫のつもりの縦線。この文書全体が「赤入れ」という体裁なので、
-   囲みではなくページの構造そのものに朱を1本通している。 */
-@media (min-width:980px){
-  main{padding:34px 0 110px;border-left:1px solid color-mix(in srgb,var(--shu) 30%,transparent);padding-left:38px}
+.caution{
+  margin:30px 0 6px;padding:13px 17px;border-radius:11px;
+  background:var(--men);border:1px solid var(--kei);border-left:4px solid var(--shu);
+  font-size:13.5px;line-height:1.75;color:var(--sumi-2);
 }
-.screen{display:none}
-.screen.on{display:block;animation:fade .26s ease}
-@keyframes fade{from{opacity:0}to{opacity:1}}
+.caution b{color:var(--sumi)}
 
-.head{margin-bottom:24px}
-.head .kind{font-size:12px;color:var(--sumi-2);margin-bottom:9px}
-.head .kind b{color:var(--shu);font-weight:700;margin-right:.5em}
-.head h2{font-size:23px;line-height:1.6;margin-bottom:13px;max-width:26em}
-@media (min-width:720px){.head h2{font-size:27px}}
-.head .lead{font-size:14.5px;color:var(--sumi-2);max-width:60ch}
-.head .lead+.lead{margin-top:10px}
+/* ---------- 節 ---------- */
+section{padding:46px 0 0}
+.sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+.sec-h h2{font-size:20px}
+.sec-h .n{font-size:12px;letter-spacing:.2em;color:var(--sumi-3)}
+.sec-lead{margin-bottom:24px;font-size:14px;color:var(--sumi-2);max-width:660px}
 
-/* 操作の案内。切り取り線ふうの点線ではさむ */
-.guide{
-  margin-top:18px;display:flex;gap:10px;max-width:62ch;
-  border-top:1px dotted var(--kei);border-bottom:1px dotted var(--kei);
-  padding:11px 0;font-size:13.5px;line-height:1.8;
+/* ---------- 作品カード ---------- */
+.cards{display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:760px){.cards{grid-template-columns:1fr 1fr}}
+
+.card{
+  background:var(--men);border:1px solid var(--kei);border-radius:15px;
+  padding:22px 22px 20px;display:flex;flex-direction:column;
 }
-.guide .m{color:var(--ai);font-weight:700;flex:none}
-.guide b{color:var(--ai)}
-
-/* ---------- 図（画面のはめ込み） ---------- */
-figure{margin:0}
-.fig-body{border:1px solid var(--kei);background:var(--men);border-radius:3px;overflow:hidden;padding:18px}
-.fig-body.flush{padding:0}
-@media (max-width:600px){.fig-body{padding:12px}}
-figcaption{margin-top:9px;font-size:12px;color:var(--sumi-2);line-height:1.7}
-figcaption b{color:var(--shu);font-weight:700}
-
-/* ---------- 赤入れ ---------- */
-.akaire{
-  margin-top:26px;max-width:70ch;background:var(--shu-usu);
-  border:1px solid color-mix(in srgb,var(--shu) 35%,transparent);border-radius:3px;
-  padding:16px 18px 18px;
+.card.wide{grid-column:1/-1}
+.card .tag{
+  display:inline-block;font-size:11px;letter-spacing:.1em;font-weight:700;
+  color:var(--sumi-2);background:var(--men-2);border-radius:999px;
+  padding:4px 11px;margin-bottom:13px;align-self:flex-start;
 }
-.akaire .h{
-  font-size:12px;font-weight:700;color:var(--shu);
-  text-decoration-line:underline;text-decoration-style:wavy;
-  text-decoration-color:color-mix(in srgb,var(--shu) 55%,transparent);
-  text-underline-offset:6px;text-decoration-thickness:1px;
+.card .tag.mine{color:var(--midori);background:transparent;border:1px solid currentColor}
+.card h3{font-size:19px;margin-bottom:4px}
+.card .who{font-size:12.5px;color:var(--sumi-3);margin-bottom:12px}
+.card .body{font-size:14px;color:var(--sumi-2);margin-bottom:16px}
+.card .body b{color:var(--sumi)}
+
+.card .try{margin-top:auto;display:flex;flex-wrap:wrap;gap:9px}
+.card .try a{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:13.5px;font-weight:700;text-decoration:none;
+  padding:10px 16px;border-radius:10px;
+  background:var(--ai);color:#fff;border:1px solid var(--ai);
 }
-.akaire .t{font-size:15.5px;font-weight:700;margin:14px 0 10px;line-height:1.7}
-.akaire p{font-size:13.5px;line-height:1.95;color:var(--sumi)}
-.akaire p+p{margin-top:11px}
-.akaire ol{margin:10px 0 0;padding-left:1.4em;font-size:13.5px;line-height:1.95}
-.akaire li{margin-bottom:5px}
-.akaire .ato{
-  margin-top:14px;padding-top:11px;border-top:1px dashed color-mix(in srgb,var(--shu) 35%,transparent);
-  font-size:12.5px;color:var(--sumi-2);line-height:1.85;
+.card .try a:hover{filter:brightness(1.12)}
+.card .try a.sub{background:transparent;color:var(--ai);border-color:var(--kei)}
+.card .try a.sub:hover{background:var(--ai-usu);filter:none}
+.card .note{margin-top:12px;font-size:12px;color:var(--sumi-3)}
+
+/* ---------- できることの一覧 ---------- */
+.can{display:grid;gap:2px;grid-template-columns:1fr;background:var(--kei);
+  border:1px solid var(--kei);border-radius:13px;overflow:hidden}
+@media (min-width:620px){.can{grid-template-columns:1fr 1fr}}
+@media (min-width:900px){.can{grid-template-columns:1fr 1fr 1fr}}
+.can div{background:var(--men);padding:16px 18px}
+.can dt{font-size:14px;font-weight:700;margin-bottom:3px}
+.can dd{margin:0;font-size:13px;color:var(--sumi-2);line-height:1.7}
+
+/* ---------- 考え方 ---------- */
+.think{display:grid;gap:18px;grid-template-columns:1fr}
+@media (min-width:760px){.think{grid-template-columns:1fr 1fr 1fr}}
+.think div{border-top:2px solid var(--sumi);padding-top:14px}
+.think h3{font-size:15.5px;margin-bottom:6px}
+.think p{font-size:13.5px;color:var(--sumi-2)}
+
+/* ---------- 準備中 ---------- */
+.soon{
+  border:1px dashed var(--kei);border-radius:13px;padding:18px 20px;
+  font-size:13.5px;color:var(--sumi-2);background:transparent;
 }
+.soon b{color:var(--sumi)}
+.soon ul{margin:10px 0 0;padding-left:1.2em}
+.soon li{margin-bottom:4px}
 
-/* ---------- 仕様の表（三本線） ---------- */
-.spec{margin:0;border-top:2px solid var(--sumi)}
-.spec .r{display:flex;gap:14px;padding:9px 2px;border-bottom:1px solid var(--kei-2);align-items:baseline}
-.spec .r:last-child{border-bottom:2px solid var(--sumi)}
-.spec dt{flex:none;width:5.5em;font-size:12.5px;color:var(--sumi-2);font-weight:700}
-.spec dd{margin:0;font-size:14px;line-height:1.8}
-@media (max-width:480px){
-  .spec .r{flex-direction:column;gap:2px}
-  .spec dt{width:auto}
+footer{
+  margin-top:60px;border-top:1px solid var(--kei);padding:26px 0 60px;
+  font-size:13px;color:var(--sumi-3);
 }
-
-/* ---------- 目録（機能の一覧） ---------- */
-.mokuroku{border-top:2px solid var(--sumi)}
-.mok{display:flex;gap:13px;padding:11px 2px;border-bottom:1px solid var(--kei-2);align-items:baseline;flex-wrap:wrap}
-.mokuroku .mok:last-child{border-bottom:2px solid var(--sumi)}
-.mok .who{flex:none;font-size:11px;color:var(--sumi-2);border:1px solid var(--kei);border-radius:2px;padding:1px 6px;background:var(--men)}
-.mok .nm{flex:none;font-weight:700;font-size:14px;width:9.5em}
-.mok .ds{flex:1 1 15em;font-size:12.5px;color:var(--sumi-2);line-height:1.8}
-@media (max-width:600px){.mok .nm{width:auto}}
-
-.block{margin-top:26px}
-.block-h{display:flex;align-items:baseline;gap:10px;margin-bottom:11px;flex-wrap:wrap}
-.block-h h3{font-size:14.5px}
-.block-h .hint{font-size:11.5px;color:var(--sumi-3)}
-.grid2{display:grid;gap:22px}
-@media (min-width:840px){.grid2{grid-template-columns:1fr 1fr}}
-.chu{font-size:11.5px;color:var(--sumi-3);margin-top:10px;line-height:1.85}
-
-/* ---------- 数値の並び ---------- */
-.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--kei-2);border:1px solid var(--kei);border-radius:3px;overflow:hidden}
-.nums>div{background:var(--men);padding:11px 14px 13px}
-.nums .k{font-size:11.5px;color:var(--sumi-2)}
-.nums .v{font-size:23px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.3;margin-top:1px}
-.nums .v span{font-size:12.5px;font-weight:700;margin-left:2px}
-.nums .s{font-size:11px;color:var(--sumi-3);line-height:1.6}
-
-/* ---------- 表 ---------- */
-.tablewrap{overflow-x:auto;border-top:2px solid var(--sumi);border-bottom:2px solid var(--sumi)}
-table{border-collapse:collapse;width:100%;min-width:640px;font-size:13px}
-th,td{padding:8px 12px;text-align:left;white-space:nowrap}
-thead th{font-size:11.5px;font-weight:700;color:var(--sumi-2);border-bottom:1px solid var(--sumi-3)}
-tbody td{border-bottom:1px solid var(--kei-2)}
-tbody tr:last-child td{border-bottom:0}
-tbody tr:hover{background:var(--men-2)}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
-tfoot td{font-weight:700;border-top:1px solid var(--sumi-3)}
-
-/* ---------- 印 ---------- */
-.pill{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;border:1px solid;white-space:nowrap;line-height:1.7}
-.pill.ok{color:var(--midori);border-color:color-mix(in srgb,var(--midori) 40%,transparent);background:color-mix(in srgb,var(--midori) 8%,transparent)}
-.pill.warn{color:var(--kohaku);border-color:color-mix(in srgb,var(--kohaku) 40%,transparent);background:color-mix(in srgb,var(--kohaku) 8%,transparent)}
-.pill.crit{color:var(--shu);border-color:color-mix(in srgb,var(--shu) 40%,transparent);background:color-mix(in srgb,var(--shu) 8%,transparent)}
-.pill.mute{color:var(--sumi-3);border-color:var(--kei);background:var(--men-2)}
-
-/* ---------- 棒 ---------- */
-.bars{display:flex;flex-direction:column;gap:9px}
-/* ラベルは max-content までは縮めない。単元名が省略されると、
-   どの単元の話か分からないまま棒の長さだけが残って読めなくなる。 */
-.bar-row{display:grid;grid-template-columns:minmax(150px,max-content) 1.6fr auto;gap:11px;align-items:center;font-size:13px}
-.bar-row .lab{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar-track{height:8px;background:var(--men-2);border-radius:4px;overflow:hidden;border:1px solid var(--kei-2)}
-/* <i> は既定が display:inline のため width/height が効かず塗りが消える。必ず block に。 */
-.bar-fill{display:block;height:100%;background:var(--shu);opacity:.8}
-.bar-fill.midori{background:var(--midori)}
-.bar-row .val{font-size:12.5px;color:var(--sumi-2);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
-
-/* ---------- 画面内のボタン類 ---------- */
-.tab{cursor:pointer;font:inherit;font-weight:700;font-size:13px;padding:6px 14px;border-radius:3px;border:1px solid var(--kei);background:var(--men);color:var(--sumi-2)}
-.tab.on{border-color:var(--ai);background:var(--ai);color:var(--moji-on-iro)}
-.act{cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:3px;border:1px solid var(--kei);background:var(--men);color:var(--sumi-2)}
-.act.main{border-color:var(--ai);background:var(--ai);color:var(--moji-on-iro)}
-.act.min{font-size:11.5px;padding:3px 9px;background:var(--men-2)}
-.sel{font:inherit;font-weight:700;font-size:13.5px;padding:6px 10px;border-radius:3px;border:1px solid var(--kei);background:var(--men);color:var(--sumi)}
-/* 押しても何も起きないボタンを黙って置かない。デモで省いた旨をその場に出す */
-.demonote{font-size:12px;color:var(--ai);background:var(--ai-usu);border-radius:3px;padding:7px 11px;margin-top:10px;line-height:1.75;display:none}
-.demonote.on{display:block}
-
-/* ============================================================
-   ここから下は生徒用アプリ。製品側の見た目（角丸・配色）を
-   そのまま持ってきている。台紙の文書デザインとわざと別物にして、
-   「文書の中に製品の画面がはめ込んである」ように見せる。
-   ============================================================ */
-.app{background:var(--app-kami);padding:20px;min-height:520px;font-size:15px}
-.app-card{background:var(--men);border-radius:18px;padding:16px}
-.course-btn{
-  width:100%;text-align:left;cursor:pointer;font:inherit;color:var(--sumi);
-  background:var(--men);border:0;border-bottom:4px solid var(--kei);
-  border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:13px;
-  transition:transform .1s;
-}
-.course-btn:hover{transform:translateY(-1px)}
-.course-btn:active{transform:translateY(2px);border-bottom-width:2px}
-.course-btn .ic{font-size:26px;flex:none}
-.course-btn .nm{font-weight:700;font-size:14.5px;display:block}
-.course-btn .mt{font-size:11.5px;color:var(--sumi-3);display:block;margin-top:2px;font-variant-numeric:tabular-nums}
-.course-btn .go{margin-left:auto;color:var(--teal);font-weight:700;font-size:19px;flex:none}
-
-.hud{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
-.hud .lb{font-size:10.5px;color:var(--sumi-3);font-weight:700;letter-spacing:.08em}
-.hud .t{font-size:34px;font-weight:700;color:var(--kohaku);line-height:1.1;font-variant-numeric:tabular-nums}
-.hud .t small{font-size:15px;opacity:.6;margin-left:2px}
-.hud .meta{margin-left:auto;display:flex;gap:16px;align-items:center}
-.hud .mi{text-align:center}
-.hud .mi .v{font-weight:700;font-size:19px;line-height:1.3;font-variant-numeric:tabular-nums}
-.qprog{height:6px;background:var(--men-2);border-radius:4px;overflow:hidden;margin-bottom:16px}
-.qprog i{display:block;height:100%;background:var(--teal);border-radius:4px;transition:width .3s}
-.qtext{
-  background:var(--men);border-radius:16px;padding:24px 18px;text-align:center;
-  font-size:19px;font-weight:700;line-height:1.7;margin-bottom:16px;min-height:104px;
-  display:flex;align-items:center;justify-content:center;
-}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-@media (max-width:480px){.opts{grid-template-columns:1fr}}
-.opt{
-  cursor:pointer;font:inherit;font-weight:700;font-size:15px;color:var(--sumi);
-  background:var(--men);border:0;border-bottom:4px solid var(--kei);
-  border-radius:15px;padding:16px 12px;transition:transform .09s,background .15s;
-  display:flex;align-items:center;justify-content:center;gap:7px;touch-action:none;
-}
-.opt:hover:not(:disabled){background:var(--men-2)}
-.opt:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px}
-.opt:disabled{opacity:.45;cursor:default}
-.opt .kb{font-size:9.5px;font-weight:700;background:var(--men-2);color:var(--sumi-3);padding:2px 5px;border-radius:5px}
-.opt.right{background:color-mix(in srgb,var(--midori) 16%,var(--men));border-bottom-color:var(--midori);opacity:1}
-.opt.wrong{background:color-mix(in srgb,var(--shu) 16%,var(--men));border-bottom-color:var(--shu);opacity:1}
-
-.result{text-align:center;padding:6px 0 4px}
-.result .verdict{font-size:44px;font-weight:700;line-height:1.2;margin-bottom:14px;letter-spacing:.02em}
-.result .verdict.win{color:var(--teal)}
-.result .verdict.lose{color:var(--sumi-3)}
-.reason{
-  text-align:left;background:color-mix(in srgb,var(--shu) 8%,var(--men));
-  border:1px solid color-mix(in srgb,var(--shu) 30%,transparent);
-  border-radius:14px;padding:12px 14px;margin:0 auto 16px;max-width:380px;
-  font-size:12.5px;font-weight:700;color:var(--shu);line-height:1.8;
-}
-.scorecard{background:var(--men);border-radius:20px;padding:22px;max-width:380px;margin:0 auto 16px}
-.scorecard .k{font-size:10px;color:var(--sumi-3);font-weight:700;letter-spacing:.12em}
-.scorecard .big{font-size:44px;font-weight:700;color:var(--kohaku);line-height:1.2;margin-bottom:18px;font-variant-numeric:tabular-nums}
-.scorecard .big small{font-size:20px;opacity:.55;margin-left:2px}
-.scorecard .row{display:flex;justify-content:center;gap:44px;border-top:1px solid var(--kei-2);padding-top:16px}
-.scorecard .row .v{font-size:24px;font-weight:700;line-height:1.3;font-variant-numeric:tabular-nums}
-.rank{max-width:380px;margin:0 auto 16px;background:var(--men);border-radius:18px;padding:16px}
-.rank h4{font-size:13px;font-weight:700;margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid var(--kei-2)}
-.rank-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:11px;background:var(--men-2);font-size:12.5px;margin-bottom:5px}
-.rank-row.me{background:color-mix(in srgb,var(--kohaku) 16%,var(--men));border:1.5px solid var(--kohaku);font-weight:700}
-.rank-row .p{font-weight:700;width:16px;color:var(--sumi-3)}
-.rank-row .p.top{color:var(--kohaku)}
-.rank-row .nm{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rank-row .tm{font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums}
-.appbtn{
-  width:100%;max-width:380px;margin:0 auto 11px;display:block;cursor:pointer;font:inherit;
-  font-weight:700;border:0;border-radius:15px;padding:15px;font-size:15px;
-  background:var(--teal);color:var(--moji-on-iro);border-bottom:4px solid var(--teal-fuka);transition:transform .09s;
-}
-.appbtn:active{transform:translateY(2px);border-bottom-width:2px}
-.appbtn.ghost{background:var(--men-2);color:var(--sumi-2);border-bottom-color:var(--kei);font-size:13.5px;padding:12px}
-
-/* ---------- 予約カレンダー ---------- */
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;min-width:520px}
-.cal-h{font-size:11px;color:var(--sumi-3);text-align:center;padding:3px 0;font-weight:700}
-.cal-d{
-  background:var(--men-2);border:1px solid transparent;border-radius:3px;padding:5px 6px 7px;
-  min-height:62px;cursor:pointer;font:inherit;color:inherit;text-align:left;
-  display:flex;flex-direction:column;gap:4px;transition:border-color .12s,background .12s;
-}
-.cal-d:hover{border-color:var(--kei);background:var(--men)}
-.cal-d[aria-pressed="true"]{border-color:var(--ai);background:var(--men);box-shadow:inset 0 0 0 1px var(--ai)}
-.cal-d.blank{background:transparent;cursor:default;pointer-events:none;min-height:0;border:0}
-.cal-d .dn{font-size:11.5px;font-weight:700;color:var(--sumi-2);font-variant-numeric:tabular-nums}
-.cal-d.hol .dn{color:var(--shu)}
-.cal-d .chips{display:flex;flex-wrap:wrap;gap:2px}
-.chip{width:100%;height:4px;border-radius:1px}
-.chip.c1{background:var(--midori)}
-.chip.c2{background:var(--kohaku)}
-.chip.c3{background:var(--murasaki)}
-.cal-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:12px;color:var(--sumi-2)}
-.cal-legend span{display:inline-flex;align-items:center;gap:6px}
-.cal-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;flex:none}
-.slotlist{display:flex;flex-direction:column;gap:5px}
-.slot{display:flex;align-items:center;gap:10px;padding:7px 11px;border-radius:3px;background:var(--men-2);font-size:13px}
-.slot .tm{font-weight:700;color:var(--sumi-2);flex:none;font-variant-numeric:tabular-nums}
-.slot .nm{font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.slot .tag{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;color:var(--moji-on-iro);flex:none}
-.slot .tag.c1{background:var(--midori)}
-.slot .tag.c2{background:var(--kohaku)}
-.slot .tag.c3{background:var(--murasaki)}
-
-/* ---------- 概要の書き出し ---------- */
-.hero{margin-bottom:32px}
-.hero .date{font-size:12px;color:var(--sumi-3);margin-bottom:14px}
-.hero h2{font-size:25px;line-height:1.75;margin-bottom:18px;max-width:24em;font-weight:600}
-@media (min-width:720px){.hero h2{font-size:31px}}
-.hero p{font-size:15px;color:var(--sumi-2);max-width:58ch;line-height:2}
-.hero p+p{margin-top:13px}
-.shime{margin-top:44px;padding-top:20px;border-top:1px solid var(--kei);max-width:64ch;font-size:12.5px;color:var(--sumi-2);line-height:1.95}
-.shime h3{font-size:13.5px;margin-bottom:8px;color:var(--sumi)}
+footer a{color:var(--ai)}
+footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
 </style>
 
-<header class="topbar">
-  <div class="topbar-in">
-    <span class="t">学習塾向け 統合管理システム</span>
-    <span>操作できるデモ</span>
-    <span class="fic">※ 表示中の氏名・数値はすべて架空のサンプル</span>
-  </div>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">つくったもの・さわれるもの</p>
+  <h1 class="mincho">説明を読むより、<br><span class="em">実際に触ったほうが早い。</span></h1>
+  <p class="sub">
+    小さなお店・教室のための業務システムを作っています。
+    このページに並んでいるのは<b>実際に納品して動いているシステムそのもの</b>で、
+    スクリーンショットではありません。ボタンを押せば、本物と同じように動きます。
+  </p>
+  <p class="caution">
+    <b>どのデモも、出てくるお店・商品・氏名・金額はすべて架空です。</b>
+    実在のデータベースにはつながっていないので、何を押しても実在のお店や生徒の記録は変わりません。
+    触った結果はご覧になっているブラウザの中だけに残り、タブを閉じると消えます。
+  </p>
 </header>
 
-<div class="sheet">
-  <nav class="toc" aria-label="画面の切り替え">
-    <p class="toc-h">目次</p>
-    <ul id="rail"></ul>
-    <p class="toc-note">稼働しているシステムから主要な導線だけを抜き出し、公開用に作り直したものです。実データ・接続情報は含みません。</p>
-  </nav>
+<section>
+  <div class="sec-h"><span class="n">01</span><h2>触れるもの</h2></div>
+  <p class="sec-lead">
+    それぞれ「お客さん側の画面」と「お店側の画面」の両方を用意しています。
+    片方で入れた注文が、もう片方にちゃんと出てくるところまで試せます。
+  </p>
 
-  <main>
-    <!-- ============ 概要 ============ -->
-    <section class="screen on" id="s-intro" tabindex="-1">
-      <div class="hero">
-        <p class="date">個人開発／本番稼働中　2026年8月現在</p>
-        <h2 class="mincho">生徒がさわる学習アプリから、<br>月謝の請求と給与計算まで。<br>小さな塾の業務を、まるごとひとつにまとめました。</h2>
-        <p>
-          作りはじめたときは、生徒用のクイズだけでした。自分の塾で毎日使っていると
-          「これも同じ場所に無いと困る」が次々に出てきて、結果として教室・生徒・保護者・スタッフの
-          4者ぶんが1本につながっています。要件定義から設計・実装・運用保守まで、すべて個人で担当しました。
-        </p>
-        <p>
-          納品して終わりの受託ではなく、<b>自分が事業者として毎日使い続けている</b>システムです。
-          そのぶん、作っている最中には想像もしていなかった例外に何度もぶつかりました。
-          このデモでは、各画面にそのうちのひとつずつを書いています。
-        </p>
+  <div class="cards">
+
+    <div class="card wide">
+      <span class="tag mine">自分の事業で開発・運用中／6か月以上</span>
+      <h3>学習塾の統合管理システム</h3>
+      <p class="who">生徒の学習アプリ／教材づくり／つまずきの分析／授業の予約／プリント発行</p>
+      <p class="body">
+        自分が経営する学習塾のために作り、実際の生徒・保護者・スタッフが毎日使っているシステムです。
+        <b>生徒はゲームとして遊び、その記録がそのまま先生の授業準備の材料になります。</b>
+        「誰がどの問題で詰まっているか」を、授業が始まる前に把握できるのがいちばんの目的です。
+      </p>
+      <div class="try">
+        <a href="juku/?screen=quiz">🎮 生徒の画面を触ってみる</a>
+        <a class="sub" href="juku/?screen=analytics">📊 つまずきを見る画面</a>
+        <a class="sub" href="juku/?screen=admin">📚 教材をつくる画面</a>
+        <a class="sub" href="juku/?screen=booking">📅 予約をさばく画面</a>
       </div>
+      <p class="note">クイズは最後まで遊べます。クリアすると順位表に載り、その記録が分析画面にもすぐ反映されます。</p>
+    </div>
 
-      <div class="block">
-        <div class="block-h"><h3>開発の概要</h3></div>
-        <dl class="spec">
-          <div class="r"><dt>開発期間</dt><dd>2026年1月〜（7か月超・継続中）</dd></div>
-          <div class="r"><dt>変更履歴</dt><dd class="tnum">397 コミット</dd></div>
-          <div class="r"><dt>コード量</dt><dd class="tnum">TypeScript / TSX 約 25,400 行</dd></div>
-          <div class="r"><dt>画面数</dt><dd>20以上（生徒・保護者・講師・管理者で分離）</dd></div>
-          <div class="r"><dt>体制</dt><dd>要件定義から運用保守まで1人</dd></div>
-          <div class="r"><dt>使用技術</dt><dd>Next.js 14（App Router）／React 18／TypeScript／Tailwind CSS／PostgreSQL（Supabase）／Row Level Security／Google Calendar API／Google Apps Script／Vercel</dd></div>
-        </dl>
+    <div class="card">
+      <span class="tag">受託・小さな店舗向け</span>
+      <h3>精肉店のネット注文</h3>
+      <p class="who">お客さんの注文画面／店主の管理画面</p>
+      <p class="body">
+        電話で受けていた予約注文を、そのまま画面にしたものです。
+        会員登録もクレジット決済もありません。<b>お支払いは受け取りのときに店頭で。</b>
+        グラム売りなので注文時点では金額が決まらない、という商売の事情に画面のほうを合わせています。
+      </p>
+      <div class="try">
+        <a href="seiniku/">🥩 注文してみる</a>
+        <a class="sub" href="seiniku/kanri.html">店主の画面を見る</a>
       </div>
+      <p class="note">注文すると、店主の画面に「未対応」として並びます。</p>
+    </div>
 
-      <div class="block">
-        <div class="block-h"><h3>入っているもの</h3><span class="hint">このうち4つを、左の目次から実際に操作できます</span></div>
-        <div class="mokuroku">
-          <div class="mok"><span class="who">生徒</span><span class="nm">学習アプリ</span><span class="ds">タイムアタック形式で出題。正誤の履歴から一人ひとりの弱点を自動で蓄積する。</span></div>
-          <div class="mok"><span class="who">講師</span><span class="nm">学習分析</span><span class="ds">塾全体と生徒個別の両方で到達度を可視化。つまずいている単元を特定する。</span></div>
-          <div class="mok"><span class="who">事務</span><span class="nm">予約・通塾管理</span><span class="ds">生徒からの予約受付、固定枠の自動生成、Googleカレンダー連携、通塾率の集計。</span></div>
-          <div class="mok"><span class="who">経理</span><span class="nm">請求・給与</span><span class="ds">月謝の自動計算と請求書発行、スタッフの勤怠打刻と源泉徴収を含む給与計算。</span></div>
-          <div class="mok"><span class="who">講師</span><span class="nm">教材の作成と印刷</span><span class="ds">出題内容の編集、弱点だけを集めた個別プリントの生成、紙教材の準備状況の管理。</span></div>
-          <div class="mok"><span class="who">保護者</span><span class="nm">保護者ポータル</span><span class="ds">世帯単位で、きょうだいをまとめた予約状況と請求内容を確認できる。</span></div>
-          <div class="mok"><span class="who">運用</span><span class="nm">自動バックアップ</span><span class="ds">データベース全体を日次と月次で外部ストレージへ自動退避。異常時はメールで通知。</span></div>
-        </div>
+    <div class="card">
+      <span class="tag">受託・個人事業主向け</span>
+      <h3>売上・経費の記録</h3>
+      <p class="who">スマホからの入力／月次の収支</p>
+      <p class="body">
+        いくつも事業をやっている個人事業主が、日々の売上と経費をその場で入れるための画面です。
+        <b>3タップで1件。</b>よく使う勘定科目が上に来るので、指が覚えます。
+        月末には事業ごとの収支と年度累計がそのまま出ます。
+      </p>
+      <div class="try">
+        <a href="uriage/">🧾 入力してみる</a>
       </div>
+      <p class="note">「今月の収支」タブを開くと、入れた分がすぐ集計に反映されます。</p>
+    </div>
 
-      <aside class="akaire">
-        <p class="h">このデモの位置づけ</p>
-        <p style="margin-top:13px">
-          稼働中のシステムをそのまま公開することはできないため、主要な画面と操作の流れを公開用に作り直したものです。
-          表示されている氏名・金額・成績はすべて架空のサンプルで、実在の個人や取引の情報は含みません。
-        </p>
-        <p>
-          各画面の下には、<b>なぜその作りにしたのか</b>を書き添えました。
-          見た目より、そこを読んでいただいたほうが判断材料になるかと思います。
-        </p>
-      </aside>
-    </section>
-
-    <!-- ============ 生徒アプリ ============ -->
-    <section class="screen" id="s-quiz" tabindex="-1">
-      <div class="head">
-        <p class="kind"><b>一、</b>生徒用 ─ 学習アプリ</p>
-        <h2 class="mincho">解く速さを競わせて、毎日ひらかせる</h2>
-        <p class="lead">
-          出題はタイムアタック形式です。ミスをすると秒数が加算され、制限時間とミス上限の両方を満たしたときだけ「CLEAR」になります。
-          点数ではなく記録として残るので、生徒が自分から何度も挑戦します。間違えた問題は自動的に弱点として記録され、次の画面の分析につながります。
-        </p>
-        <p class="guide"><span class="m">▶</span><span><b>実際に遊べます。</b>コースを選ぶとタイマーが動き出します。パソコンなら 1〜4 の数字キーでも回答できます。</span></p>
+    <div class="card">
+      <span class="tag">受託・販促の企画</span>
+      <h3>パン屋の会員制クイズ</h3>
+      <p class="who">レジ横のタブレット／名簿／成果のダッシュボード</p>
+      <p class="body">
+        子どもに「また来たい」と思ってもらうための企画です。
+        会員証のQRをかざすと、その子の学年の問題が<b>1日1問だけ</b>出ます。
+        正解を貯めるとお店でごほうびと交換。効いているかどうかは、正答率ではなくリピート率で見ます。
+      </p>
+      <div class="try">
+        <a href="quiz-kikaku/">🥐 クイズを解いてみる</a>
+        <a class="sub" href="quiz-kikaku/dashboard.html">成果を見る</a>
+        <a class="sub" href="quiz-kikaku/kanri.html">名簿を見る</a>
       </div>
-      <figure>
-        <div class="fig-body flush"><div class="app" id="app"></div></div>
-        <figcaption><b>図1</b>　生徒がタブレットで開く画面。ここだけ、台紙ではなく製品そのものの配色にしています。</figcaption>
-      </figure>
-      <aside class="akaire">
-        <p class="h">なぜこの作りにしたか</p>
-        <p class="t">公平さと誤操作の防止は、同じ画面の中では両立しない。</p>
-        <p>
-          回答ボタンは<b>指が触れた瞬間に判定を確定</b>させています。指を離すまで待つ一般的な作りにすると、
-          記録が端末の反応速度に左右され、タイムを競う仕組みそのものが成立しなくなるためです。
-        </p>
-        <p>
-          ただし表形式の問題だけは例外にしました。画面を縦にスクロールしながら読む必要があり、同じ作りでは
-          スクロールしようとした指が誤って回答として扱われてしまうからです。この形式のときだけ
-          「指の移動が10px未満、かつ押している時間が500ms未満」を回答とみなし、
-          スクロール直後の慣性で触れてしまった操作は無視しています。
-          <b>ひとつの画面の中で、公平性を優先する場面と誤操作防止を優先する場面を、問題の形式ごとに切り替えている</b>形です。
-        </p>
-      </aside>
-    </section>
+      <p class="note">答えた記録は、そのまま名簿画面の「本日の結果」に出ます。</p>
+    </div>
 
-    <!-- ============ 分析 ============ -->
-    <section class="screen" id="s-analytics" tabindex="-1">
-      <div class="head">
-        <p class="kind"><b>二、</b>講師用 ─ 学習分析</p>
-        <h2 class="mincho">「誰がどこで詰まっているか」を、授業がはじまる前に</h2>
-        <p class="lead">
-          生徒が解いた履歴を集計し、塾全体の傾向と生徒一人ひとりの状況を同じ画面から切り替えて確認できます。
-          つまずいている単元が分かったら、その場からその単元だけを集めたプリントを発行して手渡すところまでを、一続きの操作にしました。
-        </p>
-        <p class="guide"><span class="m">▶</span><span><b>「塾全体」と「生徒個別」を切り替えてみてください。</b>生徒を選ぶと、その子の直近の状況と、何度も挑戦しているのにクリアできていないコースが出ます。</span></p>
+    <div class="card">
+      <span class="tag">受託・その場で使う道具</span>
+      <h3>飲み会の割り勘・精算</h3>
+      <p class="who">幹事がその場で開く1画面</p>
+      <p class="body">
+        均等割りではない飲み会のための画面です。
+        <b>「先輩は多め・学生は少なめ」を係数で決められ、端数は100円単位に切り上げます。</b>
+        受け渡しは幹事にまとめるので、参加者どうしの送金が発生しません。アプリの用意も登録も要りません。
+      </p>
+      <div class="try">
+        <a href="nomikai/">🍻 精算してみる</a>
       </div>
-      <figure>
-        <div class="fig-body"><div id="analytics"></div></div>
-        <figcaption><b>図2</b>　管理者としてログインして開く分析画面。</figcaption>
-      </figure>
-      <aside class="akaire">
-        <p class="h">なぜこの作りにしたか</p>
-        <p class="t">合計しただけの数字は、次の授業には使えない。</p>
-        <p>
-          弱点の集計は「何回間違えられたか」ではなく<b>「何人がまだ克服していないか」</b>を主軸にしています。
-          一人の生徒が同じ問題を10回間違えた場合と、10人が1回ずつ間違えた場合とでは、次の授業でやるべきことがまったく違うためです。
-          延べ回数だけを見せると、たまたま特定の生徒が繰り返した問題が上位に来てしまい、クラス全体の指導判断を誤らせます。
-        </p>
-        <p>
-          その後に正解できた問題は自動的に対象から外れるので、一覧に残り続けるのは<b>いま手当てが必要なものだけ</b>です。
-          プリントを発行するときも克服済みの問題は除外され、同じ問題を刷り続けることがないようにしています。
-        </p>
-      </aside>
-    </section>
+    </div>
 
-    <!-- ============ 予約 ============ -->
-    <section class="screen" id="s-booking" tabindex="-1">
-      <div class="head">
-        <p class="kind"><b>三、</b>事務用 ─ 予約・通塾管理</p>
-        <h2 class="mincho">毎週の固定枠を自動で作り、来られなかった回だけを数える</h2>
-        <p class="lead">
-          「毎週火曜と金曜」といった固定の通塾枠を登録しておくと、翌月分の予約が自動で作られます。
-          生徒や保護者からの追加予約、電話を受けて塾側が入れた予約とは色分けして区別し、
-          月末には「実際に何コマ通えたか」「何コマ足りなかったか」を集計します。
-        </p>
-        <p class="guide"><span class="m">▶</span><span><b>カレンダーの日付をクリックしてください。</b>その日の予約の内訳が下に出ます。下部の集計表では通塾率も確認できます。</span></p>
-      </div>
-      <figure>
-        <div class="fig-body"><div id="booking"></div></div>
-        <figcaption><b>図3</b>　事務作業に使う予約管理画面。</figcaption>
-      </figure>
-      <aside class="akaire">
-        <p class="h">なぜこの作りにしたか</p>
-        <p class="t">外部サービスの制限は、あとから吸収するのではなく先に設計へ入れる。</p>
-        <p>
-          Googleカレンダーへの書き込みには<b>毎秒4件という上限</b>があり、1か月分の予定をまとめて送ると必ず途中で失敗します。
-          そこで一括生成では書けるところまで書き、残りをあとから追加で反映させる導線を別に設けました。
-          「全部成功するか、全部失敗するか」ではなく、途中で止まっても続きから再開できる形にしています。
-        </p>
-        <p>欠席の数え方にも、実務上の例外を3つ入れています。</p>
-        <ol>
-          <li>取り消しの記録が重複しても、二重には数えない</li>
-          <li>そもそも予約が1件も無い週は、集計から除く（開校前や長期休暇の週を欠席にしないため）</li>
-          <li>固定枠は過去に遡らず、現在の設定だけで判定する</li>
-        </ol>
-        <p class="ato">
-          この3つは、最初の設計には入っていませんでした。運用をはじめて1か月ほどで、
-          どれも実際に数字がおかしくなって気づいたものです。欠席数はそのまま保護者への説明に使うので、
-          ここが合っていないと、機能が動いていても意味がありません。
-        </p>
-      </aside>
-    </section>
+  </div>
+</section>
 
-    <!-- ============ 請求・給与 ============ -->
-    <section class="screen" id="s-money" tabindex="-1">
-      <div class="head">
-        <p class="kind"><b>四、</b>経理用 ─ 請求・給与</p>
-        <h2 class="mincho">お金の計算は、間違いが後から効いてくる</h2>
-        <p class="lead">
-          月謝の請求では、生徒ごとに異なる割引や自治体の助成制度を反映した金額を自動で計算し、支払方法別に集計します。
-          スタッフの給与では、打刻記録から深夜割増を含む賃金を算出し、所得税の源泉徴収まで行います。
-        </p>
-        <p class="guide"><span class="m">▶</span><span><b>上のタブで「請求」と「給与」を切り替えられます。</b>給与側では、税区分によって所得税の計算が変わる様子が数字で確認できます。</span></p>
-      </div>
-      <figure>
-        <div class="fig-body"><div id="money"></div></div>
-        <figcaption><b>図4</b>　管理者のみアクセスできる経理画面。</figcaption>
-      </figure>
-      <aside class="akaire">
-        <p class="h">なぜこの作りにしたか</p>
-        <p class="t">制度の「よく知られている説明」をそのまま実装すると、片方の区分で必ず間違える。</p>
-        <p>
-          源泉徴収は、扶養控除申告書が提出されているかどうかで計算方式が変わります。
-          提出がある区分では月88,000円未満なら所得税は0円ですが、<b>提出が無い区分には非課税の枠が無く、1円から課税されます</b>。
-          「88,000円未満だから0円」という一般に知られた説明だけを実装すると、後者で必ず誤ります。
-        </p>
-        <p>
-          さらにこの塾では支給額を500円単位に切り上げる運用があるため、<b>切り上げた結果として課税ラインをまたいでしまう</b>ことが起きます。
-          そこで支給額は保存せず毎回計算し直す設計にしたうえで、<b>切り上げの単位そのものを履歴として保持</b>しています。
-          こうしておかないと、将来この単位を変更したときに、すでに支払い済みの過去の月の金額まで書き変わってしまい、
-          帳簿と実際の振込額が合わなくなるためです。
-        </p>
-      </aside>
+<section>
+  <div class="sec-h"><span class="n">02</span><h2>まだ触れる形にしていないもの</h2></div>
+  <p class="sec-lead">画面ではなく「裏で動く仕組み」なので、触るより見ていただくほうが早いものです。</p>
+  <div class="soon">
+    <ul style="margin:0;padding-left:1.2em">
+      <li><b>手書きメニューの組版</b> — 料理人が手で書いた文字をそのまま活かして、A4の品書きに毎月組み直す仕組み。値段を1か所直すだけで、全ページの体裁を崩さずに刷り直せます。</li>
+      <li><b>発送ラベルの自動化</b> — ネット通販の注文データを、配送業者の送り状ソフトが読める形式へ自動変換。1件ずつ手で打ち直していた作業をなくしました。</li>
+      <li><b>データの毎晩の自動バックアップ</b> — 納品したシステムのデータを毎晩コピーして保管します。事故が起きてから気づく、を避けるための備えです。</li>
+    </ul>
+  </div>
+</section>
 
-      <div class="shime">
-        <h3>このデモについて</h3>
-        <p>
-          稼働中のシステムから主要な操作の流れだけを抜き出し、公開できる形に作り直したものです。
-          実在の生徒・スタッフ・取引先の情報、および接続情報は一切含んでいません。
-          表示されている氏名や金額はすべて架空のサンプルで、税額表などの計算も、説明に必要な範囲まで簡略化しています。
-        </p>
-      </div>
-    </section>
-  </main>
+<section>
+  <div class="sec-h"><span class="n">03</span><h2>どんなことができるか</h2></div>
+  <p class="sec-lead">
+    上のデモはどれも既製品ではなく、そのお店のやり方に合わせて作ったものです。
+    よくお引き受けするのは、こういう作業です。
+  </p>
+  <dl class="can">
+    <div><dt>注文・予約を受ける</dt><dd>電話とLINEで受けていたものを、画面から受けられるようにする。締切や定休日も自動で反映。</dd></div>
+    <div><dt>売上・経費を記録する</dt><dd>紙の伝票やレシートを、その場でスマホから入力。月末の集計を自動にする。</dd></div>
+    <div><dt>お客さまに知らせる</dt><dd>注文が入ったらお店へ通知。予約の前日にお客さまへリマインド。</dd></div>
+    <div><dt>手作業の変換をなくす</dt><dd>注文データを、別のソフトが読める形式へ自動で変換。転記のまちがいがなくなります。</dd></div>
+    <div><dt>紙に印刷する</dt><dd>画面のデータを、そのまま崩れない体裁で印刷。品書き・案内・帳票など。</dd></div>
+    <div><dt>数字を見えるようにする</dt><dd>「どれが売れているか」「誰が来なくなったか」を、判断に使える形で出す。</dd></div>
+  </dl>
+</section>
+
+<section>
+  <div class="sec-h"><span class="n">04</span><h2>作るときに決めていること</h2></div>
+  <div class="think">
+    <div>
+      <h3>安く始められる形から考える</h3>
+      <p>多くの案件は、Googleのスプレッドシートを土台にしています。
+        毎月のサーバー代がかからず、いま使っているGoogleアカウントの中で完結します。
+        規模が大きくなってから、本格的な作りへ移せばよいと考えています。</p>
+    </div>
+    <div>
+      <h3>渡したあと、自分で運用できること</h3>
+      <p>商品を足す、値段を変える、受付を止める。
+        こういう日常の操作は、必ず画面から自分でできるようにしています。
+        そのたびに連絡をいただく形にすると、続きません。</p>
+    </div>
+    <div>
+      <h3>静かに壊れないようにする</h3>
+      <p>いちばん困るのは「動いているように見えて、実は記録されていない」状態です。
+        どの案件にも、異常があればすぐ分かる自己診断の仕組みを入れています。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p class="deep">
+    技術的な中身（設計の判断・つまずいた点・どう直したか）は、
+    <a href="shikumi/">開発の中身</a> にまとめています。
+  </p>
+  <p>
+    このページのデモはすべて架空のデータで動いています。
+    ご相談・お見積りは、このページをお渡しした際の連絡先までお願いいたします。
+  </p>
+</footer>
+
 </div>
-
-<script>
-(function(){
-"use strict";
-
-/* ------------------------------------------------------------------
-   画面の切り替え
-   ------------------------------------------------------------------ */
-var SCREENS=[
-  {id:"s-intro",kan:"序",label:"全体像"},
-  {id:"s-quiz",kan:"一",label:"学習アプリ"},
-  {id:"s-analytics",kan:"二",label:"学習分析"},
-  {id:"s-booking",kan:"三",label:"予約管理"},
-  {id:"s-money",kan:"四",label:"請求・給与"}
-];
-var rail=document.getElementById("rail");
-SCREENS.forEach(function(s,i){
-  var li=document.createElement("li");
-  var b=document.createElement("button");
-  b.type="button";
-  b.setAttribute("aria-current", i===0?"true":"false");
-  b.innerHTML='<span class="kan">'+s.kan+'</span><span>'+s.label+'</span>';
-  b.addEventListener("click",function(){ show(s.id); });
-  li.appendChild(b); rail.appendChild(li);
-});
-function show(id){
-  SCREENS.forEach(function(s,i){
-    var el=document.getElementById(s.id);
-    var on=s.id===id;
-    el.classList.toggle("on",on);
-    rail.children[i].firstChild.setAttribute("aria-current",on?"true":"false");
-  });
-  if(id!=="s-quiz") stopTimer();
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-/* 上の帯の高さを測って、目次の貼りつく位置に渡す。
-   帯は画面幅によって1行にも2行にもなるので、CSS 側に固定値では書けない。 */
-function fitBar(){
-  document.documentElement.style.setProperty("--bar", document.querySelector(".topbar").offsetHeight+"px");
-}
-fitBar();
-window.addEventListener("resize",fitBar);
-window.addEventListener("load",fitBar);
-
-var esc=function(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); };
-var yen=function(n){ return n.toLocaleString("ja-JP"); };
-
-/* 押しても何も起きないボタンを置いたままにしない。
-   デモで省いた機能は、その場に一行で断りを出す。 */
-function noteHTML(txt){ return '<div class="demonote'+(txt?" on":"")+'">'+(txt?esc(txt):"")+'</div>'; }
-
-/* ------------------------------------------------------------------
-   一 生徒アプリ — タイムアタック式クイズ
-   ------------------------------------------------------------------ */
-var COURSES=[
-  {id:"hist",icon:"🌏",name:"歴史① 弥生〜古墳",limit:60,maxMiss:2,
-   qs:[
-    {q:"稲作が各地に広まり、むらどうしの争いが起きた時代は？",a:"弥生時代",w:["縄文時代","古墳時代","平安時代"]},
-    {q:"弥生時代に、収穫した稲を湿気やねずみから守るために建てられたものは？",a:"高床倉庫",w:["竪穴住居","正倉院","寝殿造"]},
-    {q:"「魏志倭人伝」に記された、邪馬台国を治めた女王は？",a:"卑弥呼",w:["推古天皇","持統天皇","額田王"]},
-    {q:"卑弥呼が使いを送り、「親魏倭王」の称号を得た中国の国は？",a:"魏",w:["漢","隋","唐"]},
-    {q:"古墳の頂上や周囲に並べられた、素焼きの土製品は？",a:"埴輪",w:["土偶","銅鐸","勾玉"]},
-    {q:"円形と方形を組み合わせた、大王の墓に多い古墳の形は？",a:"前方後円墳",w:["円墳","方墳","上円下方墳"]},
-    {q:"大和政権で、各地の豪族をまとめた最高の地位の呼び名は？",a:"大王",w:["関白","将軍","太政大臣"]},
-    {q:"朝鮮半島から移り住み、須恵器や漢字などの技術を伝えた人々は？",a:"渡来人",w:["防人","国司","守護"]}
-   ]},
-  {id:"sci",icon:"⚗️",name:"理科 光・音・力",limit:55,maxMiss:2,
-   qs:[
-    {q:"光が鏡ではね返るとき、入射角と反射角の関係は？",a:"つねに等しい",w:["入射角の方が大きい","反射角の方が大きい","光の色で変わる"]},
-    {q:"光が空気中から水中へ進むとき、屈折角は入射角と比べてどうなる？",a:"小さくなる",w:["大きくなる","変わらない","0°になる"]},
-    {q:"空気を抜いた容器の中で鳴らしたブザーの音はどうなる？",a:"聞こえなくなる",w:["大きくなる","高くなる","変わらない"]},
-    {q:"音の高さを決めているのは、次のうちどれ？",a:"振動数",w:["振幅","音の速さ","気温"]},
-    {q:"音の大きさを決めているのは、次のうちどれ？",a:"振幅",w:["振動数","波長","音源の重さ"]},
-    {q:"1Nの力は、およそ何gの物体にはたらく重力と等しい？",a:"約100g",w:["約10g","約1000g","約1g"]},
-    {q:"ばねののびが、加えた力の大きさに比例するという法則は？",a:"フックの法則",w:["オームの法則","作用・反作用の法則","パスカルの原理"]},
-    {q:"力がはたらいていない物体が、静止や等速直線運動を続ける性質は？",a:"慣性",w:["弾性","摩擦","重力"]}
-   ]},
-  {id:"eng",icon:"🅰️",name:"英単語 中1レベル",limit:40,maxMiss:3,
-   qs:[
-    {q:"library",a:"図書館",w:["博物館","体育館","駅"]},
-    {q:"breakfast",a:"朝食",w:["昼食","夕食","おやつ"]},
-    {q:"Wednesday",a:"水曜日",w:["火曜日","木曜日","日曜日"]},
-    {q:"favorite",a:"お気に入りの",w:["important（重要な）","difficult（難しい）","famous（有名な）"]},
-    {q:"between",a:"〜の間に",w:["〜の上に","〜の下に","〜のまわりに"]},
-    {q:"difficult",a:"難しい",w:["簡単な","楽しい","静かな"]},
-    {q:"borrow",a:"借りる",w:["貸す","買う","返す"]},
-    {q:"usually",a:"たいてい",w:["まったく〜ない","ときどき","いつも"]}
-   ]}
-];
-var RANK_BASE={
-  hist:[{n:"小野寺 まひろ",t:31.44,m:0},{n:"河西 実玖",t:35.10,m:1},{n:"三村 陸斗",t:38.72,m:1},{n:"戸田 千遥",t:44.05,m:2},{n:"柏木 湊",t:51.38,m:2}],
-  sci:[{n:"河西 実玖",t:28.91,m:0},{n:"三村 陸斗",t:33.60,m:1},{n:"小野寺 まひろ",t:36.27,m:0},{n:"宮下 蒼太",t:42.83,m:2},{n:"戸田 千遥",t:47.16,m:2}],
-  eng:[{n:"戸田 千遥",t:19.22,m:0},{n:"小野寺 まひろ",t:21.06,m:0},{n:"柏木 湊",t:24.55,m:1},{n:"三村 陸斗",t:26.90,m:1},{n:"宮下 蒼太",t:30.41,m:3}]
-};
-var PENALTY=3;
-var app=document.getElementById("app");
-var G=null, raf=null;
-
-function stopTimer(){ if(raf){ cancelAnimationFrame(raf); raf=null; } }
-
-function renderMenu(){
-  stopTimer(); G=null;
-  var h='<div style="margin-bottom:14px">'
-    + '<div style="font-weight:700;font-size:17px">こんにちは、体験さん</div>'
-    + '<div style="font-size:12px;color:var(--sumi-3)">今日やるコースをえらぼう</div>'
-    + '</div><div style="display:flex;flex-direction:column;gap:10px">';
-  COURSES.forEach(function(c){
-    h+='<button class="course-btn" data-c="'+c.id+'" type="button">'
-      + '<span class="ic">'+c.icon+'</span>'
-      + '<span><span class="nm">'+esc(c.name)+'</span>'
-      + '<span class="mt">'+c.qs.length+'問 · 制限'+c.limit+'秒 · ミス'+c.maxMiss+'回まで</span></span>'
-      + '<span class="go">▶</span></button>';
-  });
-  h+='</div>';
-  app.innerHTML=h;
-  Array.prototype.forEach.call(app.querySelectorAll("[data-c]"),function(b){
-    b.addEventListener("click",function(){ startGame(b.getAttribute("data-c")); });
-  });
-}
-
-function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
-
-function startGame(cid){
-  var c=null; COURSES.forEach(function(x){ if(x.id===cid) c=x; });
-  G={c:c,i:0,miss:0,penalty:0,start:performance.now(),locked:false,
-     order:shuffle(c.qs.map(function(_,i){return i;}))};
-  renderGame();
-  tick();
-}
-
-function tick(){
-  if(!G) return;
-  var el=document.getElementById("timer");
-  if(el){ el.firstChild.nodeValue=elapsed().toFixed(2); }
-  raf=requestAnimationFrame(tick);
-}
-function elapsed(){ return (performance.now()-G.start)/1000 + G.penalty; }
-
-function renderGame(){
-  var q=G.c.qs[G.order[G.i]];
-  var opts=shuffle([q.a].concat(q.w));
-  G.cur=opts;
-  var pct=Math.round(G.i/G.c.qs.length*100);
-  var h='<div class="hud">'
-    + '<div><div class="lb">TIME</div>'
-    + '<div class="t" id="timer">0.00<small>s</small></div></div>'
-    + '<div class="meta">'
-    + '<div class="mi"><div class="lb">問題</div><div class="v">'+(G.i+1)+'<span style="font-size:12px;color:var(--sumi-3)">/'+G.c.qs.length+'</span></div></div>'
-    + '<div class="mi"><div class="lb">ミス</div><div class="v" style="color:var(--shu)">'+G.miss+'</div></div>'
-    + '<div class="mi"><div class="lb">ペナルティ</div><div class="v" style="color:var(--sumi-3)">+'+G.penalty+'</div></div>'
-    + '</div></div>'
-    + '<div class="qprog"><i style="width:'+pct+'%"></i></div>'
-    + '<div class="qtext">'+esc(q.q)+'</div>'
-    + '<div class="opts" id="opts">';
-  opts.forEach(function(o,i){
-    h+='<button class="opt" type="button" data-i="'+i+'"><span class="kb">'+(i+1)+'</span>'+esc(o)+'</button>';
-  });
-  h+='</div>';
-  app.innerHTML=h;
-  Array.prototype.forEach.call(app.querySelectorAll(".opt"),function(b){
-    // 製品と同じく pointerdown で即確定する（指を離すのを待たない）
-    b.addEventListener("pointerdown",function(e){
-      if(e.pointerType==="mouse"&&e.button!==0) return;
-      e.preventDefault();
-      answer(parseInt(b.getAttribute("data-i"),10));
-    });
-  });
-}
-
-function answer(idx){
-  if(!G||G.locked) return;
-  var q=G.c.qs[G.order[G.i]];
-  var picked=G.cur[idx];
-  var correct=picked===q.a;
-  var btns=app.querySelectorAll(".opt");
-  if(correct){
-    G.locked=true;
-    btns[idx].classList.add("right");
-    setTimeout(function(){
-      if(!G) return;
-      G.locked=false; G.i++;
-      if(G.i>=G.c.qs.length) finish(); else renderGame();
-    },170);
-  }else{
-    G.miss++; G.penalty+=PENALTY;
-    btns[idx].classList.add("wrong");
-    btns[idx].disabled=true;
-    var mi=app.querySelectorAll(".hud .mi .v");
-    if(mi[1]) mi[1].textContent=G.miss;
-    if(mi[2]) mi[2].textContent="+"+G.penalty;
-  }
-}
-
-function finish(){
-  stopTimer();
-  var t=elapsed(), c=G.c;
-  var overTime=t>c.limit, overMiss=G.miss>c.maxMiss;
-  var win=!overTime&&!overMiss;
-  var board=RANK_BASE[c.id].slice();
-  board.push({n:"体験さん",t:Math.round(t*100)/100,m:G.miss,me:true});
-  board.sort(function(a,b){ return a.t-b.t; });
-  board=board.slice(0,5);
-
-  var h='<div class="result">'
-    + '<div class="verdict '+(win?"win":"lose")+'">'+(win?"CLEAR!!":"FAILED")+'</div>';
-  if(!win){
-    h+='<div class="reason">';
-    if(overTime) h+='<div>⏱️ タイムオーバー：制限 '+c.limit+'秒 に対して '+t.toFixed(2)+'秒。あと <b>'+(t-c.limit).toFixed(2)+'秒</b> 縮めよう！</div>';
-    if(overMiss) h+='<div'+(overTime?' style="margin-top:6px"':'')+'>❤️ ミス '+G.miss+'回（上限 '+c.maxMiss+'回）。あと <b>'+(G.miss-c.maxMiss)+'回</b> ミスを減らそう！</div>';
-    h+='</div>';
-  }
-  h+='<div class="scorecard">'
-    + '<div class="k">TIME</div>'
-    + '<div class="big">'+t.toFixed(2)+'<small>s</small></div>'
-    + '<div class="row">'
-    + '<div><div class="k">ミス</div><div class="v" style="color:var(--shu)">'+G.miss+'</div></div>'
-    + '<div><div class="k">ペナルティ</div><div class="v" style="color:var(--sumi-3)">+'+G.penalty+'</div></div>'
-    + '</div></div>'
-    + '<div class="rank"><h4>🏆 上位5名</h4>';
-  board.forEach(function(r,i){
-    h+='<div class="rank-row'+(r.me?" me":"")+'">'
-      + '<span class="p'+(i<3?" top":"")+'">'+(i+1)+'</span>'
-      + '<span class="nm">'+esc(r.n)+'</span>'
-      + '<span class="pill mute">ミス'+r.m+'</span>'
-      + '<span class="tm">'+r.t.toFixed(2)+'s</span></div>';
-  });
-  h+='</div>'
-    + '<button class="appbtn" type="button" id="again">🔄 もう一度挑戦する</button>'
-    + '<button class="appbtn ghost" type="button" id="back">メニューへ戻る</button>'
-    + '</div>';
-  app.innerHTML=h;
-  var cid=c.id;
-  document.getElementById("again").addEventListener("click",function(){ startGame(cid); });
-  document.getElementById("back").addEventListener("click",renderMenu);
-  G=null;
-}
-
-document.addEventListener("keydown",function(e){
-  if(!G||G.locked) return;
-  if(!document.getElementById("s-quiz").classList.contains("on")) return;
-  var n=parseInt(e.key,10);
-  if(n>=1&&n<=4){
-    var b=app.querySelectorAll(".opt")[n-1];
-    if(b&&!b.disabled) answer(n-1);
-  }
-});
-renderMenu();
-
-/* ------------------------------------------------------------------
-   二 学習分析
-   クリア率は持たせず tries と clears から毎回出す。数字を別々に
-   持つと、あとで片方だけ直したときに表と集計が食い違うため。
-   ------------------------------------------------------------------ */
-var STUDENTS=[
-  {id:"s1",n:"三村 陸斗",g:"中2",days:18,tries:23,clears:14,last:"歴史① 弥生〜古墳",
-   stuck:[{n:"一次関数 導入",c:9},{n:"化学変化と質量",c:7},{n:"英語 不規則動詞",c:5}],
-   tasks:[{n:"歴史① 弥生〜古墳",s:"ok"},{n:"光・音・力",s:"ok"},{n:"一次関数 導入",s:"try"}]},
-  {id:"s2",n:"小野寺 まひろ",g:"中3",days:24,tries:31,clears:26,last:"英単語 Stage1",
-   stuck:[{n:"気候と農業",c:6},{n:"英語 現在完了",c:4}],
-   tasks:[{n:"英単語 Stage1",s:"ok"},{n:"歴史② 飛鳥〜奈良",s:"ok"},{n:"気候と農業",s:"try"}]},
-  {id:"s3",n:"柏木 湊",g:"中1",days:9,tries:11,clears:5,last:"英単語 中1レベル",
-   stuck:[{n:"正負の数",c:11},{n:"英単語 中1レベル",c:8},{n:"光・音・力",c:6}],
-   tasks:[{n:"正負の数",s:"try"},{n:"英単語 中1レベル",s:"try"},{n:"歴史① 弥生〜古墳",s:"yet"}]},
-  {id:"s4",n:"戸田 千遥",g:"中2",days:15,tries:19,clears:14,last:"光・音・力",
-   stuck:[{n:"化学変化と質量",c:6}],
-   tasks:[{n:"光・音・力",s:"ok"},{n:"化学変化と質量",s:"try"},{n:"一次関数 導入",s:"yet"}]},
-  {id:"s5",n:"宮下 蒼太",g:"小6",days:12,tries:14,clears:8,last:"都道府県マップ",
-   stuck:[{n:"割合と百分率",c:7},{n:"都道府県マップ",c:4}],
-   tasks:[{n:"都道府県マップ",s:"ok"},{n:"割合と百分率",s:"try"}]},
-  {id:"s6",n:"河西 実玖",g:"中3",days:21,tries:27,clears:22,last:"歴史③ 鎌倉",
-   stuck:[{n:"歴史③ 鎌倉幕府",c:8}],
-   tasks:[{n:"歴史③ 鎌倉",s:"try"},{n:"英単語 Stage2",s:"ok"},{n:"気候と農業",s:"ok"}]}
-];
-function rateOf(s){ return Math.round(s.clears/s.tries*100); }
-
-var WEAK=[
-  {t:"歴史_鎌倉幕府のしくみ",people:5,total:24},
-  {t:"理科_化学変化と質量",people:4,total:19},
-  {t:"英語_不規則動詞の活用",people:4,total:17},
-  {t:"数学_一次関数の式",people:3,total:14},
-  {t:"社会_世界の気候区分",people:2,total:11},
-  {t:"理科_電流と回路",people:2,total:9}
-];
-var COURSE_CLEAR=[
-  {n:"🌏 歴史① 弥生〜古墳",c:5,t:6},{n:"🅰️ 英単語 Stage1",c:4,t:6},
-  {n:"⚗️ 光・音・力",c:3,t:6},{n:"📐 一次関数 導入",c:2,t:6},{n:"🌏 気候と農業",c:1,t:6}
-];
-var aMode="all", aStudent="s1", aNote="";
-var an=document.getElementById("analytics");
-
-function renderAnalytics(){
-  var h='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:16px">'
-    + '<button data-tab="all" type="button" class="tab'+(aMode==="all"?" on":"")+'">🏢 塾全体</button>'
-    + '<button data-tab="one" type="button" class="tab'+(aMode==="one"?" on":"")+'">🧑‍🎓 生徒個別</button>'
-    + '<span style="margin-left:auto;font-size:11.5px;color:var(--sumi-3)" class="tnum">分析期間 2026-07-09 〜 2026-08-08</span>'
-    + '</div>';
-  h+= aMode==="all" ? viewAll() : viewOne();
-  an.innerHTML=h;
-  Array.prototype.forEach.call(an.querySelectorAll("[data-tab]"),function(b){
-    b.addEventListener("click",function(){ aMode=b.getAttribute("data-tab"); aNote=""; renderAnalytics(); });
-  });
-  var sel=an.querySelector("#stusel");
-  if(sel) sel.addEventListener("change",function(){ aStudent=sel.value; renderAnalytics(); });
-  Array.prototype.forEach.call(an.querySelectorAll("[data-note]"),function(b){
-    b.addEventListener("click",function(){ aNote=b.getAttribute("data-note"); renderAnalytics(); });
-  });
-}
-
-function viewAll(){
-  var tries=0,clears=0;
-  STUDENTS.forEach(function(s){ tries+=s.tries; clears+=s.clears; });
-  var h='<div class="nums">'
-    + numi("学習した生徒","6","名","在籍6名中")
-    + numi("挑戦",""+tries,"回","直近7日")
-    + numi("クリア",""+clears,"回","クリア率 "+Math.round(clears/tries*100)+"%")
-    + numi("不合格",""+(tries-clears),"回","再挑戦につながる")
-    + '</div>';
-
-  h+='<div class="grid2" style="margin-top:22px">';
-  h+='<div><div class="block-h"><h3>⚠️ 塾全体の弱点</h3><span class="hint">未克服の人数が多い順</span></div><div class="bars">';
-  var mx=Math.max.apply(null,WEAK.map(function(w){return w.people;}));
-  WEAK.forEach(function(w){
-    h+='<div class="bar-row"><span class="lab">'+esc(w.t)+'</span>'
-      + '<span class="bar-track"><i class="bar-fill" style="width:'+(w.people/mx*100)+'%"></i></span>'
-      + '<span class="val">'+w.people+'人 <span style="color:var(--sumi-3)">/ '+w.total+'回</span></span></div>';
-  });
-  h+='</div><p class="chu">「人数」は、その単元をまだ克服できていない生徒の数。「回」は延べの誤答回数。'
-    + '並び順は<b>人数</b>を基準にしている。</p></div>';
-
-  h+='<div><div class="block-h"><h3>コース別のクリア状況</h3><span class="hint">在籍6名のうち</span></div><div class="bars">';
-  COURSE_CLEAR.forEach(function(c){
-    h+='<div class="bar-row"><span class="lab">'+esc(c.n)+'</span>'
-      + '<span class="bar-track"><i class="bar-fill midori" style="width:'+(c.c/c.t*100)+'%"></i></span>'
-      + '<span class="val">'+c.c+' / '+c.t+'</span></div>';
-  });
-  h+='</div></div></div>';
-
-  h+='<div class="block"><div class="block-h"><h3>生徒ごとの直近7日</h3></div><div class="tablewrap"><table>'
-    + '<thead><tr><th>生徒</th><th>学年</th><th class="num">挑戦</th><th class="num">クリア</th><th class="num">クリア率</th><th>最後にやったコース</th><th>状態</th></tr></thead><tbody>';
-  STUDENTS.forEach(function(s){
-    var r=rateOf(s);
-    var pill = r>=70 ? '<span class="pill ok">順調</span>'
-             : r>=55 ? '<span class="pill warn">様子見</span>'
-                     : '<span class="pill crit">要フォロー</span>';
-    h+='<tr><td style="font-weight:700">'+esc(s.n)+'</td><td>'+s.g+'</td>'
-      + '<td class="num">'+s.tries+'</td><td class="num">'+s.clears+'</td><td class="num">'+r+'%</td>'
-      + '<td style="color:var(--sumi-2)">'+esc(s.last)+'</td><td>'+pill+'</td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  return h;
-}
-
-function viewOne(){
-  var s=null; STUDENTS.forEach(function(x){ if(x.id===aStudent) s=x; });
-  var h='<div style="display:flex;align-items:center;gap:9px;margin-bottom:6px;flex-wrap:wrap">'
-    + '<label for="stusel" style="font-size:12.5px;font-weight:700;color:var(--sumi-2)">生徒</label>'
-    + '<select id="stusel" class="sel">';
-  STUDENTS.forEach(function(x){
-    h+='<option value="'+x.id+'"'+(x.id===aStudent?" selected":"")+'>'+esc(x.n)+'（'+x.g+'）</option>';
-  });
-  h+='</select>'
-    + '<button type="button" class="act" data-note="本番では、この生徒が見ている画面を講師側からそのまま開けます（デモでは省略）。">この生徒の画面を見る</button>'
-    + '<button type="button" class="act" data-note="本番では、保護者に渡す月次の学習報告をPDFで書き出します（デモでは省略）。">月次報告書</button>'
-    + '</div>'
-    + noteHTML(aNote);
-
-  h+='<div class="nums" style="margin-top:16px">'
-    + numi("学習した日数",""+s.days,"日","直近30日")
-    + numi("挑戦",""+s.tries,"回","直近7日")
-    + numi("クリア率",""+rateOf(s),"%",s.clears+" / "+s.tries+" 回")
-    + numi("最終学習","今日","",s.last)
-    + '</div>';
-
-  h+='<div class="grid2" style="margin-top:22px">';
-  h+='<div><div class="block-h"><h3>🔥 詰まっているコース</h3><span class="hint">挑戦回数が多いのに未クリア</span></div>';
-  if(s.stuck.length===0){
-    h+='<p style="font-size:13px;color:var(--sumi-3)">詰まっているコースはありません。</p>';
-  }else{
-    var mx=Math.max.apply(null,s.stuck.map(function(x){return x.c;}));
-    h+='<div class="bars">';
-    s.stuck.forEach(function(x){
-      h+='<div class="bar-row"><span class="lab">'+esc(x.n)+'</span>'
-        + '<span class="bar-track"><i class="bar-fill" style="width:'+(x.c/mx*100)+'%"></i></span>'
-        + '<span class="val">'+x.c+'回</span></div>';
-    });
-    h+='</div>';
-  }
-  h+='<p class="chu">ここに出たコースは、その場で 🖨️ から弱点プリントを発行して手渡せる。</p></div>';
-
-  h+='<div><div class="block-h"><h3>いま出している課題</h3></div><div style="display:flex;flex-direction:column;gap:6px">';
-  s.tasks.forEach(function(t){
-    var p = t.s==="ok" ? '<span class="pill ok">クリア済</span>'
-          : t.s==="try" ? '<span class="pill warn">挑戦中</span>'
-                        : '<span class="pill mute">未着手</span>';
-    h+='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--kei);border-radius:3px;background:var(--men);font-size:13px">'
-      + '<span style="flex:1;font-weight:700">'+esc(t.n)+'</span>'+p
-      + '<button type="button" class="act min" data-note="本番では、この課題の未克服の問題だけを集めたプリントをその場で印刷します（デモでは省略）。">🖨️</button>'
-      + '</div>';
-  });
-  h+='</div></div></div>';
-  return h;
-}
-function numi(k,v,u,s){
-  return '<div><div class="k">'+k+'</div><div class="v">'+v+(u?'<span>'+u+'</span>':'')+'</div><div class="s">'+esc(s)+'</div></div>';
-}
-renderAnalytics();
-
-/* ------------------------------------------------------------------
-   三 予約管理
-   ------------------------------------------------------------------ */
-var KIND={1:{lab:"固定枠（自動生成）",cls:"c1"},2:{lab:"本人・保護者の追加",cls:"c2"},3:{lab:"塾側で手動登録",cls:"c3"}};
-// 2026年8月のダミー予約。key=日, value=[{t:時刻, n:生徒, k:種別}]
-var BOOKINGS={
-  3:[{t:"17:00",n:"三村 陸斗",k:1},{t:"17:00",n:"戸田 千遥",k:1},{t:"19:00",n:"小野寺 まひろ",k:1}],
-  4:[{t:"17:00",n:"柏木 湊",k:1},{t:"18:30",n:"宮下 蒼太",k:2}],
-  5:[{t:"17:00",n:"河西 実玖",k:1},{t:"19:00",n:"小野寺 まひろ",k:1},{t:"19:00",n:"三村 陸斗",k:2}],
-  6:[{t:"17:00",n:"戸田 千遥",k:1},{t:"18:30",n:"柏木 湊",k:3}],
-  7:[{t:"17:00",n:"三村 陸斗",k:1},{t:"17:00",n:"宮下 蒼太",k:1},{t:"19:00",n:"河西 実玖",k:1}],
-  10:[{t:"17:00",n:"三村 陸斗",k:1},{t:"17:00",n:"戸田 千遥",k:1},{t:"19:00",n:"小野寺 まひろ",k:1}],
-  17:[{t:"17:00",n:"戸田 千遥",k:1},{t:"19:00",n:"小野寺 まひろ",k:1}],
-  18:[{t:"17:00",n:"柏木 湊",k:1},{t:"18:30",n:"三村 陸斗",k:2}],
-  19:[{t:"17:00",n:"河西 実玖",k:1},{t:"19:00",n:"小野寺 まひろ",k:1},{t:"19:00",n:"戸田 千遥",k:2}],
-  20:[{t:"17:00",n:"戸田 千遥",k:1},{t:"18:30",n:"宮下 蒼太",k:1}],
-  21:[{t:"17:00",n:"三村 陸斗",k:1},{t:"19:00",n:"河西 実玖",k:1}],
-  24:[{t:"17:00",n:"三村 陸斗",k:1},{t:"17:00",n:"戸田 千遥",k:1}],
-  25:[{t:"17:00",n:"柏木 湊",k:1},{t:"19:00",n:"小野寺 まひろ",k:3}],
-  26:[{t:"17:00",n:"河西 実玖",k:1},{t:"19:00",n:"小野寺 まひろ",k:1}],
-  27:[{t:"17:00",n:"戸田 千遥",k:1},{t:"18:30",n:"宮下 蒼太",k:1},{t:"19:00",n:"柏木 湊",k:2}],
-  28:[{t:"17:00",n:"三村 陸斗",k:1},{t:"19:00",n:"河西 実玖",k:1}],
-  31:[{t:"17:00",n:"三村 陸斗",k:1},{t:"17:00",n:"戸田 千遥",k:1}]
-};
-var HOLIDAYS={11:"お盆休講",12:"お盆休講",13:"お盆休講",14:"お盆休講",15:"お盆休講"};
-
-var ATT=[
-  {n:"三村 陸斗",g:"中2",koma:9,br:[7,1,1],waku:8,furi:1,kesseki:0,last:"8/07"},
-  {n:"小野寺 まひろ",g:"中3",koma:8,br:[7,0,1],waku:8,furi:0,kesseki:0,last:"8/05"},
-  {n:"柏木 湊",g:"中1",koma:5,br:[4,1,0],waku:8,furi:0,kesseki:3,last:"8/04"},
-  {n:"戸田 千遥",g:"中2",koma:9,br:[8,1,0],waku:8,furi:1,kesseki:0,last:"8/07"},
-  {n:"宮下 蒼太",g:"小6",koma:6,br:[4,2,0],waku:4,furi:2,kesseki:0,last:"8/06"},
-  {n:"河西 実玖",g:"中3",koma:7,br:[6,1,0],waku:8,furi:0,kesseki:1,last:"8/07"}
-];
-var selDay=7, bkNote="";
-var bk=document.getElementById("booking");
-
-function renderBooking(){
-  var h='<div style="display:flex;align-items:center;gap:9px;margin-bottom:6px;flex-wrap:wrap">'
-    + '<h3 style="font-size:15px">2026年 8月</h3>'
-    + '<span class="pill mute">お盆休講 8/11〜8/15</span>'
-    + '<button type="button" class="act main" style="margin-left:auto" data-note="本番では、登録された固定枠から翌月分の予約をまとめて作ります。Googleカレンダーの毎秒4件制限にかかった分は、次の「カレンダーに反映」で続きから埋めます（デモでは省略）。">当月分を一括生成</button>'
-    + '<button type="button" class="act" data-note="本番では、まだ書き込めていない予定だけをGoogleカレンダーへ追加します（デモでは省略）。">📅 カレンダーに反映</button>'
-    + '</div>'
-    + noteHTML(bkNote);
-
-  h+='<div style="overflow-x:auto;margin-top:14px"><div class="cal">';
-  ["月","火","水","木","金","土","日"].forEach(function(d){ h+='<div class="cal-h">'+d+'</div>'; });
-  // 2026-08-01 は土曜。月曜はじまりなので前に5マス空ける
-  var first=new Date(2026,7,1).getDay();          // 0=日
-  var lead=(first+6)%7;
-  var dim=new Date(2026,8,0).getDate();
-  for(var i=0;i<lead;i++) h+='<div class="cal-d blank"></div>';
-  for(var d=1;d<=dim;d++){
-    var list=BOOKINGS[d]||[];
-    var hol=HOLIDAYS[d];
-    h+='<button type="button" class="cal-d'+(hol?" hol":"")+'" data-d="'+d+'" aria-pressed="'+(d===selDay)+'">'
-      + '<span class="dn">'+d+'</span>';
-    if(hol){ h+='<span style="font-size:9.5px;color:var(--shu);font-weight:700;line-height:1.4">休講</span>'; }
-    else if(list.length){
-      h+='<span class="chips">';
-      list.forEach(function(x){ h+='<i class="chip '+KIND[x.k].cls+'"></i>'; });
-      h+='</span><span style="font-size:9.5px;color:var(--sumi-3)" class="tnum">'+list.length+'件</span>';
-    }
-    h+='</button>';
-  }
-  h+='</div></div>';
-
-  h+='<div class="cal-legend">'
-    + '<span><i style="background:var(--midori)"></i>固定枠（毎週の自動生成）</span>'
-    + '<span><i style="background:var(--kohaku)"></i>本人・保護者からの追加予約</span>'
-    + '<span><i style="background:var(--murasaki)"></i>塾側で手動登録（電話受付など）</span>'
-    + '</div>';
-
-  var sl=BOOKINGS[selDay]||[];
-  h+='<div class="block"><div class="block-h"><h3>8月'+selDay+'日の予約</h3><span class="hint">'
-    + (HOLIDAYS[selDay]?'休講日（週枠にも欠席にも数えない）':sl.length+'件')+'</span></div><div class="slotlist">';
-  if(HOLIDAYS[selDay]){
-    h+='<p style="font-size:13px;color:var(--sumi-3)">この日は休講として登録されています。休講で消えた枠は、週の枠数からも欠席数からも除外されます。</p>';
-  }else if(!sl.length){
-    h+='<p style="font-size:13px;color:var(--sumi-3)">この日の予約はありません。</p>';
-  }else{
-    sl.forEach(function(x){
-      h+='<div class="slot"><span class="tm">'+x.t+'</span><span class="nm">'+esc(x.n)+'</span>'
-        + '<span class="tag '+KIND[x.k].cls+'">'+KIND[x.k].lab+'</span></div>';
-    });
-  }
-  h+='</div></div>';
-
-  h+='<div class="block"><div class="block-h"><h3>通塾の集計</h3><span class="hint">2026年8月・生徒別</span></div>'
-    + '<div class="tablewrap"><table><thead><tr>'
-    + '<th>生徒</th><th>学年</th><th class="num">通塾コマ</th><th>内訳（固定／本人／塾）</th>'
-    + '<th class="num">週枠</th><th class="num">振替</th><th class="num">欠席</th><th class="num">通塾率</th><th>最終通塾日</th>'
-    + '</tr></thead><tbody>';
-  ATT.forEach(function(a){
-    var rate=Math.round(a.koma/a.waku*100);
-    var rpill = rate>=100 ? '<span class="pill ok">'+rate+'%</span>'
-              : rate>=75  ? '<span class="pill warn">'+rate+'%</span>'
-                          : '<span class="pill crit">'+rate+'%</span>';
-    h+='<tr><td style="font-weight:700">'+esc(a.n)+'</td><td>'+a.g+'</td>'
-      + '<td class="num">'+a.koma+'</td>'
-      + '<td class="tnum" style="font-size:12px;color:var(--sumi-2)">'
-      + '<span style="color:var(--midori)">'+a.br[0]+'</span> / '
-      + '<span style="color:var(--kohaku)">'+a.br[1]+'</span> / '
-      + '<span style="color:var(--murasaki)">'+a.br[2]+'</span></td>'
-      + '<td class="num">'+a.waku+'</td><td class="num">'+a.furi+'</td>'
-      + '<td class="num"'+(a.kesseki>0?' style="color:var(--shu);font-weight:700"':'')+'>'+a.kesseki+'</td>'
-      + '<td class="num">'+rpill+'</td><td class="tnum" style="font-size:12px">'+a.last+'</td></tr>';
-  });
-  h+='</tbody></table></div>'
-    + '<p class="chu">欠席＝その週の固定枠に足りなかったコマ数。通塾率＝通塾コマ ÷ 週枠 で、100%で頭打ちにしていないため、'
-    + '振替などで週枠より多く来ている生徒は100%を超える。休講日で消えた枠は、週枠にも欠席にも数えない。</p></div>';
-
-  bk.innerHTML=h;
-  Array.prototype.forEach.call(bk.querySelectorAll("[data-d]"),function(b){
-    b.addEventListener("click",function(){ selDay=parseInt(b.getAttribute("data-d"),10); renderBooking(); });
-  });
-  Array.prototype.forEach.call(bk.querySelectorAll("[data-note]"),function(b){
-    b.addEventListener("click",function(){ bkNote=b.getAttribute("data-note"); renderBooking(); });
-  });
-}
-// お盆は休講なので、生成済みの予約を消しておく
-[11,12,13,14,15].forEach(function(d){ delete BOOKINGS[d]; });
-renderBooking();
-
-/* ------------------------------------------------------------------
-   四 請求・給与
-   ------------------------------------------------------------------ */
-var BILLS=[
-  {n:"三村 陸斗",g:"中2",course:"週2 レギュラー",base:15400,subsidy:10000,disc:0,discName:"",pay:"口座引落",st:"ok"},
-  {n:"小野寺 まひろ",g:"中3",course:"週2 受験科",base:18700,subsidy:10000,disc:0,discName:"",pay:"口座引落",st:"ok"},
-  {n:"柏木 湊",g:"中1",course:"週2 レギュラー",base:15400,subsidy:0,disc:3300,discName:"入塾初月割",pay:"現金",st:"wait"},
-  {n:"戸田 千遥",g:"中2",course:"週2 レギュラー",base:15400,subsidy:10000,disc:0,discName:"",pay:"口座引落",st:"ok"},
-  {n:"宮下 蒼太",g:"小6",course:"週1 小学生",base:8800,subsidy:0,disc:2200,discName:"紹介割",pay:"振込",st:"wait"},
-  {n:"河西 実玖",g:"中3",course:"週2 受験科",base:18700,subsidy:10000,disc:0,discName:"",pay:"口座引落",st:"ok"}
-];
-var STAFF=[
-  {n:"中込",wage:1200,kubun:"甲",hours:62.3,night:0,ok:true},
-  {n:"芦田",wage:1150,kubun:"乙",hours:31.0,night:2.5,ok:true},
-  {n:"大隅",wage:1300,kubun:"甲",hours:96.0,night:4.0,ok:false}
-];
-var mMode="bill";
-var mo=document.getElementById("money");
-
-function calcBill(b){ return b.base - b.subsidy - b.disc; }
-function calcPay(s){
-  var basic=Math.round(s.wage*s.hours);
-  var night=Math.round(s.wage*0.25*s.night);
-  var raw=basic+night;
-  var total=Math.ceil(raw/500)*500;           // 支給額は500円単位に切り上げる
-  var tokubetsu=total-raw;                     // 切り上げのぶんは「端数調整」として出す
-  var tax;
-  if(s.kubun==="乙"){ tax=Math.floor(total*0.03063); }                 // 乙欄は1円から課税
-  else { tax = total<88000 ? 0 : Math.floor((total-88000)*0.05)+130; } // 甲欄は88,000円未満なら0円
-  return {basic:basic,night:night,raw:raw,total:total,tokubetsu:tokubetsu,tax:tax,net:total-tax};
-}
-
-function renderMoney(){
-  var h='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:16px">'
-    + '<button data-m="bill" type="button" class="tab'+(mMode==="bill"?" on":"")+'">請求</button>'
-    + '<button data-m="pay" type="button" class="tab'+(mMode==="pay"?" on":"")+'">給与</button>'
-    + '<span style="margin-left:auto;font-size:11.5px;color:var(--sumi-3)" class="tnum">対象月 2026-08</span>'
-    + '</div>';
-  h += mMode==="bill" ? viewBill() : viewPay();
-  mo.innerHTML=h;
-  Array.prototype.forEach.call(mo.querySelectorAll("[data-m]"),function(b){
-    b.addEventListener("click",function(){ mMode=b.getAttribute("data-m"); renderMoney(); });
-  });
-}
-
-function viewBill(){
-  var sums={"口座引落":0,"現金":0,"振込":0}, subsidyTotal=0, grand=0;
-  BILLS.forEach(function(b){ var v=calcBill(b); sums[b.pay]+=v; subsidyTotal+=b.subsidy; grand+=v; });
-  var fee=Math.round(sums["口座引落"]*0.022);
-
-  var h='<div class="nums">'
-    + numi("助成カード",yen(subsidyTotal),"円","自治体の助成分")
-    + numi("口座引落",yen(sums["口座引落"]),"円","6件中4件")
-    + numi("現金・振込",yen(sums["現金"]+sums["振込"]),"円","2件")
-    + numi("請求合計",yen(grand),"円","額面")
-    + numi("手残り",yen(grand-fee),"円","決済手数料 "+yen(fee)+"円 を差し引き")
-    + '</div>';
-
-  h+='<div class="block"><div class="block-h"><h3>生徒別の請求内訳</h3><span class="hint">金額は自動計算</span></div>'
-    + '<div class="tablewrap"><table><thead><tr>'
-    + '<th>生徒</th><th>コース</th><th class="num">月謝</th><th class="num">助成カード</th>'
-    + '<th class="num">割引</th><th class="num">請求額</th><th>支払方法</th><th>状態</th>'
-    + '</tr></thead><tbody>';
-  BILLS.forEach(function(b){
-    var v=calcBill(b);
-    h+='<tr><td style="font-weight:700">'+esc(b.n)+'</td>'
-      + '<td style="color:var(--sumi-2)">'+esc(b.course)+'</td>'
-      + '<td class="num">'+yen(b.base)+'</td>'
-      + '<td class="num"'+(b.subsidy?' style="color:var(--midori)"':' style="color:var(--sumi-3)"')+'>'+(b.subsidy?"-"+yen(b.subsidy):"—")+'</td>'
-      + '<td class="num"'+(b.disc?' style="color:var(--midori)"':' style="color:var(--sumi-3)"')+'>'+(b.disc?"-"+yen(b.disc)+'<span style="font-size:10.5px;color:var(--sumi-3)"> '+esc(b.discName)+'</span>':"—")+'</td>'
-      + '<td class="num" style="font-weight:700">'+yen(v)+'</td>'
-      + '<td>'+b.pay+'</td>'
-      + '<td>'+(b.st==="ok"?'<span class="pill ok">確定</span>':'<span class="pill warn">入金待ち</span>')+'</td></tr>';
-  });
-  h+='</tbody><tfoot><tr><td colspan="5">合計（額面）</td><td class="num">'+yen(grand)+'</td><td colspan="2"></td></tr></tfoot>'
-    + '</table></div>'
-    + '<p class="chu">割引は「助成カード」「紹介割」「入塾初月割」の3種類が別々に効く。売上として計上するのは<b>額面の合計</b>で、'
-    + '決済手数料は経費として別に扱う（手残りの数字をそのまま売上にすると、確定申告で合わなくなる）。</p></div>';
-  return h;
-}
-
-function viewPay(){
-  var tt=0,tx=0;
-  STAFF.forEach(function(s){ var c=calcPay(s); tt+=c.total; tx+=c.tax; });
-  var h='<div class="nums">'
-    + numi("対象人員","3","名","延べ")
-    + numi("支給額 合計",yen(tt),"円","")
-    + numi("源泉徴収 合計",yen(tx),"円","納付書用")
-    + numi("要確認","1","件","退勤打刻の漏れ")
-    + '</div>';
-
-  h+='<div class="block"><div class="block-h"><h3>給与明細サマリー</h3><span class="hint">打刻記録から自動計算</span></div>'
-    + '<div class="tablewrap"><table style="min-width:860px"><thead><tr>'
-    + '<th>氏名</th><th class="num">時給</th><th>税区分</th><th class="num">総稼働</th><th class="num">深夜</th>'
-    + '<th class="num">基本賃金</th><th class="num">深夜割増</th><th class="num">端数調整</th>'
-    + '<th class="num">支給総額</th><th class="num">所得税</th><th class="num">差引支給額</th><th>状態</th>'
-    + '</tr></thead><tbody>';
-  STAFF.forEach(function(s){
-    var c=calcPay(s);
-    h+='<tr><td style="font-weight:700">'+esc(s.n)+'</td>'
-      + '<td class="num">'+yen(s.wage)+'</td>'
-      + '<td>'+(s.kubun==="甲"?'<span class="pill ok">甲欄</span>':'<span class="pill warn">乙欄</span>')+'</td>'
-      + '<td class="num">'+s.hours.toFixed(1)+'h</td>'
-      + '<td class="num">'+(s.night?s.night.toFixed(1)+"h":"—")+'</td>'
-      + '<td class="num">'+yen(c.basic)+'</td>'
-      + '<td class="num">'+(c.night?yen(c.night):"—")+'</td>'
-      + '<td class="num" style="color:var(--sumi-3)">'+(c.tokubetsu?"+"+yen(c.tokubetsu):"—")+'</td>'
-      + '<td class="num" style="font-weight:700">'+yen(c.total)+'</td>'
-      + '<td class="num"'+(c.tax?' style="color:var(--shu)"':' style="color:var(--sumi-3)"')+'>'+(c.tax?"-"+yen(c.tax):"0")+'</td>'
-      + '<td class="num" style="font-weight:700">'+yen(c.net)+'</td>'
-      + '<td>'+(s.ok?'<span class="pill ok">正常</span>':'<span class="pill crit">⚠ 退勤漏れ</span>')+'</td></tr>';
-  });
-  h+='</tbody><tfoot><tr><td colspan="8">合計</td><td class="num">'+yen(tt)+'</td><td class="num">-'+yen(tx)+'</td><td class="num">'+yen(tt-tx)+'</td><td></td></tr></tfoot>'
-    + '</table></div>'
-    + '<p class="chu">「甲欄」は扶養控除申告書の提出がある区分で、月88,000円未満なら所得税は0円。'
-    + '<b>「乙欄」には非課税の枠が無く、1円から3.063%が課税される</b>ため、同じ支給額でも税額が変わる。'
-    + '「端数調整」は、支給額を500円単位に切り上げるための手当で、上の税額は切り上げ<b>後</b>の金額に対して計算している。'
-    + '（このデモの税額は説明用に簡略化した式で出している。本番は月額表に準拠。）</p></div>';
-  return h;
-}
-renderMoney();
-
-})();
-</script>
 </body>
 </html>

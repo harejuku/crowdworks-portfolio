@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
 <meta name="referrer" content="no-referrer" />
-<title>飲み会精算</title>
+<title>飲み会の割り勘・精算（体験版）</title>
 <!--
   自動生成ファイル。手で直さないでください（node build.mjs で作り直すと消えます）。
   直すのは engine.js / ui.js / style.css / app.html です。
@@ -361,8 +361,26 @@ dialog button { width: 100%; margin-top: 0.5rem; padding: 0.7rem; border-radius:
 dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
 
 </style>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/demo.css">
+<style>
+  .ss-next{
+    display:block;max-width:640px;margin:26px auto 34px;padding:15px 18px;
+    background:#161a20;color:#fff;border-radius:12px;text-decoration:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:15px;font-weight:700;text-align:center;
+  }
+</style>
 </head>
 <body>
+<script src="../assets/demo.js"></script>
+<script src="demo-data.js"></script>
+<!-- ============================================================
+     ここから下は、実際に納品したシステムのコードをそのまま置いたもの。
+     体験版のために向け先を変えているのは、サーバーを呼ぶところだけ。
+     （tools/build.mjs が自動で作っています。直接直さないこと）
+     ============================================================ -->
 <header>
   <div class="head-top">
     <input id="eventName" type="text" placeholder="飲み会名（例：8月の同期会）" />
@@ -524,7 +542,7 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
   }
 
   /* ===== 「割る人」の名前あわせ =====
-   * 「谷」が「谷川」に誤ヒットしないよう、前後を「、」で囲んで完全一致させる。
+   * 「谷」が「みどり」に誤ヒットしないよう、前後を「、」で囲んで完全一致させる。
    * 区切りは 、 , ， ・ / を受け付ける。
    */
   var SEPARATORS = ["，", ",", "・", "/", "／", "、"];
@@ -881,7 +899,7 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
       return x.fixed === null;
     });
 
-    /* 人に送る文。順序（【精算】→支出→回収→精算額→一人ずつ）は岸本さんが実物で
+    /* 人に送る文。順序（【精算】→支出→回収→精算額→一人ずつ）は制作者が実物で
      * 確定させたもので、変えない。2026-08-14 に言い回しだけ整えた（身内向けの
      * くだけた調子を、誰に送っても差し支えない調子へ）。
      *
@@ -2022,6 +2040,26 @@ dialog h2 { margin: 0 0 0.6rem; font-size: 1rem; }
   }
 })();
 
+</script>
+
+<script>
+Demo.init({
+  home: "../",
+  note: "これは<b>体験版</b>です。名前も金額も自由に書き換えられます。入力はこのタブの中だけに残ります。",
+  about: {"title":"均等割りではない飲み会のための、1画面の道具","sub":"もとはExcelの精算シート。幹事がその場でスマホから使えるように、同じ計算を画面に移しました。","points":[{"t":"「多め・少なめ」を係数で決める","d":"先輩は1.3、学生は0.7、のように係数を入れると、その比で割ります。均等割りにすると誰かが黙って損をするためです。"},{"t":"端数は切り上げてそろえる","d":"1円単位の請求は現場で回りません。100円単位（変更できます）に切り上げ、余りは幹事の手元に残る形にしています。"},{"t":"受け渡しは幹事にまとめる","d":"参加者どうしで送金し合うと必ず取りこぼします。全員が幹事とだけやりとりする形に固定しました。"},{"t":"計算はExcelと1円までそろえてある","d":"もとのExcelと同じ答えが出ることを、自動の突き合わせで毎回確かめています。丸めの順序まで合わせているのは、ここがずれると誰かの支払額が変わるためです。"}]}
+});
+
+// 帯の「最初から」を、見本の飲み会に戻す動きに差し替える
+(function () {
+  var b = document.querySelector('.ss-reset');
+  if (!b) return;
+  b.addEventListener('click', function (e) {
+    e.stopImmediatePropagation();
+    if (window.__demoResetNomikai) window.__demoResetNomikai();
+    Demo.clearAll();
+    location.reload();
+  }, true);
+})();
 </script>
 </body>
 </html>
