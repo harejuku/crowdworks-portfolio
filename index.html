@@ -119,6 +119,8 @@ section{padding:46px 0 0}
 .can div{background:var(--men);padding:16px 18px}
 .can dt{font-size:14px;font-weight:700;margin-bottom:3px}
 .can dd{margin:0;font-size:13px;color:var(--sumi-2);line-height:1.7}
+/* a{color:inherit} を上書きする。ここだけ実物へ飛べるので、藍＝触れる目じるしを付ける */
+.can dd a{color:var(--ai);text-decoration:underline;text-underline-offset:3px;white-space:nowrap;margin-left:4px}
 
 /* ---------- 考え方 ---------- */
 .think{display:grid;gap:18px;grid-template-columns:1fr}
@@ -175,6 +177,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <a class="sub" href="juku/?screen=analytics">📊 つまずきを見る画面</a>
         <a class="sub" href="juku/?screen=admin">📚 教材をつくる画面</a>
         <a class="sub" href="juku/?screen=booking">📅 予約をさばく画面</a>
+        <a class="sub" href="juku/?screen=hp">🌐 この塾のホームページ</a>
       </div>
       <p class="note">クイズは最後まで遊べます。クリアすると順位表に載り、その記録が分析画面にもすぐ反映されます。</p>
     </div>
@@ -251,6 +254,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     よくお引き受けするのは、こういう作業です。
   </p>
   <dl class="can">
+    <div><dt>お店のホームページを作る</dt><dd>スマホでも崩れず、検索で見つけてもらえる形に。料金表・よくある質問・問い合わせまでを1ページにまとめます。<a href="juku/?screen=hp">実物を見る</a></dd></div>
     <div><dt>注文・予約を受ける</dt><dd>電話とLINEで受けていたものを、画面から受けられるようにする。締切や定休日も自動で反映。</dd></div>
     <div><dt>売上・経費を記録する</dt><dd>紙の伝票やレシートを、その場でスマホから入力。月末の集計を自動にする。</dd></div>
     <div><dt>お客さまに知らせる</dt><dd>注文が入ったらお店へ通知。予約の前日にお客さまへリマインド。</dd></div>
