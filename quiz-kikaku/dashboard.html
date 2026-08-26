@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>まるやまベーカリー クイズ 成果（体験版）</title>
+<style>
+/* =========================================================
+   v2.1 — 外部CSSフレームワーク（Tailwind CDN）を廃止。
+   キオスク画面は外部リソースへの依存ゼロで動作する。
+   ========================================================= */
+:root{
+  --green:#2e9e4f; --green-d:#1f7a3a; --green-l:#e8f6ec;
+  --blue:#2563c9;  --blue-l:#e8f0fd;
+  --red:#d93a3a;   --red-l:#fdeaea;
+  --orange:#e07b1f;--orange-l:#fdf1e3;
+  --gold:#f5c518;
+  --ink:#22262b; --sub:#6a7280; --line:#e3e6ea; --bg:#f4f6f8;
+  --r:18px; --shadow:0 4px 16px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+  background:var(--bg); color:var(--ink); line-height:1.6;
+  padding:16px; display:flex; flex-direction:column; align-items:center; min-height:100vh;
+  touch-action:manipulation;
+}
+.hidden{display:none !important}
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);width:100%;overflow:hidden}
+.w-md{max-width:520px} .w-lg{max-width:680px} .w-xl{max-width:1060px}
+.pad{padding:24px}
+h1,h2,h3{margin:0}
+.fade{animation:fade .28s ease-out both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.hero{background:linear-gradient(135deg,#3fbb66,#1f7a3a);color:#fff;padding:28px 20px;text-align:center}
+.hero h1{font-size:30px;font-weight:900;letter-spacing:.06em;text-shadow:0 2px 6px rgba(0,0,0,.18)}
+.hero p{margin:6px 0 0;font-size:13px;opacity:.9}
+.sec-title{font-size:19px;font-weight:900;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sec-title::before{content:"";width:5px;height:20px;border-radius:3px;background:var(--green)}
+
+input[type=text],select,textarea{
+  width:100%;border:2px solid var(--line);border-radius:12px;padding:14px;font-size:17px;
+  background:#fff;color:var(--ink);font-family:inherit;
+}
+input:focus,select:focus{outline:none;border-color:var(--green)}
+label.fl{display:block;font-weight:700;font-size:14px;margin-bottom:6px;color:var(--sub)}
+.field{margin-bottom:16px}
+.row{display:flex;gap:8px}
+.btn{
+  border:0;border-radius:12px;padding:14px 20px;font-size:16px;font-weight:800;
+  font-family:inherit;cursor:pointer;color:#fff;background:var(--green);
+  box-shadow:0 3px 0 rgba(0,0,0,.12);transition:transform .08s;white-space:nowrap;
+}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.12)}
+.btn[disabled]{opacity:.45;cursor:default;transform:none}
+.btn.blue{background:var(--blue)} .btn.gray{background:#5b6470}
+.btn.red{background:var(--red)} .btn.ghost{background:#eef1f4;color:var(--ink);box-shadow:none}
+.btn.wide{width:100%;padding:18px;font-size:19px}
+.btn.sm{padding:9px 14px;font-size:14px}
+.btn.on{background:var(--blue)} .btn.off{background:#eef1f4;color:var(--ink);box-shadow:none}
+
+.slist{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.sitem{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px}
+.sitem .nm{font-weight:800;font-size:18px;flex:1;min-width:0;word-break:break-all}
+.badge{display:inline-block;background:var(--blue-l);color:var(--blue);border-radius:999px;
+  padding:3px 11px;font-size:13px;font-weight:800;white-space:nowrap}
+.badge.warn{background:var(--orange-l);color:var(--orange)}
+.note{font-size:12px;color:var(--sub);display:block;font-weight:600}
+.empty{text-align:center;color:var(--sub);font-weight:700;padding:22px}
+
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.who{font-weight:900;font-size:18px;background:#eef1f4;border-radius:999px;padding:8px 16px}
+.timer{font-weight:900;font-size:15px;background:var(--red-l);color:var(--red);border-radius:999px;padding:8px 16px}
+.timer b{font-size:26px}
+.timer.calm{background:var(--blue-l);color:var(--blue)}
+.tbar{height:8px;background:#e9edf1;border-radius:99px;overflow:hidden;margin-bottom:16px}
+.tbar>i{display:block;height:100%;background:var(--blue);width:100%;transition:width .25s linear}
+.tbar>i.hot{background:var(--red)}
+.qbox{background:var(--blue-l);border-left:6px solid var(--blue);border-radius:14px;
+  padding:26px 20px;margin-bottom:20px;min-height:120px;display:flex;align-items:center;justify-content:center}
+.qbox h2{font-size:24px;font-weight:900;text-align:center;line-height:1.5}
+.choices{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:560px){.choices{grid-template-columns:1fr 1fr}}
+.ch{border:0;border-radius:16px;padding:22px 14px;font-size:20px;font-weight:900;color:#fff;
+  font-family:inherit;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.16);line-height:1.35;word-break:break-word}
+.ch:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.16)}
+.ch[disabled]{opacity:.4}
+.ch.c0{background:#3b82d6}.ch.c1{background:#d6539a}.ch.c2{background:#31a05c}.ch.c3{background:#e08a2b}
+.ch.picked{outline:5px solid #111;opacity:1 !important}
+.pill{display:inline-block;background:var(--green-l);color:var(--green-d);border-radius:999px;
+  padding:6px 14px;font-size:14px;font-weight:800;margin-bottom:12px}
+.pill.rev{background:var(--orange-l);color:var(--orange)}
+
+.rtitle{font-size:40px;font-weight:900;text-align:center;margin-bottom:6px}
+.rbox{background:#fafbfc;border:2px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+.rq{font-weight:900;font-size:17px;margin:4px 0 14px}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;
+  border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.kv span:first-child{font-size:13px;font-weight:800;color:var(--sub);white-space:nowrap}
+.kv b{font-size:17px;text-align:right;word-break:break-word}
+.kv.ok{background:var(--green-l);border-color:#bfe3ca}
+.hintbox{background:var(--blue-l);border:1px solid #c9dcf8;border-radius:12px;padding:14px;margin-top:10px}
+.hintbox p{margin:0;font-size:14px;font-weight:700}
+.hintbox .lbl{color:var(--blue);font-size:13px;margin-bottom:4px}
+.coin{background:linear-gradient(135deg,#fff3c4,#fbd44a);border:4px solid var(--gold);
+  border-radius:20px;padding:26px;text-align:center;margin:18px 0;transform:rotate(-1.5deg)}
+.coin .ic{font-size:56px;line-height:1}
+.coin .t1{font-weight:900;font-size:22px;color:#7a5a00;margin-top:6px}
+.coin .t2{font-size:14px;font-weight:700;color:#8a6a10;opacity:.9}
+.msg{text-align:center;font-weight:800;font-size:17px;margin:12px 0;white-space:pre-wrap}
+.alert{background:var(--red-l);border:2px solid #f2b8b8;color:#8c1f1f;border-radius:12px;
+  padding:14px;font-weight:800;font-size:15px;margin:12px 0}
+
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:12px}
+.stat{background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.stat .lb{font-size:12px;font-weight:800;color:var(--sub)}
+.stat .vl{font-size:30px;font-weight:900;margin-top:2px}
+.stat.g{background:var(--green-l);border-color:#bfe3ca}.stat.g .vl{color:var(--green-d)}
+.stat.r{background:var(--red-l);border-color:#f2b8b8}.stat.r .vl{color:var(--red)}
+.stat.b{background:var(--blue-l);border-color:#c9dcf8}.stat.b .vl{color:var(--blue)}
+.panel{background:#fafbfc;border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--sub)}
+td.num,th.num{text-align:right;font-weight:800;white-space:nowrap}
+.warnbox{background:var(--orange-l);border:2px solid #f2d3a8;border-radius:12px;padding:14px;margin-bottom:14px;font-weight:700;font-size:14px}
+/* まきちゃん画面のタブ（スクロールせずに切り替えられるように） */
+.tabs{display:flex;gap:6px;width:100%;margin-bottom:12px;position:sticky;top:0;z-index:5;
+  background:var(--bg);padding:6px 0}
+.tab{flex:1;border:0;border-radius:12px;padding:13px 8px;font-size:15px;font-weight:800;
+  font-family:inherit;cursor:pointer;background:#e7ebf0;color:var(--sub);white-space:nowrap;
+  display:flex;align-items:center;justify-content:center;gap:6px}
+.tab.on{background:var(--green);color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.12)}
+.tab-badge{background:var(--red);color:#fff;border-radius:999px;font-size:11px;
+  padding:1px 7px;font-weight:900}
+.tab.on .tab-badge{background:#fff;color:var(--red)}
+.pane{width:100%}
+.issuebox{background:var(--orange-l);border:2px solid #f2d3a8;border-radius:12px;
+  padding:12px 14px;margin-bottom:14px}
+.issuebox h4{margin:0 0 6px;font-size:14px;font-weight:900;color:var(--orange)}
+.issuebox ul{margin:0;padding-left:18px;font-size:13px;font-weight:700}
+.issuebox li{margin:2px 0}
+.chkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;
+  max-height:460px;overflow-y:auto;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fafbfc}
+.chk{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
+  border-radius:10px;padding:8px;cursor:pointer;font-size:14px;font-weight:700}
+.chk input{width:20px;height:20px;flex:none}
+#qrbox{display:flex;justify-content:center;padding:14px;background:#fff;border-radius:12px}
+/* 日別プレイ数の棒グラフ */
+.trend{display:flex;align-items:flex-end;gap:5px;height:120px;margin-top:6px}
+.trend>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.trend .bar{width:100%;background:var(--blue);border-radius:5px 5px 0 0;min-height:2px}
+.trend .bar.zero{background:#dfe4ea}
+.trend .bar.today{background:var(--green)}
+.trend .cap{font-size:10px;color:var(--sub);margin-top:4px;font-weight:700;white-space:nowrap}
+.trend .cnt{font-size:11px;font-weight:900;margin-bottom:2px}
+.rate{display:inline-block;min-width:44px;padding:2px 8px;border-radius:999px;font-weight:900;font-size:13px;text-align:center}
+.rate.hi{background:var(--green-l);color:var(--green-d)}
+.rate.mid{background:var(--blue-l);color:var(--blue)}
+.rate.lo{background:var(--red-l);color:var(--red)}
+
+/* =========================================================
+   管理画面（まきちゃん画面 / ダッシュボード / QR印刷）
+   ＝大人が業務で使う画面。子ども向けのキオスクとは要求が逆で、
+   「一度に見える件数」と「1操作あたりの手数」を優先する。
+   キオスクに影響しないよう、すべて .adm 配下に閉じること。
+   ========================================================= */
+.adm .pad{padding:16px 18px}
+.adm .card{border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.05)}
+.adm .sec-title{font-size:15px;margin-bottom:10px}
+.adm .sec-title::before{width:4px;height:16px}
+.adm input[type=text],.adm select{border-width:1px;border-radius:8px;padding:8px 10px;font-size:14px}
+.adm label.fl{font-size:12px;margin-bottom:4px}
+.adm .field{margin-bottom:12px}
+.adm .btn{border-radius:8px;padding:9px 14px;font-size:14px;font-weight:700;box-shadow:none}
+.adm .btn.wide{padding:12px;font-size:15px}
+.adm .btn.sm{padding:6px 10px;font-size:13px}
+.adm .btn:active{transform:none}
+/* 一覧の各行に並ぶ破壊的操作は、押し間違いを誘わないよう常時は控えめに出す */
+.adm .btn.red{background:#fff;border:1px solid #f2b8b8;color:var(--red)}
+.adm .btn.red:hover{background:var(--red);border-color:var(--red);color:#fff}
+
+/* 画面をまたぐナビゲーション（URLを手で打ち替えなくてよいように） */
+.topbar{width:100%;max-width:1160px;display:flex;align-items:center;gap:8px;
+  flex-wrap:wrap;margin:0 0 12px}
+.topbar .ttl{font-weight:800;font-size:15px;margin-right:auto;display:flex;align-items:center;gap:8px}
+.topbar .ttl small{font-weight:700;font-size:12px;color:var(--sub)}
+.navlink{display:inline-block;text-decoration:none;background:#fff;border:1px solid var(--line);
+  color:var(--ink);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700}
+.navlink:hover{border-color:var(--green);color:var(--green-d)}
+.navlink.on{background:var(--green);border-color:var(--green);color:#fff}
+
+/* 指標タイルは、1画面に収まる数を増やすため小さめにする */
+.adm .stat-row{grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px}
+.adm .stat{padding:10px 8px;border-width:1px;border-radius:10px}
+.adm .stat .vl{font-size:24px}
+.adm .panel{padding:14px;margin-top:12px}
+.adm .grid2{gap:12px;margin-top:12px}
+
+/* 操作バー（検索・絞り込み・件数を1行に集約する） */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.toolbar .grow{flex:1 1 200px;min-width:150px}
+.toolbar .cnt{font-size:13px;font-weight:700;color:var(--sub);margin-left:auto;white-space:nowrap}
+.hintline{font-size:12px;color:var(--sub);font-weight:600;margin:0 0 10px}
+.opmsg{font-size:13px;font-weight:800;color:var(--green-d);background:var(--green-l);
+  border:1px solid #bfe3ca;border-radius:8px;padding:8px 10px;margin-bottom:10px}
+.opmsg.err{color:var(--red);background:var(--red-l);border-color:#f2b8b8}
+
+/* 一覧＝1件1行。181人をスクロール少なく見渡せるようにカードをやめる */
+.dl{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.dl>li{border-bottom:1px solid var(--line);padding:9px 6px}
+.dl>li:hover{background:#fafbfc}
+.dl>li.ng{background:#fffdf6}
+.dl .line{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dl .meta{font-size:12px;color:var(--sub);font-weight:600;display:flex;gap:10px;
+  flex-wrap:wrap;align-items:center;margin-top:4px}
+.dl .ok{color:var(--green-d);font-weight:800}
+.f-name{flex:2 1 150px;min-width:120px}
+.f-note{flex:2 1 150px;min-width:120px}
+.f-grade{flex:0 0 108px}
+/* 同名の統合＝どちらが誰かを見比べる画面。1件ずつの違いが目に入る形にする */
+.mgroup{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.mgroup>.hd{background:#f2f5f8;padding:9px 12px;font-weight:800;font-size:15px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mgroup>.hd .n{font-size:12px;font-weight:700;color:var(--sub)}
+.macc{display:flex;gap:10px;padding:11px 12px;border-top:1px solid var(--line);align-items:flex-start}
+.macc.keep{background:var(--green-l)}
+.macc .pick{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;width:56px;
+  font-size:11px;font-weight:800;color:var(--sub);cursor:pointer}
+.macc .pick input{width:20px;height:20px;margin:0;cursor:pointer}
+.macc .body{flex:1;min-width:0}
+.macc .ttl{font-weight:800;font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.macc .facts{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;font-weight:700;
+  color:var(--sub);margin-top:5px}
+.macc .facts b{color:var(--ink)}
+.macc .acts{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.mhist{margin-top:8px;border:1px solid var(--line);border-radius:8px;background:#fafbfc;padding:8px 10px}
+.mhist table{font-size:12px}
+.mhist td{padding:3px 4px;border-bottom:1px dashed var(--line)}
+.mfoot{padding:11px 12px;border-top:1px solid var(--line);display:flex;gap:10px;
+  align-items:center;flex-wrap:wrap;background:#fff}
+.mfoot .lead{font-size:12px;font-weight:700;color:var(--sub);flex:1 1 200px}
+.tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:800;white-space:nowrap}
+.tag.ok{background:var(--green-l);color:var(--green-d)}
+.tag.ng{background:var(--red-l);color:var(--red)}
+.tag.wait{background:var(--orange-l);color:var(--orange)}
+.tag.g{background:#eef1f4;color:var(--sub)}
+
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff;padding:0;display:block}
+  .noprint{display:none !important}
+  #printArea{display:block !important}
+  .psheet{width:210mm;height:297mm;margin:0 auto;padding-top:13.4mm;box-sizing:border-box;
+    display:grid;grid-template-columns:repeat(3,70mm);grid-template-rows:repeat(8,33.9mm);
+    page-break-after:always;break-after:page}
+  .psheet:last-child{page-break-after:auto;break-after:auto}
+  .pcell{width:70mm;height:33.9mm;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;page-break-inside:avoid;break-inside:avoid}
+  .pname{font-size:11px;font-weight:700;margin-bottom:2mm;text-align:center}
+  .pcell img,.pcell canvas{width:22mm;height:22mm}
+}
+</style>
+
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/demo.css">
+<style>
+  .ss-next{
+    display:block;max-width:640px;margin:26px auto 34px;padding:15px 18px;
+    background:#161a20;color:#fff;border-radius:12px;text-decoration:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:15px;font-weight:700;text-align:center;
+  }
+</style>
+</head>
+<body>
+<script src="../assets/demo.js"></script>
+<script src="fake-server.js"></script>
+<!-- ============================================================
+     ここから下は、実際に納品したシステムのコードをそのまま置いたもの。
+     体験版のために向け先を変えているのは、サーバーを呼ぶところだけ。
+     （tools/build.mjs が自動で作っています。直接直さないこと）
+     ============================================================ -->
+
+<!-- ============ 管理画面のナビ（キオスクでは出さない） ============ -->
+<div id="adm-nav" class="topbar hidden noprint">
+  <span class="ttl">まるやまベーカリー クイズ <small id="nav-now"></small></span>
+  <a class="navlink" id="nav-register" target="_top">名簿・本日の結果</a>
+  <a class="navlink" id="nav-admin"    target="_top">ダッシュボード</a>
+  <a class="navlink" id="nav-print"    target="_top">QR印刷</a>
+</div>
+
+<!-- ============ キオスク：名前さがし ============ -->
+<div id="v-kiosk" class="view card w-md hidden noprint">
+  <div class="hero">
+    <h1>まるやまベーカリー<br>クイズ</h1>
+    <p>1日1回・30びょう しょうぶ！</p>
+  </div>
+  <div class="pad">
+    <div id="k-loading" class="hidden empty">
+      <div style="font-size:34px">⏳</div>
+      <div id="k-loading-text">じゅんびちゅう…</div>
+    </div>
+    <div id="k-search">
+      <p style="font-weight:800;text-align:center;margin:0 0 14px">じぶんの名前をさがしてね</p>
+      <div class="row">
+        <input type="text" id="k-input" placeholder="なまえを入力" autocomplete="off">
+        <button class="btn" id="k-btn">さがす</button>
+      </div>
+      <ul id="k-results" class="slist"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============ クイズ ============ -->
+<div id="v-quiz" class="view card w-lg hidden noprint">
+  <div class="pad">
+    <div class="qhead">
+      <span class="who" id="q-who"></span>
+      <span class="timer" id="q-timer">のこり <b id="q-sec">30</b> びょう</span>
+    </div>
+    <div class="tbar"><i id="q-bar"></i></div>
+    <div>
+      <span class="pill" id="q-count">これまでの正解 0 回</span>
+      <span class="pill rev hidden" id="q-mode"></span>
+    </div>
+    <div class="qbox"><h2 id="q-text"></h2></div>
+    <div class="choices" id="q-choices"></div>
+  </div>
+</div>
+
+<!-- ============ 結果 ============ -->
+<div id="v-result" class="view card w-md hidden noprint">
+  <div class="pad">
+    <h1 class="rtitle" id="r-title"></h1>
+    <div id="r-detail" class="hidden">
+      <div class="rbox">
+        <div style="font-size:13px;font-weight:800;color:var(--sub)">もんだい</div>
+        <div class="rq" id="r-q"></div>
+        <div class="kv"><span>あなたの答え</span><b id="r-you"></b></div>
+        <div class="kv ok" id="r-ansbox"><span>せいかい</span><b id="r-ans"></b></div>
+        <div class="hintbox hidden" id="r-hintbox">
+          <div class="lbl">💡 かいせつ</div>
+          <p id="r-hint"></p>
+        </div>
+      </div>
+    </div>
+    <div class="msg" id="r-msg"></div>
+    <div class="coin hidden" id="r-coin">
+      <div class="ic">🪙</div>
+      <div class="t1">パンコイン ゲット！</div>
+      <div class="t2">お店の人に見せてね</div>
+    </div>
+    <div class="alert hidden" id="r-alert"></div>
+    <button class="btn gray wide" id="r-finish">さいしょの画面にもどる</button>
+  </div>
+</div>
+
+<!-- ============ まきちゃん画面 ============ -->
+<div id="v-register" class="view adm w-xl hidden noprint">
+  <div class="tabs">
+    <button class="tab" id="tb-today">本日の結果</button>
+    <button class="tab" id="tb-edit">名簿の編集<span class="tab-badge hidden" id="tb-edit-n"></span></button>
+    <button class="tab" id="tb-merge">同名の統合<span class="tab-badge hidden" id="tb-merge-n"></span></button>
+    <button class="tab" id="tb-new">新規登録</button>
+  </div>
+
+  <!-- QRはどのタブからも出せるよう、タブの外に置く -->
+  <div id="qr-result" class="card hidden" style="margin-bottom:12px"><div class="pad" style="text-align:center">
+    <div style="font-weight:800;font-size:15px;margin-bottom:8px" id="qr-name"></div>
+    <div id="qrbox"></div>
+    <p class="hintline" style="margin:8px 0 0">印刷して本人に渡してください。読み取ると、名前の検索なしでクイズが始まります。</p>
+    <button class="btn ghost sm" id="qr-close" style="margin-top:8px">閉じる</button>
+  </div></div>
+
+  <div id="pane-new" class="pane hidden"><div class="card"><div class="pad">
+    <div class="sec-title">新規登録</div>
+    <div class="row" style="flex-wrap:wrap">
+      <div class="field f-name"><label class="fl">氏名</label>
+        <input type="text" id="rg-name" placeholder="例：なっちゃん"></div>
+      <div class="field f-grade"><label class="fl">学年</label>
+        <select id="rg-grade">
+          <option>小3まで</option><option>小4</option><option>小5</option><option>小6</option>
+          <option>中1</option><option>中2</option><option>中3</option>
+        </select>
+      </div>
+      <div class="field f-note"><label class="fl">目印（任意）</label>
+        <input type="text" id="rg-note" placeholder="例：赤いめがね／〇〇小">
+      </div>
+    </div>
+    <p class="hintline">
+      同姓同名が多数います。<b>目印</b>を入れると、キオスクの検索結果に小さく表示され、取り違えを防げます。
+      登録すると QR コードが表示されます（Enter キーでも登録できます）。
+    </p>
+    <div class="alert hidden" id="rg-msg"></div>
+    <button class="btn wide" id="rg-btn">登録する</button>
+  </div></div></div>
+
+  <div id="pane-edit" class="pane hidden"><div class="card"><div class="pad">
+    <div class="sec-title">名簿の編集・削除</div>
+    <div id="se-issues"></div>
+    <div class="toolbar">
+      <input type="text" id="se-q" class="grow" placeholder="名前で絞り込み（入力すると即座に絞り込みます）">
+      <select id="se-grade" class="f-grade">
+        <option value="">学年：すべて</option>
+        <option>小3まで</option><option>小4</option><option>小5</option><option>小6</option>
+        <option>中1</option><option>中2</option><option>中3</option><option>卒業生</option>
+      </select>
+      <button class="btn sm off" id="se-f-all">すべて</button>
+      <button class="btn sm off" id="se-f-ng">要対応のみ</button>
+      <button class="btn ghost sm" id="se-reload">再読込</button>
+      <span id="se-count" class="cnt"></span>
+    </div>
+    <p class="hintline">氏名・学年・目印はその場で書き換えて［保存］。保存すると過去の回答記録の氏名も同時に更新されます。</p>
+    <!-- 保存・削除の結果は一覧の外に出す（一覧は再描画で作り直されるため、行の中に置くと消える） -->
+    <div id="se-msg" class="opmsg hidden"></div>
+    <ul id="se-list" class="dl"></ul>
+  </div></div></div>
+
+  <div id="pane-merge" class="pane hidden"><div class="card"><div class="pad">
+    <div class="sec-title">同姓同名アカウントの統合</div>
+    <p class="hintline">
+      同じ名前のアカウントが2つ以上ある人を並べています。<b>同一人物だと分かるものだけ</b>まとめてください
+      （本当に別人の同姓同名は、そのままで構いません）。まとめると、消す側の回答記録は残す側へ移り、記録の件数は変わりません。<br>
+      <b>残す方は「最近プレイしている方」を選ぶのが安全です。</b>消した方の QR コードは使えなくなるため、
+      その子が今持っている QR を残すためです。
+    </p>
+    <div class="toolbar">
+      <input type="text" id="mg-q" class="grow" placeholder="名前で絞り込み">
+      <button class="btn ghost sm" id="mg-reload">再読込</button>
+      <span id="mg-count" class="cnt"></span>
+    </div>
+    <div id="mg-msg" class="opmsg hidden"></div>
+    <div id="mg-list"></div>
+  </div></div></div>
+
+  <div id="pane-today" class="pane hidden"><div class="card"><div class="pad">
+    <div class="sec-title">本日の結果</div>
+    <div class="toolbar">
+      <button class="btn ghost sm" id="td-reload">更新</button>
+      <span id="td-summary" class="cnt"></span>
+    </div>
+    <ul id="td-list" class="dl"></ul>
+  </div></div></div>
+</div>
+
+<!-- ============ 分析ダッシュボード ============ -->
+<div id="v-admin" class="view adm card w-xl hidden noprint"><div class="pad">
+  <div class="toolbar">
+    <div class="sec-title" style="margin:0">運用ダッシュボード</div>
+    <button class="btn sm on"  id="pd-month">今月</button>
+    <button class="btn sm off" id="pd-all">全期間</button>
+    <button class="btn ghost sm" id="pd-reload" style="margin-left:auto">更新</button>
+  </div>
+  <div id="dash-warn"></div>
+
+  <div class="stat-row">
+    <div class="stat b"><div class="lb">本日のプレイ数</div><div class="vl" id="d-today">…</div></div>
+    <div class="stat b"><div class="lb">本日の参加人数</div><div class="vl" id="d-users">…</div></div>
+    <div class="stat g"><div class="lb">本日の正解数</div><div class="vl" id="d-tcorrect">…</div></div>
+    <div class="stat g"><div class="lb"><span id="lb-correct">今月</span>の正解数</div><div class="vl" id="d-correct">…</div></div>
+    <div class="stat r"><div class="lb"><span id="lb-wrong">今月</span>の不正解数</div><div class="vl" id="d-wrong">…</div></div>
+    <div class="stat"><div class="lb">正答率</div><div class="vl"><span id="d-acc">…</span>%</div></div>
+    <div class="stat"><div class="lb">リピート率</div><div class="vl"><span id="d-repeat">…</span>%</div></div>
+    <div class="stat"><div class="lb">名簿の登録人数</div><div class="vl" id="d-students">…</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="sec-title">直近14日のプレイ数</div>
+    <div class="trend" id="d-trend"></div>
+  </div>
+
+  <div class="panel">
+    <div class="sec-title">問題の在庫</div>
+    <p class="hintline">当月分が0件の学年は、別の月の問題で代用して出題されます。「通年」＝出題月が空欄の問題。</p>
+    <table><thead><tr>
+      <th>学年</th><th class="num">在籍</th><th class="num">今月</th><th class="num">来月</th>
+      <th class="num">通年</th><th class="num">総数</th><th>状態</th>
+    </tr></thead><tbody id="d-stock"></tbody></table>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><div class="sec-title">学年別 正答率</div>
+      <table><thead><tr><th>学年</th><th class="num">回答</th><th class="num">正答率</th></tr></thead>
+      <tbody id="d-gacc"></tbody></table></div>
+    <div class="panel"><div class="sec-title">正答率が低い問題（見直し候補）</div>
+      <p class="hintline">3回以上出題された問題のうち、正答率が低い順。</p>
+      <table><thead><tr><th>問題</th><th class="num">正答率</th></tr></thead>
+      <tbody id="d-hard"></tbody></table></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><div class="sec-title">学年分布</div>
+      <table><tbody id="d-dist"></tbody></table></div>
+    <div class="panel"><div class="sec-title">正解数ランキング</div>
+      <table><tbody id="d-rank"></tbody></table></div>
+    <div class="panel"><div class="sec-title">来店が途絶えている常連</div>
+      <p class="hintline">5回以上プレイし、最終プレイから14日以上あいている人。</p>
+      <table><tbody id="d-away"></tbody></table></div>
+    <div class="panel"><div class="sec-title">直近の履歴</div>
+      <table><tbody id="d-hist"></tbody></table></div>
+  </div>
+</div></div>
+
+<!-- ============ QR 印刷 ============ -->
+<div id="v-print" class="view adm card w-xl hidden noprint"><div class="pad">
+  <div class="sec-title">QRコードのシール印刷（A4・24面）</div>
+  <p class="hintline">
+    対象にチェックを入れて［印刷］。24人ごとにページが分かれます。絞り込みを変えても、チェックした人は保持されます。
+  </p>
+  <div class="toolbar">
+    <input type="text" id="p-q" class="grow" placeholder="名前で絞り込み">
+    <select id="p-grade" class="f-grade">
+      <option value="">学年：すべて</option>
+      <option>小3まで</option><option>小4</option><option>小5</option><option>小6</option>
+      <option>中1</option><option>中2</option><option>中3</option><option>卒業生</option>
+    </select>
+    <button class="btn ghost sm" id="p-all">表示中をすべて選択</button>
+    <button class="btn ghost sm" id="p-none">選択をすべて解除</button>
+    <span id="p-count" class="cnt"></span>
+    <button class="btn" id="p-go">印刷</button>
+  </div>
+  <div class="chkgrid" id="p-list"><div class="empty">読み込み中…</div></div>
+</div></div>
+
+<div id="printArea"></div>
+
+<script>
+//= サーバから渡される値 ==========================================
+var MODE       = "admin";
+var URL_ID     = "";
+var SCRIPT_URL = "#";
+var SECONDS    = Number("30") || 30;
+
+//= 小さなユーティリティ ==========================================
+function $(id){ return document.getElementById(id); }
+function show(id){
+  var vs = document.querySelectorAll('.view');
+  for (var i=0;i<vs.length;i++) vs[i].classList.add('hidden');
+  var e = $(id); e.classList.remove('hidden'); e.classList.remove('fade');
+  void e.offsetWidth; e.classList.add('fade');
+}
+/** innerHTML を使わずに要素を作る（名前や問題文に < や ' が入っても壊れない） */
+function el(tag, cls, text){
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined && text !== null) e.textContent = String(text);
+  return e;
+}
+function clear(node){ while(node.firstChild) node.removeChild(node.firstChild); }
+/** google.script.run を Promise で扱う（runner を this にしないと呼び出せない） */
+function call(fn){
+  var args = Array.prototype.slice.call(arguments,1);
+  return new Promise(function(res, rej){
+    var runner = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
+    runner[fn].apply(runner, args);
+  });
+}
+
+//= 効果音（外部mp3への依存を廃止し、その場で合成する）==============
+var AC=null;
+function ac(){
+  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=false; } }
+  if(AC && AC.state==='suspended'){ try{ AC.resume(); }catch(e){} }
+  return AC||null;
+}
+function beep(freq, at, dur, type, vol){
+  var c=ac(); if(!c) return;
+  var o=c.createOscillator(), g=c.createGain();
+  o.type=type||'sine'; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001, c.currentTime+at);
+  g.gain.exponentialRampToValueAtTime(vol||0.22, c.currentTime+at+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+at+dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(c.currentTime+at); o.stop(c.currentTime+at+dur+0.02);
+}
+function sndCorrect(){ beep(988,0,.14); beep(1319,.13,.34); }
+function sndWrong(){ beep(233,0,.20,'square',.18); beep(175,.18,.34,'square',.18); }
+function sndTap(){ beep(660,0,.06,'triangle',.10); }
+
+//===============================================================
+// キオスク
+//===============================================================
+var busy=false, answering=false, current=null, tHandle=null;
+
+function kioskSearch(){
+  var q = $('k-input').value.trim();
+  var list = $('k-results');
+  clear(list);
+  if(!q){ list.appendChild(el('li','empty','なまえを入力してね')); return; }
+  ac(); // ここで音を使えるようにしておく（ユーザー操作が必要なため）
+  list.appendChild(el('li','empty','さがしています…'));
+  call('searchStudents', q, false).then(function(rs){
+    clear(list);
+    if(!rs.length){ list.appendChild(el('li','empty','見つかりませんでした')); return; }
+    rs.forEach(function(s){
+      var li = el('li','sitem');
+      var wrap = el('div','nm');
+      wrap.appendChild(document.createTextNode(s.name));
+      if(s.sameName || s.note) wrap.appendChild(el('span','note', s.note ? s.note : 'おなじ名前の子がいます'));
+      li.appendChild(wrap);
+      li.appendChild(el('span', s.sameName ? 'badge warn' : 'badge', s.grade));
+      var b = el('button','btn sm','はじめる');
+      b.onclick = function(){ startScan(s.id); };
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+  }).catch(function(){
+    clear(list); list.appendChild(el('li','empty','つうしんに失敗しました'));
+  });
+}
+
+function startScan(id){
+  if(busy) return; busy=true;
+  $('k-search').classList.add('hidden');
+  $('k-loading').classList.remove('hidden');
+  $('k-loading-text').textContent='もんだいを さがしています…';
+  show('v-kiosk');
+  call('processScan', id).then(function(res){
+    busy=false;
+    if(res.success){ startQuiz(res); return; }
+    if(res.status==='already_played') showSimple('また明日！', res.message, 'orange');
+    else if(res.status==='busy')      showSimple('ちょっと待ってね', res.message, 'blue');
+    else                              showSimple('あれ？', res.message, 'blue');
+  }).catch(function(){
+    busy=false;
+    showSimple('つうしんエラー','ネットにつながりませんでした。\nもう一度ためしてね。','blue');
+  });
+}
+
+var MODE_LABEL = {
+  fallback:'今月のもんだいは ぜんぶ おわったよ',
+  review:'ふくしゅうモード（まちがえた問題）',
+  replay:'ぜんぶクリア！ おかわりモード',
+  resume:'さっきの つづきです'
+};
+
+function startQuiz(res){
+  current = { row:res.row, id:res.student.id, correctCount:res.correctCount, q:res.question };
+  answering=false;
+  $('q-who').textContent = res.student.name + ' さん（' + res.student.grade + '）';
+  $('q-count').textContent = 'これまでの正解 ' + res.correctCount + ' 回';
+  var mb = $('q-mode');
+  if(MODE_LABEL[res.mode]){ mb.textContent = MODE_LABEL[res.mode]; mb.classList.remove('hidden'); }
+  else mb.classList.add('hidden');
+  $('q-text').textContent = res.question.text;
+
+  var box = $('q-choices'); clear(box);
+  res.question.choices.forEach(function(c, i){
+    var b = el('button','ch c'+(i%4), c);
+    b.onclick = function(){ answer(c, b); };
+    box.appendChild(b);
+  });
+  show('v-quiz');
+  startTimer(res.seconds || SECONDS);
+}
+
+function startTimer(sec){
+  var end = Date.now() + sec*1000;
+  var tm = $('q-timer');
+  clear(tm);                                   // 「はんてい中…」で書き換えた構造を毎回作り直す
+  tm.appendChild(document.createTextNode('のこり '));
+  var sp = el('b'); sp.id='q-sec'; tm.appendChild(sp);
+  tm.appendChild(document.createTextNode(' びょう'));
+  var bar = $('q-bar'); bar.style.width='100%';
+  if(tHandle) clearInterval(tHandle);
+  var tick = function(){
+    var left = Math.max(0, end - Date.now());
+    var s = Math.ceil(left/1000);
+    sp.textContent = s;
+    bar.style.width = (left/(sec*1000)*100) + '%';
+    if(s<=5){ bar.classList.add('hot'); tm.classList.remove('calm'); }
+    else { bar.classList.remove('hot'); tm.classList.add('calm'); }
+    if(left<=0){ clearInterval(tHandle); tHandle=null; answer('__TIMEUP__', null); }
+  };
+  tick();
+  tHandle = setInterval(tick, 200);   // Date.now 基準なので、間隔がずれても表示は正確
+}
+
+function answer(choice, btn){
+  if(answering) return;               // ← 連打・同時押し・タイムアップとの競合を止める
+  answering = true;
+  if(tHandle){ clearInterval(tHandle); tHandle=null; }
+  var btns = document.querySelectorAll('#q-choices .ch');
+  for(var i=0;i<btns.length;i++) btns[i].disabled = true;
+  if(btn) btn.classList.add('picked');
+  sndTap();
+
+  // 保存が終わるまで結果を出さない（＝保存できていないのにコインを出さない）
+  var tm = $('q-timer'); tm.classList.add('calm'); tm.textContent = 'はんてい中…';
+  $('q-bar').style.width = '0%';
+
+  call('recordAnswer', current.row, current.id, choice).then(function(r){
+    if(!r.success){ showSimple('ほぞんできませんでした', (r.message||'') + '\nお店の人をよんでね。', 'red'); return; }
+    showAnswerResult(r, choice==='__TIMEUP__');
+  }).catch(function(){
+    showSimple('つうしんエラー', 'こたえを ほぞんできませんでした。\nお店の人をよんでね。', 'red');
+  });
+}
+
+function showAnswerResult(r, timeup){
+  var ok = r.isCorrect;
+  if(ok) sndCorrect(); else sndWrong();
+
+  $('r-title').textContent = ok ? 'せいかい！🎉' : (timeup ? '時間ぎれ…⏰' : 'ざんねん…💦');
+  $('r-title').style.color = ok ? 'var(--green-d)' : 'var(--blue)';
+  $('r-detail').classList.remove('hidden');
+  $('r-q').textContent   = current.q.text;
+  $('r-you').textContent = r.yourAnswer;
+  $('r-you').style.color = ok ? 'var(--green-d)' : 'var(--red)';
+  $('r-ans').textContent = r.correctAnswer;
+  $('r-ansbox').classList.toggle('hidden', ok);
+
+  if(r.hint){ $('r-hint').textContent = r.hint; $('r-hintbox').classList.remove('hidden'); }
+  else $('r-hintbox').classList.add('hidden');
+
+  var msg = $('r-msg');
+  msg.textContent = ok ? ('これまでの正解 ' + (current.correctCount+1) + ' 回になったよ！')
+                       : (timeup ? 'つぎは はやく こたえてみよう！' : 'あしたは きっと できる！');
+  msg.style.color = ok ? 'var(--green-d)' : 'var(--sub)';
+  msg.classList.remove('hidden');
+
+  $('r-coin').classList.toggle('hidden', !ok);
+  $('r-alert').classList.add('hidden');
+  show('v-result');
+}
+
+function showSimple(title, message, color){
+  $('r-title').textContent = title;
+  $('r-title').style.color = color==='orange' ? 'var(--orange)' : (color==='red' ? 'var(--red)' : 'var(--blue)');
+  $('r-detail').classList.add('hidden');
+  $('r-coin').classList.add('hidden');
+  var al = $('r-alert');
+  if(color==='red'){ al.textContent = message; al.classList.remove('hidden'); $('r-msg').classList.add('hidden'); }
+  else { al.classList.add('hidden'); $('r-msg').textContent = message; $('r-msg').style.color='var(--sub)'; $('r-msg').classList.remove('hidden'); }
+  show('v-result');
+}
+
+function backToKiosk(){
+  if(tHandle){ clearInterval(tHandle); tHandle=null; }
+  answering=false; busy=false; current=null;
+  $('k-loading').classList.add('hidden');
+  $('k-search').classList.remove('hidden');
+  $('k-input').value=''; clear($('k-results'));
+  show('v-kiosk');
+}
+
+//===============================================================
+// まきちゃん画面（大人が業務で使う画面）
+//===============================================================
+/** タブ切り替え（1画面に全部並べるとスクロールが長すぎるため） */
+function tab(name){
+  ['today','edit','merge','new'].forEach(function(n){
+    $('pane-'+n).classList.toggle('hidden', n!==name);
+    $('tb-'+n).className = 'tab' + (n===name ? ' on' : '');
+  });
+  window.scrollTo(0,0);
+  if(name==='edit') setTimeout(function(){ $('se-q').focus(); }, 0);
+  if(name==='new')  setTimeout(function(){ $('rg-name').focus(); }, 0);
+}
+
+function rgRegister(force){
+  var b = $('rg-btn'); if(b.disabled) return;          // ← 二重登録の防止
+  var name = $('rg-name').value.trim();
+  var grade= $('rg-grade').value;
+  var note = $('rg-note').value.trim();
+  var msg  = $('rg-msg');
+  if(!name){ msg.textContent='氏名を入力してください。'; msg.classList.remove('hidden'); return; }
+  b.disabled = true; b.textContent = '登録中…';
+  call('registerNewStudent', name, grade, note, !!force).then(function(r){
+    b.disabled=false; b.textContent='登録する';
+    if(r.success){
+      msg.classList.add('hidden');
+      $('rg-name').value=''; $('rg-note').value='';
+      $('rg-name').focus();                       // 続けて登録できるように入力欄へ戻す
+      showQR(r.id, r.name, r.grade);
+      loadSearch();
+    } else if(r.needConfirm){
+      var t = r.error + '\n（' + r.duplicates.map(function(d){return d.grade;}).join('・') + '）\n'
+            + '同姓同名の別人として登録しますか？';
+      if(confirm(t)) rgRegister(true);
+      else { msg.textContent = '登録を中止しました。同一人物なら［名簿の編集］から氏名を修正してください。'; msg.classList.remove('hidden'); }
+    } else {
+      msg.textContent = r.error; msg.classList.remove('hidden');
+    }
+  }).catch(function(e){ b.disabled=false; b.textContent='登録する'; msg.textContent='エラー: '+e.message; msg.classList.remove('hidden'); });
+}
+
+function showQR(id, name, grade){
+  $('qr-result').classList.remove('hidden');
+  $('qr-name').textContent = name + '（' + grade + '）';
+  var box = $('qrbox'); clear(box);
+  if(typeof QRCode === 'undefined'){ box.appendChild(el('div','empty','QRライブラリを読み込めませんでした（ネット接続を確認）')); return; }
+  new QRCode(box, { text: SCRIPT_URL + '?id=' + id, width:180, height:180 });
+}
+
+var ONLY_NG = false;
+var LAST_SEARCH = [];
+var GRADES = ['小3まで','小4','小5','小6','中1','中2','中3','卒業生'];
+
+/** サーバが返す要対応の種別（Code.gs の文言）→ 画面表示・対処の説明 */
+var ISSUE_LABEL = {
+  'だれか分からない名前'    : '氏名から本人を特定できない',
+  '同じ子が2つある'        : '同一人物が重複登録',
+  '同名なのに目じるしが無い': '同姓同名だが目印が未設定',
+  '1回も遊んでいない'      : 'プレイ記録なし',
+  '学年がおかしい'         : '学年が不正'
+};
+var ISSUE_HELP = {
+  'だれか分からない名前'    :'「男子」「塾生」など本人を特定できない氏名です。正しい氏名に修正するか、削除してください。',
+  '同じ子が2つある'        :'同一の氏名・学年のアカウントが2件以上あります。同一人物なら［同名の統合］タブでまとめてください（記録は残ります）。',
+  '同名なのに目じるしが無い':'キオスクの検索結果で取り違えます。「赤いめがね」「〇〇小」などの目印を入力してください。',
+  '1回も遊んでいない'      :'記録が1件もありません。QRの渡し忘れ、または二重登録の可能性があります。',
+  '学年がおかしい'         :'想定外の学年です。正しい学年に修正してください。'
+};
+function issueLabel(t){ return ISSUE_LABEL[t] || t; }
+
+/** 保存・削除の結果を一覧の外に出す（一覧は再描画されるため、行の中に置くと即座に消える） */
+function opMsg(text, isError){
+  var b = $('se-msg');
+  b.textContent = text;
+  b.className = 'opmsg' + (isError ? ' err' : '');
+}
+
+/** 要対応アカウントを種別ごとにまとめて先頭に出す */
+function renderIssueSummary(rs){
+  var box = $('se-issues'); clear(box);
+  var groups = {};
+  rs.forEach(function(s){
+    (s.issues||[]).forEach(function(t){ (groups[t] = groups[t] || []).push(s); });
+  });
+  var keys = Object.keys(groups);
+  var ngCount = rs.filter(function(s){ return (s.issues||[]).length; }).length;
+
+  // タブのバッジ
+  var badge = $('tb-edit-n');
+  if(ngCount){ badge.textContent = ngCount; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+
+  if(!keys.length){
+    var okBox = el('div','issuebox');
+    okBox.style.background='var(--green-l)'; okBox.style.borderColor='#bfe3ca';
+    var h = el('h4','', '要対応のアカウントはありません');
+    h.style.color='var(--green-d)'; h.style.margin='0';
+    okBox.appendChild(h);
+    box.appendChild(okBox);
+    return;
+  }
+  var b = el('div','issuebox');
+  b.appendChild(el('h4','', '要対応のアカウント ' + ngCount + ' 件'));
+  var ul = el('ul');
+  keys.forEach(function(k){
+    var li = el('li');
+    li.appendChild(el('b',null, issueLabel(k) + '：' + groups[k].length + '件'));
+    li.appendChild(el('span','note', groups[k].slice(0,8).map(function(s){return s.name+'（'+s.grade+'）';}).join('、')
+      + (groups[k].length>8 ? ' ほか' + (groups[k].length-8) + '件' : '')));
+    li.appendChild(el('span','note', ISSUE_HELP[k] || ''));
+    ul.appendChild(li);
+  });
+  b.appendChild(ul);
+  box.appendChild(b);
+}
+
+function setNgFilter(v){
+  ONLY_NG = v;
+  $('se-f-all').className = 'btn sm ' + (v ? 'off' : 'on');
+  $('se-f-ng').className  = 'btn sm ' + (v ? 'on' : 'off');
+  renderSearchList();
+}
+
+/**
+ * 名簿は全件まとめて取得し、以降の絞り込みは画面側で行う（サーバ往復ゼロ＝入力と同時に絞り込める）。
+ * @param {boolean} keepView true のとき、絞り込み条件とスクロール位置を保ったまま再読込する
+ */
+function loadSearch(keepView){
+  var list = $('se-list');
+  var y = window.scrollY;
+  if(!keepView){ clear(list); list.appendChild(el('li','empty','読み込み中…')); }
+  call('searchStudents', '', true, true).then(function(rs){
+    LAST_SEARCH = rs;
+    renderIssueSummary(rs);
+    if(keepView){ renderSearchList(); window.scrollTo(0, y); }
+    else {
+      var ng = rs.filter(function(s){ return (s.issues||[]).length; }).length;
+      setNgFilter(ng > 0);        // 要対応があれば、最初はそれだけを見せる
+    }
+  }).catch(function(e){ clear(list); list.appendChild(el('li','empty','エラー: '+e.message)); });
+}
+
+/** 画面側の絞り込み（氏名の部分一致 × 学年 × 要対応のみ） */
+function filteredStudents(){
+  var q = $('se-q').value.trim();
+  var g = $('se-grade').value;
+  return LAST_SEARCH.filter(function(s){
+    if(ONLY_NG && !(s.issues||[]).length) return false;
+    if(g && s.grade !== g) return false;
+    if(q && s.name.indexOf(q) < 0) return false;
+    return true;
+  });
+}
+
+function renderSearchList(){
+  var list = $('se-list'); clear(list);
+  var rs = filteredStudents();
+  var ngAll = LAST_SEARCH.filter(function(s){ return (s.issues||[]).length; }).length;
+  $('se-count').textContent = '表示 ' + rs.length + ' 件 / 全 ' + LAST_SEARCH.length + ' 件（要対応 ' + ngAll + ' 件）';
+  if(!rs.length){ list.appendChild(el('li','empty', ONLY_NG ? '要対応のアカウントはありません' : '該当する人がいません')); return; }
+  // 要対応を先頭にまとめる
+  rs = rs.slice().sort(function(a,b){ return ((b.issues||[]).length?1:0) - ((a.issues||[]).length?1:0); });
+
+  rs.forEach(function(s){
+    var bad = (s.issues||[]).length > 0;
+    var li = el('li', bad ? 'ng' : null);
+
+    var row = el('div','line');
+    var iName = el('input'); iName.type='text'; iName.value=s.name; iName.className='f-name';
+    var sGrade= el('select'); sGrade.className='f-grade';
+    GRADES.forEach(function(g){
+      var o=el('option',null,g); o.value=g; if(g===s.grade) o.selected=true; sGrade.appendChild(o);
+    });
+    var iNote = el('input'); iNote.type='text'; iNote.value=s.note||''; iNote.placeholder='目印'; iNote.className='f-note';
+    var bSave = el('button','btn gray sm','保存');
+    var bQR   = el('button','btn blue sm','QR');
+    var bDel  = el('button','btn red sm','削除');
+
+    // 保存は取り消しても実害が無い操作なので確認ダイアログを出さない（削除だけ確認する）
+    bSave.onclick = function(){
+      if(bSave.disabled) return;
+      var nm = iName.value.trim();
+      if(!nm){ opMsg('氏名が空です。', true); return; }
+      bSave.disabled=true; bSave.textContent='保存中';
+      call('updateStudent', s.id, nm, sGrade.value, iNote.value.trim()).then(function(r){
+        bSave.disabled=false; bSave.textContent='保存';
+        if(r.success){
+          opMsg('「'+nm+'（'+sGrade.value+'）」を保存しました（過去の回答記録 '+r.updatedRecords+' 件も更新）。');
+          s.name=nm; s.grade=sGrade.value; s.note=iNote.value.trim();
+          loadSearch(true);                 // 要対応の判定はサーバ側なので取り直す（表示位置は維持）
+        } else opMsg('エラー: '+r.error, true);
+      }).catch(function(e){
+        bSave.disabled=false; bSave.textContent='保存';
+        opMsg('エラー: '+e.message, true);
+      });
+    };
+    // Enter でも保存できる（3項目のどこからでも）
+    [iName, iNote].forEach(function(inp){
+      inp.addEventListener('keypress', function(e){ if(e.key==='Enter') bSave.onclick(); });
+    });
+
+    bQR.onclick = function(){ showQR(s.id, s.name, s.grade); window.scrollTo(0,0); };
+    bDel.onclick = function(){
+      if(!confirm('「'+s.name+'（'+s.grade+'）」を名簿から削除します。\n\n・過去の回答記録（正解数など）は残ります\n・この人の QR コードは使えなくなります\n\n削除しますか？')) return;
+      bDel.disabled=true;
+      call('deleteStudent', s.id).then(function(r){
+        if(r.success){ opMsg('「'+s.name+'（'+s.grade+'）」を名簿から削除しました（回答記録は残しています）。'); loadSearch(true); }
+        else { opMsg('エラー: '+r.error, true); bDel.disabled=false; }
+      }).catch(function(e){ opMsg('エラー: '+e.message, true); bDel.disabled=false; });
+    };
+
+    row.appendChild(iName); row.appendChild(sGrade); row.appendChild(iNote);
+    row.appendChild(bSave); row.appendChild(bQR); row.appendChild(bDel);
+    li.appendChild(row);
+
+    var meta = el('div','meta');
+    if(s.records !== undefined) meta.appendChild(el('span',null,'プレイ ' + s.records + ' 回'));
+    if(s.sameName) meta.appendChild(el('span','tag wait','同姓同名あり'));
+    (s.issues||[]).forEach(function(t){
+      meta.appendChild(el('span','tag ' + (t==='だれか分からない名前'||t==='学年がおかしい' ? 'ng':'wait'), issueLabel(t)));
+    });
+    li.appendChild(meta);
+    list.appendChild(li);
+  });
+}
+
+//===============================================================
+// 同姓同名アカウントの統合
+//   どれが同一人物かはスプレッドシートを見ても分からない（店頭で子どもを知っている
+//   まきちゃんにしか判断できない）ため、判断材料を並べて画面上で選べるようにする。
+//===============================================================
+var MERGE_GROUPS = [];
+var MERGE_PICK = {};      // グループのキー → { keep:生徒ID, drops:{生徒ID:true} }
+
+function mgMsg(text, isError){
+  var b = $('mg-msg');
+  b.textContent = text;
+  b.className = 'opmsg' + (isError ? ' err' : '');
+}
+
+/** 最終プレイの表示（今その子が使っているアカウントを見分ける、いちばん強い手がかり） */
+function lastPlayText(a){
+  if(a.daysSinceLast < 0) return 'プレイ記録なし';
+  var d = a.daysSinceLast;
+  var when = d===0 ? '今日' : (d===1 ? 'きのう' : d + '日前');
+  return a.lastPlay + '（' + when + '）';
+}
+
+function loadMerge(){
+  var box = $('mg-list'); clear(box);
+  box.appendChild(el('div','empty','読み込み中…'));
+  call('getMergeCandidates').then(function(gs){
+    MERGE_GROUPS = gs;
+    // 既定の「残す方」＝いちばん最近プレイしているアカウント（＝今その子が持っているQR）
+    MERGE_PICK = {};
+    gs.forEach(function(g){
+      var best = g.accounts[0];
+      g.accounts.forEach(function(a){
+        if(a.daysSinceLast >= 0 && (best.daysSinceLast < 0 || a.daysSinceLast < best.daysSinceLast)) best = a;
+      });
+      MERGE_PICK[g.key] = { keep: best.id, drops: {} };
+    });
+    var badge = $('tb-merge-n');
+    if(gs.length){ badge.textContent = gs.length; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+    renderMerge();
+  }).catch(function(e){ clear(box); box.appendChild(el('div','empty','エラー: '+e.message)); });
+}
+
+/**
+ * 同名グループの「見立て」。同名は別人のことも多いので、二重登録の可能性が高い組から先に見せる。
+ * 0＝学年も同じ（同一人物の可能性が高い）／1＝未プレイのアカウントがある（登録しただけの重複）／2＝学年ちがい
+ */
+function mergeHint(g){
+  var byGrade = {};
+  var hasIdle = false;
+  g.accounts.forEach(function(a){
+    byGrade[a.grade] = (byGrade[a.grade]||0) + 1;
+    if(a.plays === 0) hasIdle = true;
+  });
+  var dupGrade = Object.keys(byGrade).some(function(k){ return byGrade[k] > 1; });
+  if(dupGrade) return { rank:0, label:'学年も同じ', cls:'tag ng' };
+  if(hasIdle)  return { rank:1, label:'未プレイのアカウントあり', cls:'tag wait' };
+  return { rank:2, label:'学年ちがい（進級か別人か）', cls:'tag g' };
+}
+
+function renderMerge(){
+  var box = $('mg-list'); clear(box);
+  var q = $('mg-q').value.trim();
+  var gs = MERGE_GROUPS.filter(function(g){ return !q || g.name.indexOf(q) >= 0; });
+  // 二重登録の可能性が高い組を上に。同順位は名前順（サーバ側で名前順に並んでいる）
+  gs = gs.slice().sort(function(a,b){ return mergeHint(a).rank - mergeHint(b).rank; });
+  var dup = gs.filter(function(g){ return mergeHint(g).rank === 0; }).length;
+  $('mg-count').textContent = '同名 ' + gs.length + ' 組 / 全 ' + MERGE_GROUPS.length + ' 組'
+    + (dup ? '（うち学年も同じ ' + dup + ' 組）' : '');
+  if(!gs.length){
+    box.appendChild(el('div','empty', MERGE_GROUPS.length ? '該当する名前がありません' : '同じ名前が重なっているアカウントはありません'));
+    return;
+  }
+  gs.forEach(function(g){ box.appendChild(buildGroup(g)); });
+}
+
+function buildGroup(g){
+  var pick = MERGE_PICK[g.key];
+  var wrap = el('div','mgroup');
+
+  var hint = mergeHint(g);
+  var hd = el('div','hd');
+  hd.appendChild(el('span',null,g.name));
+  hd.appendChild(el('span','n', 'アカウント ' + g.accounts.length + ' 件'));
+  hd.appendChild(el('span', hint.cls, hint.label));
+  wrap.appendChild(hd);
+
+  g.accounts.forEach(function(a){
+    var isKeep = pick.keep === a.id;
+    var row = el('div','macc' + (isKeep ? ' keep' : ''));
+
+    // --- 残す／まとめる の選択
+    var pk = el('label','pick');
+    var rd = el('input'); rd.type='radio'; rd.name='mg-keep-'+g.key; rd.checked=isKeep;
+    rd.onchange = function(){
+      pick.keep = a.id;
+      delete pick.drops[a.id];       // 残す方に選んだものは「まとめる相手」から外す
+      renderMerge();
+    };
+    pk.appendChild(rd);
+    pk.appendChild(el('span',null,'残す'));
+    row.appendChild(pk);
+
+    var pk2 = el('label','pick');
+    var cb = el('input'); cb.type='checkbox'; cb.checked = !!pick.drops[a.id]; cb.disabled = isKeep;
+    cb.onchange = function(){
+      if(cb.checked) pick.drops[a.id] = true; else delete pick.drops[a.id];
+      renderMerge();
+    };
+    pk2.appendChild(cb);
+    pk2.appendChild(el('span',null,'まとめる'));
+    pk2.style.opacity = isKeep ? '.3' : '1';
+    row.appendChild(pk2);
+
+    // --- 見分けるための情報
+    var body = el('div','body');
+    var ttl = el('div','ttl');
+    ttl.appendChild(el('span',null,a.name));
+    ttl.appendChild(el('span','tag g', a.grade));
+    if(a.note) ttl.appendChild(el('span','tag wait', '目印：' + a.note));
+    else ttl.appendChild(el('span','tag g','目印なし'));
+    if(isKeep) ttl.appendChild(el('span','tag ok','これを残す'));
+    body.appendChild(ttl);
+
+    var f = el('div','facts');
+    var f1 = el('span'); f1.appendChild(document.createTextNode('最終プレイ '));
+    f1.appendChild(el('b',null, lastPlayText(a))); f.appendChild(f1);
+    var f2 = el('span'); f2.appendChild(document.createTextNode('プレイ '));
+    f2.appendChild(el('b',null, a.plays + ' 回')); f2.appendChild(document.createTextNode('（正解 ' + a.correct + '）')); f.appendChild(f2);
+    if(a.firstPlay) f.appendChild(el('span',null,'初回 ' + a.firstPlay));
+    if(a.registered) f.appendChild(el('span',null,'登録 ' + a.registered));
+    if(a.gradesPlayed.length) f.appendChild(el('span',null,'記録の学年 ' + a.gradesPlayed.join('・')));
+    f.appendChild(el('span',null,'ID ' + a.id));
+    body.appendChild(f);
+
+    var acts = el('div','acts');
+    var bH = el('button','btn ghost sm', a.recent.length ? '直近の履歴を見る（' + a.recent.length + '件）' : '履歴なし');
+    bH.disabled = !a.recent.length;
+    var hist = null;
+    bH.onclick = function(){
+      if(hist){ body.removeChild(hist); hist=null; bH.textContent='直近の履歴を見る（' + a.recent.length + '件）'; return; }
+      hist = el('div','mhist');
+      var tb = el('table');
+      a.recent.forEach(function(r){
+        var tr = el('tr');
+        tr.appendChild(el('td',null,r.when));
+        tr.appendChild(el('td',null,r.grade));
+        tr.appendChild(el('td',null,r.question));
+        tr.appendChild(el('td',null,r.result));
+        tb.appendChild(tr);
+      });
+      hist.appendChild(tb);
+      body.appendChild(hist);
+      bH.textContent = '履歴を閉じる';
+    };
+    acts.appendChild(bH);
+    var bQ = el('button','btn blue sm','QRを表示');
+    bQ.onclick = function(){ showQR(a.id, a.name, a.grade); window.scrollTo(0,0); };
+    acts.appendChild(bQ);
+    body.appendChild(acts);
+
+    row.appendChild(body);
+    wrap.appendChild(row);
+  });
+
+  // --- 実行
+  var keepAcc = g.accounts.filter(function(a){ return a.id===pick.keep; })[0] || g.accounts[0];
+  var drops = g.accounts.filter(function(a){ return pick.drops[a.id]; });
+  var foot = el('div','mfoot');
+  foot.appendChild(el('span','lead', drops.length
+    ? '「' + keepAcc.name + '（' + keepAcc.grade + '）」に ' + drops.length + ' 件をまとめます。'
+    : '同一人物のアカウントに［まとめる］のチェックを入れてください。'));
+  var bGo = el('button','btn', drops.length ? drops.length + ' 件をまとめる' : 'まとめる');
+  bGo.disabled = !drops.length;
+  bGo.onclick = function(){ doMerge(g, keepAcc, drops, bGo); };
+  foot.appendChild(bGo);
+  wrap.appendChild(foot);
+  return wrap;
+}
+
+function doMerge(g, keep, drops, btn){
+  var lines = drops.map(function(a){
+    return '・' + a.name + '（' + a.grade + '）' + (a.note ? '／目印：' + a.note : '')
+         + '　プレイ ' + a.plays + '回／最終 ' + lastPlayText(a);
+  }).join('\n');
+  var total = drops.reduce(function(n,a){ return n + a.plays; }, 0);
+  var msg = '「' + keep.name + '（' + keep.grade + '）」に、次の ' + drops.length + ' 件を同一人物としてまとめます。\n\n'
+          + lines + '\n\n'
+          + '・回答記録 約' + total + ' 件が「' + keep.name + '（' + keep.grade + '）」に移ります（記録は消えません）\n'
+          + '・まとめた方は名簿から消え、その QR コードは使えなくなります\n\n'
+          + '実行しますか？';
+  if(!confirm(msg)) return;
+  btn.disabled = true; btn.textContent = '処理中…';
+  call('mergeStudents', keep.id, drops.map(function(a){ return a.id; })).then(function(r){
+    if(r.success){
+      mgMsg('「' + r.keep.name + '（' + r.keep.grade + '）」にまとめました（' + r.mergedCount + ' 件・回答記録 '
+            + r.movedRecords + ' 件を移動）。この子には、残した方の QR を渡してください。');
+      loadMerge();
+      loadSearch(true);            // 名簿側の件数・要対応もずれるので取り直す
+    } else {
+      mgMsg('エラー: ' + r.error, true);
+      btn.disabled = false; btn.textContent = drops.length + ' 件をまとめる';
+    }
+  }).catch(function(e){
+    mgMsg('エラー: ' + e.message, true);
+    btn.disabled = false; btn.textContent = drops.length + ' 件をまとめる';
+  });
+}
+
+function loadToday(){
+  var list = $('td-list'); clear(list);
+  list.appendChild(el('li','empty','読み込み中…'));
+  call('getTodaysResults').then(function(rs){
+    clear(list);
+    var pend = rs.filter(function(r){return r.pending;}).length;
+    var ok   = rs.filter(function(r){return r.isCorrect;}).length;
+    $('td-summary').textContent = 'プレイ ' + rs.length + ' 件 / 正解 ' + ok + ' 件'
+      + (pend ? ' / 未完了 ' + pend + ' 件' : '');
+    if(!rs.length){ list.appendChild(el('li','empty','本日の記録はまだありません。')); return; }
+    rs.forEach(function(r){
+      var li = el('li', r.pending ? 'ng' : null);
+      var row = el('div','line');
+      row.appendChild(el('span', r.pending ? 'tag wait' : (r.isCorrect ? 'tag ok' : 'tag ng'),
+                          r.pending ? '未完了' : (r.isCorrect ? '正解' : '不正解')));
+      row.appendChild(el('b', null, r.name));
+      row.appendChild(el('span','tag g', r.grade));
+      row.appendChild(el('span','tag g', r.time));
+      // 救済用の操作なので、常時目立つ赤ではなく控えめな見た目にする（確認ダイアログは残す）
+      var b = el('button','btn ghost sm','記録を削除して再挑戦可に');
+      b.style.marginLeft='auto';
+      b.onclick = function(){
+        if(!confirm(r.name+' さんの本日の記録を削除し、もう一度挑戦できる状態にします。よろしいですか？')) return;
+        b.disabled=true;
+        call('resetTodayForStudent', r.id).then(function(x){
+          if(x.success){ loadToday(); } else { alert('エラー: '+x.error); b.disabled=false; }
+        }).catch(function(e){ alert('エラー: '+e.message); b.disabled=false; });
+      };
+      row.appendChild(b);
+      li.appendChild(row);
+
+      var meta = el('div','meta');
+      meta.appendChild(el('span',null, r.question));
+      if(r.pending) meta.appendChild(el('span',null,'回答前に画面を閉じた／端末が停止した記録です'));
+      else meta.appendChild(el('span',null,'回答：' + r.yourAnswer + '　正解：' + r.correctAnswer));
+      li.appendChild(meta);
+      list.appendChild(li);
+    });
+  }).catch(function(e){ clear(list); list.appendChild(el('li','empty','エラー: '+e.message)); });
+}
+
+//===============================================================
+// ダッシュボード
+//===============================================================
+var PERIOD = 'month';
+
+function rateCls(r){ return r>=70 ? 'rate hi' : (r>=40 ? 'rate mid' : 'rate lo'); }
+
+function loadDashboard(){
+  $('pd-month').className = 'btn sm ' + (PERIOD==='month'?'on':'off');
+  $('pd-all').className   = 'btn sm ' + (PERIOD==='all'?'on':'off');
+  var lb = (PERIOD==='all') ? '全期間' : '今月';
+  $('lb-correct').textContent = lb;
+  $('lb-wrong').textContent = lb;
+
+  call('getDashboardData', PERIOD).then(function(d){
+    $('d-today').textContent   = d.todayPlays;
+    $('d-users').textContent   = d.todayUniquePlayersCount;
+    $('d-tcorrect').textContent= d.todayCorrect;
+    $('d-correct').textContent = d.totalCorrect;
+    $('d-wrong').textContent   = d.totalWrong;
+    $('d-acc').textContent     = d.accuracy;
+    $('d-repeat').textContent  = d.repeatRate;
+    $('d-students').textContent= d.studentCount;
+
+    // --- 警告
+    var warn = $('dash-warn'); clear(warn);
+    var msgs = [];
+    var dry = d.stock.filter(function(s){ return s.thisMonth===0 && s.students>0; });
+    if(dry.length) msgs.push('【要対応】' + d.currentMonth + '月の問題が0件の学年があります（' +
+      dry.map(function(s){return s.grade;}).join('・') + '）。別の月の問題で代用中です。');
+    var dryNext = d.stock.filter(function(s){ return s.nextMonth===0 && s.students>0; });
+    if(dryNext.length) msgs.push('【予告】' + d.nextMonth + '月の問題も0件です（' +
+      dryNext.map(function(s){return s.grade;}).join('・') + '）。通年で出したい問題は「出題月」を空欄にすると使われます。');
+    if(d.totalPending) msgs.push('【未完了】回答前に終了した記録が ' + d.totalPending + ' 件あります。');
+    if(d.deletedPlays) msgs.push('【参考】名簿から削除した人の記録 ' + d.deletedPlays + ' 件（うち正解 ' + d.deletedCorrect + ' 件）も上の合計に含みます。');
+    if(msgs.length){ var w = el('div','warnbox'); msgs.forEach(function(m){ w.appendChild(el('div',null,m)); }); warn.appendChild(w); }
+
+    // --- 日別プレイ数
+    var tr = $('d-trend'); clear(tr);
+    d.trend.forEach(function(t, i){
+      var col = el('div');
+      col.appendChild(el('div','cnt', t.count || ''));
+      var bar = el('div','bar' + (t.count===0?' zero':'') + (i===d.trend.length-1?' today':''));
+      bar.style.height = Math.max(2, Math.round(t.count / d.trendMax * 78)) + 'px';
+      col.appendChild(bar);
+      col.appendChild(el('div','cap', t.label));
+      col.title = t.label + '（' + t.weekday + '） ' + t.count + '回';
+      tr.appendChild(col);
+    });
+
+    // --- 問題の在庫
+    var st = $('d-stock'); clear(st);
+    d.stock.forEach(function(s){
+      var tr2 = el('tr');
+      tr2.appendChild(el('td',null,s.grade));
+      tr2.appendChild(el('td','num',s.students));
+      tr2.appendChild(el('td','num',s.thisMonth));
+      tr2.appendChild(el('td','num',s.nextMonth));
+      tr2.appendChild(el('td','num',s.evergreen));
+      tr2.appendChild(el('td','num',s.total));
+      var stat = el('td',null, s.thisMonth===0 ? '当月分なし（代用中）' : '充足');
+      stat.style.color = s.thisMonth===0 ? 'var(--orange)' : 'var(--green-d)';
+      stat.style.fontWeight='800';
+      tr2.appendChild(stat);
+      st.appendChild(tr2);
+    });
+
+    // --- 学年べつ正答率
+    var ga = $('d-gacc'); clear(ga);
+    if(!d.gradeAccuracy.length) ga.appendChild(el('tr',null,'データがありません'));
+    d.gradeAccuracy.forEach(function(g){
+      var t2=el('tr');
+      t2.appendChild(el('td',null,g.grade));
+      t2.appendChild(el('td','num',g.total+' 回'));
+      var td=el('td','num'); td.appendChild(el('span',rateCls(g.rate),g.rate+'%')); t2.appendChild(td);
+      ga.appendChild(t2);
+    });
+
+    // --- むずかしすぎる問題
+    var hq = $('d-hard'); clear(hq);
+    if(!d.hardQuestions.length){ var e0=el('tr'); e0.appendChild(el('td',null,'3回以上出題された問題がまだありません')); hq.appendChild(e0); }
+    d.hardQuestions.forEach(function(q){
+      var t2=el('tr');
+      var c1=el('td');
+      c1.appendChild(el('div',null,q.text));
+      c1.appendChild(el('span','note', q.grade + '　' + q.id + '　' + q.total + '回中 ' + q.correct + '件正解'));
+      t2.appendChild(c1);
+      var td=el('td','num'); td.appendChild(el('span',rateCls(q.rate),q.rate+'%')); t2.appendChild(td);
+      hq.appendChild(t2);
+    });
+
+    // --- 学年分布 / ランキング / ごぶさた / 履歴
+    var dl = $('d-dist'); clear(dl);
+    d.gradeDistribution.forEach(function(g){
+      var t2=el('tr'); t2.appendChild(el('td',null,g.grade)); t2.appendChild(el('td','num',g.count+' 人')); dl.appendChild(t2);
+    });
+    var rl = $('d-rank'); clear(rl);
+    if(!d.ranking.length){ var e1=el('tr'); e1.appendChild(el('td',null,'データがありません')); rl.appendChild(e1); }
+    d.ranking.forEach(function(s,i){
+      var t2=el('tr');
+      t2.appendChild(el('td',null,(i+1)+'位　'+s.name+'（'+s.grade+'）'));
+      t2.appendChild(el('td','num',s.correctCount+' 問'));
+      rl.appendChild(t2);
+    });
+    var aw = $('d-away'); clear(aw);
+    if(!d.away.length){ var e2=el('tr'); e2.appendChild(el('td',null,'該当なし')); aw.appendChild(e2); }
+    d.away.forEach(function(s){
+      var t2=el('tr');
+      t2.appendChild(el('td',null,s.name+'（'+s.grade+'）'));
+      t2.appendChild(el('td','num',s.days+' 日'));
+      aw.appendChild(t2);
+    });
+    var hl = $('d-hist'); clear(hl);
+    d.recentHistory.forEach(function(h){
+      var t2=el('tr');
+      t2.appendChild(el('td',null,h.time+'　'+h.name));
+      var mk = el('td','num');
+      mk.appendChild(el('span', h.state==='出題中' ? 'tag wait' : (h.isCorrect?'tag ok':'tag ng'),
+                          h.state==='出題中' ? '未完了' : (h.isCorrect?'正解':'不正解')));
+      t2.appendChild(mk);
+      hl.appendChild(t2);
+    });
+  }).catch(function(e){ alert('読み込みエラー: '+e.message); });
+}
+
+//===============================================================
+// 印刷
+//===============================================================
+var printStudents = [];
+var printSel = {};                 // id → true。絞り込みを変えても選択が消えないよう、DOMではなくここで持つ
+
+function loadPrint(){
+  call('searchStudents','',true).then(function(rs){
+    printStudents = rs;
+    renderPrintList();
+  });
+}
+/** 名前・学年で絞り込んで一覧を描き直す（チェック状態は printSel から復元する） */
+function renderPrintList(){
+  var q = $('p-q').value.trim();
+  var g = $('p-grade').value;
+  var box = $('p-list'); clear(box);
+  var shown = 0;
+  printStudents.forEach(function(s,i){
+    if(g && s.grade !== g) return;
+    if(q && s.name.indexOf(q) < 0) return;
+    shown++;
+    var lb = el('label','chk');
+    var cb = el('input'); cb.type='checkbox'; cb.value=i; cb.className='pchk';
+    cb.checked = !!printSel[s.id];
+    cb.onchange = function(){ printSel[s.id] = cb.checked; updatePCount(); };
+    lb.appendChild(cb);
+    lb.appendChild(el('span',null,s.name+'（'+s.grade+'）'));
+    box.appendChild(lb);
+  });
+  if(!shown) box.appendChild(el('div','empty','該当する人がいません'));
+  updatePCount();
+}
+function updatePCount(){
+  var n = printStudents.filter(function(s){ return printSel[s.id]; }).length;
+  var shown = document.querySelectorAll('.pchk').length;
+  $('p-count').textContent = '表示 ' + shown + ' 件 / 選択 ' + n + ' 件（' + Math.ceil(n/24) + ' ページ）';
+}
+/** 表示中（＝絞り込み後）だけを対象に選択する。解除は全件が対象。 */
+function selectAllP(v){
+  if(!v){ printSel = {}; }
+  else {
+    var cs = document.querySelectorAll('.pchk');
+    for(var i=0;i<cs.length;i++) printSel[printStudents[Number(cs[i].value)].id] = true;
+  }
+  renderPrintList();
+}
+function doPrint(){
+  var idx = [];
+  printStudents.forEach(function(s,i){ if(printSel[s.id]) idx.push(i); });
+  if(!idx.length){ alert('印刷する対象にチェックを入れてください。'); return; }
+  if(typeof QRCode === 'undefined'){ alert('QRライブラリを読み込めませんでした。ネット接続を確認してください。'); return; }
+
+  var area = $('printArea'); clear(area);
+  var sheet=null;
+  idx.forEach(function(k, n){
+    if(n % 24 === 0){ sheet = el('div','psheet'); area.appendChild(sheet); }  // ← 24件ごとにページを分ける
+    var s = printStudents[k];
+    var cell = el('div','pcell');
+    cell.appendChild(el('div','pname', s.name+'（'+s.grade+'）'));
+    var qd = el('div');
+    cell.appendChild(qd);
+    sheet.appendChild(cell);
+    new QRCode(qd, { text: SCRIPT_URL + '?id=' + s.id, width:96, height:96 });
+  });
+  // QRの描画完了（img の onload）を待ってから印刷する
+  var imgs = area.querySelectorAll('img');
+  var wait = [];
+  for(var i=0;i<imgs.length;i++){
+    (function(im){
+      if(im.complete) return;
+      wait.push(new Promise(function(res){ im.onload=res; im.onerror=res; setTimeout(res,3000); }));
+    })(imgs[i]);
+  }
+  Promise.all(wait).then(function(){ window.print(); });
+}
+
+//===============================================================
+// 管理画面のナビ（3画面をURLの打ち替えなしで行き来する）
+//===============================================================
+var ADM_TITLE = { register:'名簿・本日の結果', admin:'ダッシュボード', print:'QR印刷' };
+function setupAdminNav(mode){
+  $('nav-now').textContent = '／ ' + (ADM_TITLE[mode] || '');
+  [['nav-register','register'],['nav-admin','admin'],['nav-print','print']].forEach(function(p){
+    var a = $(p[0]);
+    a.href = SCRIPT_URL + '?mode=' + p[1];
+    if(p[1] === mode) a.className = 'navlink on';
+  });
+  $('adm-nav').classList.remove('hidden');
+}
+
+//===============================================================
+// 起動
+//===============================================================
+window.onload = function(){
+  $('k-btn').onclick = kioskSearch;
+  $('k-input').addEventListener('keypress', function(e){
+    if(e.key==='Enter'){ kioskSearch(); $('k-input').blur(); }
+  });
+  $('r-finish').onclick = backToKiosk;
+
+  // --- まきちゃん画面
+  $('rg-btn').onclick   = function(){ rgRegister(false); };
+  ['rg-name','rg-note'].forEach(function(id){
+    $(id).addEventListener('keypress', function(e){ if(e.key==='Enter') rgRegister(false); });
+  });
+  // 名簿は全件を手元に持っているので、入力と同時に絞り込む（サーバ往復なし）
+  $('se-q').addEventListener('input', renderSearchList);
+  $('se-grade').onchange= renderSearchList;
+  $('se-reload').onclick= function(){ loadSearch(true); };
+  $('se-f-all').onclick = function(){ setNgFilter(false); };
+  $('se-f-ng').onclick  = function(){ setNgFilter(true); };
+  $('td-reload').onclick= loadToday;
+  $('qr-close').onclick = function(){ $('qr-result').classList.add('hidden'); };
+  $('tb-today').onclick = function(){ tab('today'); };
+  $('tb-edit').onclick  = function(){ tab('edit'); };
+  $('tb-merge').onclick = function(){ tab('merge'); };
+  $('tb-new').onclick   = function(){ tab('new'); };
+  // --- 同名の統合
+  $('mg-q').addEventListener('input', renderMerge);
+  $('mg-reload').onclick= loadMerge;
+  // --- ダッシュボード
+  $('pd-month').onclick = function(){ PERIOD='month'; loadDashboard(); };
+  $('pd-all').onclick   = function(){ PERIOD='all';   loadDashboard(); };
+  $('pd-reload').onclick= loadDashboard;
+  // --- QR印刷
+  $('p-all').onclick    = function(){ selectAllP(true); };
+  $('p-none').onclick   = function(){ selectAllP(false); };
+  $('p-go').onclick     = doPrint;
+  $('p-q').addEventListener('input', renderPrintList);
+  $('p-grade').onchange = renderPrintList;
+
+  if(MODE !== 'kiosk') setupAdminNav(MODE);
+
+  if(MODE === 'register'){ show('v-register'); tab('today'); loadSearch(); loadToday(); loadMerge(); return; }
+  if(MODE === 'admin')   { show('v-admin');    loadDashboard(); return; }
+  if(MODE === 'print')   { show('v-print');    loadPrint(); return; }
+
+  if(URL_ID) startScan(URL_ID);
+  else show('v-kiosk');
+};
+</script>
+<a class="ss-next" href="./">レジ横の画面（子どもがさわる側）をひらく →</a>
+<script>
+Demo.init({
+  home: "../",
+  note: "これは<b>体験版</b>です。表示中の数字はすべて架空で、実在の店舗にはつながっていません。",
+  about: {"title":"「この企画は効いているのか」を数字で見る画面","sub":"正答率だけでなく、また来てくれた割合（リピート率）と、ごぶさたの子を出します。","points":[{"t":"見るべきは正答率ではなくリピート率","d":"企画の目的は「また来てもらうこと」なので、2日以上来た子の割合を主役にしています。正答率は問題の難易度調整のための材料です。"},{"t":"むずかしすぎる問題が名指しで出る","d":"3回以上出した問題のうち、正答率が低い順に並びます。「この問題は難しすぎた」がその場で分かるので、差し替えられます。"},{"t":"ごぶさたリスト","d":"5回以上遊んだのに2週間来ていない子を出します。声をかける相手を決めるための一覧です。"},{"t":"問題の在庫が切れる前に警告する","d":"学年ごとに「今月ぶん・来月ぶん・通年」の問題数を出します。在庫が切れると企画そのものが止まるためです。"}]}
+});
+
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    var map = { 'nav-register': 'kanri.html', 'nav-admin': 'dashboard.html' };
+    Object.keys(map).forEach(function (id) {
+      var a = document.getElementById(id);
+      if (a) a.href = map[id];
+    });
+    var pr = document.getElementById('nav-print');
+    if (pr) pr.addEventListener('click', function (e) {
+      e.preventDefault();
+      Demo.toast('会員証のQRコードを、名簿から一括で組版して印刷します（1枚に12人ぶん）。体験版では省いています。');
+    });
+  }, 0);
+});
+</script>
+</body>
+</html>
