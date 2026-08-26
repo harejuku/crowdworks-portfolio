@@ -20,27 +20,29 @@
 
   function sample() {
     return {
-      meta: { name: '9月の歓迎会', date: today(), organizer: '田村', roundUnit: 100 },
+      meta: { name: '9月の歓迎会', date: today(), organizer: 'かんじ', roundUnit: 100 },
+      // 名字を使わず、ひらがなの呼び名だけにしてある。
+      // 実在の誰かを指していないことが、読んだ瞬間に分かるようにするため
       participants: [
         // kind:'split' ＝ わり勘（係数の比で割る）／ kind:'fixed' ＝ 定額（会費）
-        { name: '田村', kind: 'split', coef: 1.3, fixed: '' },
-        { name: '西口', kind: 'split', coef: 1.3, fixed: '' },
-        { name: '小林', kind: 'split', coef: 1,   fixed: '' },
-        { name: '藤井', kind: 'split', coef: 1,   fixed: '' },
-        { name: '中原', kind: 'split', coef: 0.7, fixed: '' },
-        { name: '大槻', kind: 'split', coef: 0.7, fixed: '' },
+        { name: 'かんじ',   kind: 'split', coef: 1.3, fixed: '' },
+        { name: 'せんぱい', kind: 'split', coef: 1.3, fixed: '' },
+        { name: 'あおい',   kind: 'split', coef: 1,   fixed: '' },
+        { name: 'けいた',   kind: 'split', coef: 1,   fixed: '' },
+        { name: 'なつき',   kind: 'split', coef: 0.7, fixed: '' },
+        { name: 'みなみ',   kind: 'split', coef: 0.7, fixed: '' },
         // 学生アルバイトは会費3,000円の定額。残りをわり勘の6人で割る
-        { name: '柏木', kind: 'fixed', coef: 1,   fixed: 3000 },
+        { name: 'がくせい', kind: 'fixed', coef: 1,   fixed: 3000 },
       ],
       expenses: [
         { item: '1次会（居酒屋）', amount: 42800, target: '', memo: '7名' },
-        { item: '2次会（バー）',   amount: 15600, target: '田村、西口、小林、中原', memo: '4名だけ' },
+        { item: '2次会（バー）',   amount: 15600, target: 'かんじ、せんぱい、あおい、なつき', memo: '4名だけ' },
         { item: 'ケーキ',          amount: 3200,  target: '', memo: '差し入れ' },
       ],
       payments: [
-        { itemNo: 1, who: '田村', amount: 42800, to: '', memo: 'カードで支払い' },
-        { itemNo: 2, who: '小林', amount: 15600, to: '', memo: '' },
-        { itemNo: 3, who: '西口', amount: 3200,  to: '', memo: '' },
+        { itemNo: 1, who: 'かんじ',   amount: 42800, to: '', memo: 'カードで支払い' },
+        { itemNo: 2, who: 'あおい',   amount: 15600, to: '', memo: '' },
+        { itemNo: 3, who: 'せんぱい', amount: 3200,  to: '', memo: '' },
       ],
     };
   }
