@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144" role="img" aria-label="そら塾">
+  <!-- 体験版の架空校「そら塾」のマーク。実在の塾のロゴは使っていません -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="1" stop-color="#e0f2fe"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="128" height="128" rx="30" fill="url(#sky)"/>
+  <!-- 太陽 -->
+  <g stroke="#fb923c" stroke-width="7" stroke-linecap="round">
+    <line x1="48" y1="26" x2="48" y2="36"/>
+    <line x1="26" y1="48" x2="36" y2="48"/>
+    <line x1="32" y1="32" x2="39" y2="39"/>
+  </g>
+  <circle cx="48" cy="48" r="15" fill="#fb923c"/>
+  <!-- ひらいた本 -->
+  <path d="M30 104c14-9 26-9 40-2v-30c-14-7-26-7-40 2z" fill="#ffffff" stroke="#0f766e" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M110 104c-14-9-26-9-40-2v-30c14-7 26-7 40 2z" fill="#ffffff" stroke="#0f766e" stroke-width="6" stroke-linejoin="round"/>
+  <line x1="70" y1="72" x2="70" y2="102" stroke="#0f766e" stroke-width="6" stroke-linecap="round"/>
+</svg>

@@ -17,7 +17,7 @@
 
    本番のソースの場所は tools/sources.local.json の juku.repo に書く（公開しない）。
    ------------------------------------------------------------------ */
-import { readFileSync, readdirSync, existsSync, rmSync, mkdirSync, cpSync, writeFileSync, symlinkSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, rmSync, mkdirSync, cpSync, writeFileSync, symlinkSync, statSync, renameSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -60,6 +60,9 @@ const DROP = [
   ...(sources.juku.dropExtra || []),
 ];
 
+/* 配信先のパス。next.config の basePath と、③-3 の画像パス補正で同じ値を使う */
+const BASE = '/crowdworks-portfolio/juku/app';
+
 const WORK = join(tmpdir(), 'ss-portfolio-juku-build');
 const OUT = join(ROOT, 'juku', 'app');
 
@@ -79,6 +82,19 @@ DROP.forEach((p) => rmSync(join(WORK, p), { recursive: true, force: true }));
 readdirSync(join(WORK, 'public'))
   .filter((f) => /^google[0-9a-f]+\.html$/.test(f))
   .forEach((f) => rmSync(join(WORK, 'public', f), { force: true }));
+
+/* ②-2 塾HPのルート名を変える。
+   コードの中の文字列は ③-2 が置き換えるが、フォルダ名は置き換わらないので、
+   そのままだと URL に実在の塾の名前が残る。元のルート名は屋号そのものなので、
+   ここには書かず sources.local.json の juku.hpRoute から読む。 */
+const HP_ROUTE = sources.juku.hpRoute;
+if (!HP_ROUTE) {
+  console.error('× sources.local.json の juku.hpRoute がありません。塾HPのルート名が分からないので止めます。');
+  process.exit(1);
+}
+if (existsSync(join(WORK, 'src/app', HP_ROUTE))) {
+  renameSync(join(WORK, 'src/app', HP_ROUTE), join(WORK, 'src/app/demo'));
+}
 
 console.log('③ 偽データベースを上書き…');
 cpSync(join(HERE, 'overlay'), WORK, { recursive: true });
@@ -105,12 +121,36 @@ function scrub(dir) {
 }
 scrub(join(WORK, 'src'));
 
+/* ③-3 塾HPだけの後始末。
+
+   (1) next/image は unoptimized のとき basePath を付けてくれないので、画像の src だけ
+       配信先のパスを手で補う。Link の href は next 側が付けるので触らない。
+   (2) 人物写真はフリー素材（ぱくたそ）。規約上、人物素材をサンプル・デモに使うには
+       「架空である注釈」が要る。素材のクレジットと合わせてフッターに出す。 */
+const HP = join(WORK, 'src/app/demo/page.tsx');
+if (existsSync(HP)) {
+  let hp = readFileSync(HP, 'utf8');
+  hp = hp.split('src="/demo/').join(`src="${BASE}/demo/`);
+
+  const COPY = '&copy; 2026 Sora Juku. All rights reserved.</p>';
+  if (!hp.includes(COPY)) {
+    console.error('× 塾HPのフッターが見つかりません（注釈を入れられないので止めます）。');
+    process.exit(1);
+  }
+  hp = hp.split(COPY).join(COPY + `
+         <p className="text-[10px] leading-relaxed text-gray-500 mt-3 max-w-lg mx-auto">
+           これはホームページ制作の<b>サンプル</b>です。塾名・人物・経歴・所在地・電話番号はすべて架空で、実在の塾ではありません。<br/>
+           掲載している写真はフリー素材サイト「ぱくたそ」（https://www.pakutaso.com）の素材を使用しています。
+         </p>`);
+  writeFileSync(HP, hp);
+}
+
 writeFileSync(join(WORK, 'next.config.mjs'), `/** 体験版だけの設定（tools/juku/build-juku.mjs が作っています） */
 const nextConfig = {
   output: 'export',
   // どの配信先でも同じURLで開けるよう、/quiz/index.html の形で書き出す
   trailingSlash: true,
-  basePath: '/crowdworks-portfolio/juku/app',
+  basePath: '${BASE}',
   images: { unoptimized: true },
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },

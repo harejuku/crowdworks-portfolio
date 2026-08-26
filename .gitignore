@@ -11,5 +11,9 @@ Thumbs.db
 .vscode/
 node_modules/
 
-# 素材の実際の置き場所。お客さまのフォルダ名が入るので公開しない
-tools/sources.local.json
+# 素材の実際の置き場所と、実名の置き換え表。公開すると「誰の案件か」が分かってしまう。
+# 末尾の * は .bak / .orig などの控えを巻き込むため（2026-08-26 に .bak が
+# 追跡対象になりかけた。表そのものが漏れるので、拡張子違いも必ず除外する）
+tools/sources.local.json*
+*.bak
+*.orig
