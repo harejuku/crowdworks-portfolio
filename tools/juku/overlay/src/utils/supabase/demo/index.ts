@@ -50,7 +50,7 @@ function theStore(): DemoStore {
    体験版はブラウザの中だけなので、最初からログイン済みの状態で始める。 */
 const DEMO_USER = {
   id: 'demo-user',
-  email: `${SCHOOL}@smart-steps.jp`,
+  email: `${SCHOOL}@example.com`,
   app_metadata: { school_id: SCHOOL },
   user_metadata: { school_id: SCHOOL },
 };
