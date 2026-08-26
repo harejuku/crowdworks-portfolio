@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- ⚠ HtmlService はこの meta を取り除くため、実際に効いているのは
+     コード.gs の doGet にある addMetaTag('viewport', ...) のほう。
+     ここに置いてあるのは、このファイルをブラウザで直接開いて確認するときのため。
+     doGet 側を消すとスマホで表示が崩れる。 -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>さくら商店 売上入力（体験版）</title>
+<style>
+  :root {
+    --bg:#f4f5f7; --card:#fff; --line:#dcdfe4; --txt:#1a1a1a; --sub:#6b7280;
+    --in:#1b7f4b; --out:#b03a2e; --key:#1a5fb4; --warn:#b8860b;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:16px; line-height:1.5; padding-bottom:40px;
+  }
+  .wrap { max-width:560px; margin:0 auto; padding:12px; }
+  h1 { font-size:17px; margin:0; font-weight:700; }
+  header {
+    background:var(--card); border-bottom:1px solid var(--line); padding:12px 14px;
+    position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:10px;
+  }
+  header .sub { font-size:12px; color:var(--sub); margin-left:auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; }
+  .tabs button {
+    flex:1; padding:11px; border:1px solid var(--line); background:var(--card);
+    border-radius:9px; font-size:15px; font-weight:600; color:var(--sub);
+  }
+  .tabs button.on { background:var(--key); color:#fff; border-color:var(--key); }
+  .card {
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:14px; margin-bottom:12px;
+  }
+  .lbl { font-size:13px; font-weight:700; color:var(--sub); margin-bottom:7px; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  .grid.g3 { grid-template-columns:repeat(3,1fr); }
+  .chip {
+    padding:13px 8px; border:1.5px solid var(--line); background:#fff; border-radius:10px;
+    font-size:15px; font-weight:600; color:var(--txt); text-align:center; min-height:48px;
+  }
+  .chip.on { background:var(--key); color:#fff; border-color:var(--key); }
+  .chip.in.on  { background:var(--in);  border-color:var(--in); }
+  .chip.out.on { background:var(--out); border-color:var(--out); }
+  .chip.sm { padding:10px 6px; font-size:14px; min-height:42px; }
+  input[type=text], input[type=date], input[type=password], input[type=tel], textarea {
+    width:100%; padding:12px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:16px; font-family:inherit; background:#fff; color:var(--txt);
+  }
+  input#kingaku { font-size:30px; font-weight:700; text-align:right; padding:14px; letter-spacing:1px; }
+  .row { display:flex; gap:8px; align-items:center; }
+  .row > input[type=date] { flex:1; }
+  .btn {
+    width:100%; padding:16px; border:0; border-radius:12px; background:var(--key);
+    color:#fff; font-size:17px; font-weight:700; margin-top:4px;
+  }
+  .btn:disabled { background:#9aa3ad; }
+  .btn.ghost { background:#fff; color:var(--key); border:1.5px solid var(--key); font-size:15px; padding:12px; }
+  .msg { padding:12px 14px; border-radius:10px; font-size:14px; margin-bottom:12px; font-weight:600; }
+  .msg.ok  { background:#e3f4ea; color:#12693c; border:1px solid #b6e0c6; }
+  .msg.err { background:#fdeaea; color:#8f2b21; border:1px solid #f2c2bd; }
+  .hint { font-size:12px; color:var(--sub); margin-top:6px; }
+  details summary { font-size:14px; color:var(--key); font-weight:600; cursor:pointer; padding:8px 0; }
+  .rec { border-top:1px solid var(--line); padding:10px 0; display:flex; align-items:center; gap:10px; }
+  .rec:first-of-type { border-top:0; }
+  .rec .m { flex:1; min-width:0; }
+  .rec .t { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rec .d { font-size:12px; color:var(--sub); }
+  .rec .a { font-size:15px; font-weight:700; white-space:nowrap; }
+  .rec .a.in { color:var(--in); } .rec .a.out { color:var(--out); }
+  /* 指で押せる大きさを確保する（小さいと「押せない」と言われる） */
+  .rec button {
+    padding:10px 12px; border:1.5px solid var(--line); background:#fff; border-radius:8px;
+    font-size:13px; font-weight:600; color:var(--out); min-height:40px; white-space:nowrap;
+    cursor:pointer; -webkit-tap-highlight-color:rgba(0,0,0,.1);
+  }
+  /* 2段押しの2段目。ここで色が変わることが「もう一度押す」の合図になる */
+  .rec button.danger { background:var(--out); color:#fff; border-color:var(--out); }
+  .rec button:disabled { background:#9aa3ad; color:#fff; border-color:#9aa3ad; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { padding:9px 6px; text-align:right; border-bottom:1px solid var(--line); }
+  th:first-child, td:first-child { text-align:left; font-weight:600; }
+  thead th { font-size:12px; color:var(--sub); }
+  td.plus { color:var(--in); font-weight:700; } td.minus { color:var(--out); font-weight:700; }
+  .hide { display:none !important; }
+  .center { text-align:center; color:var(--sub); padding:20px 0; font-size:14px; }
+</style>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/demo.css">
+<style>
+  .ss-next{
+    display:block;max-width:640px;margin:26px auto 34px;padding:15px 18px;
+    background:#161a20;color:#fff;border-radius:12px;text-decoration:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:15px;font-weight:700;text-align:center;
+  }
+</style>
+</head>
+<body>
+<script src="../assets/demo.js"></script>
+<script src="fake-server.js"></script>
+<!-- ============================================================
+     ここから下は、実際に納品したシステムのコードをそのまま置いたもの。
+     体験版のために向け先を変えているのは、サーバーを呼ぶところだけ。
+     （tools/build.mjs が自動で作っています。直接直さないこと）
+     ============================================================ -->
+
+<header><h1>さくら商店 売上入力</h1><span class="sub" id="ver"></span></header>
+
+<!-- 読み込み中 -->
+<div class="wrap" id="loading">
+  <div class="card"><div class="center">読み込み中…</div></div>
+  <div id="loadmsg"></div>
+</div>
+
+<!-- 本体 -->
+<div class="wrap hide" id="main">
+  <div class="tabs">
+    <button id="tabIn" class="on">入力する</button>
+    <button id="tabSum">今月の収支</button>
+  </div>
+
+  <div id="msg"></div>
+
+  <!-- 入力 -->
+  <div id="paneIn">
+    <div class="card">
+      <div class="lbl">日付</div>
+      <div class="row">
+        <button class="chip sm" id="dYest" style="flex:0 0 78px">昨日</button>
+        <button class="chip sm" id="dToday" style="flex:0 0 78px">今日</button>
+        <input type="date" id="hizuke">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">事業</div>
+      <div class="grid" id="jigyo"></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">収入か支出か</div>
+      <div class="grid">
+        <button class="chip in"  id="sIn">収入（入ってきた）</button>
+        <button class="chip out" id="sOut">支出（出ていった）</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">金額（円）</div>
+      <input type="tel" id="kingaku" inputmode="numeric" placeholder="0">
+    </div>
+
+    <div class="card">
+      <div class="lbl">勘定科目</div>
+      <div class="grid g3" id="kamoku"></div>
+      <div class="hint" id="kamokuHint"></div>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>＋ 取引先・備考・レシート写真</summary>
+        <div style="margin-top:10px">
+          <div class="lbl">取引先</div>
+          <input type="text" id="torihiki" placeholder="（任意）">
+          <div class="lbl" style="margin-top:12px">備考</div>
+          <input type="text" id="bikou" placeholder="（任意）">
+          <div class="lbl" style="margin-top:12px">レシート写真</div>
+          <input type="file" id="shashin" accept="image/*" capture="environment">
+          <div class="hint" id="shashinInfo">撮ると自動で小さくしてから送ります。</div>
+        </div>
+      </details>
+    </div>
+
+    <button class="btn" id="submit">登録する</button>
+    <button class="btn ghost hide" id="again" style="margin-top:8px">同じ内容でもう1件</button>
+
+    <div class="card" style="margin-top:12px">
+      <div class="lbl">さっき入れたもの（まちがえたら取り消せます）</div>
+      <div id="recent"><div class="center">読み込み中…</div></div>
+    </div>
+  </div>
+
+  <!-- 今月 -->
+  <div id="paneSum" class="hide">
+    <div class="card">
+      <div class="lbl" id="sumTitle">今月</div>
+      <table>
+        <thead><tr><th>事業</th><th>収入</th><th>支出</th><th>収支</th><th>年度累計</th></tr></thead>
+        <tbody id="sumBody"></tbody>
+      </table>
+      <div class="hint" id="sumFoot"></div>
+    </div>
+    <button class="btn ghost" id="sumReload">最新にする</button>
+  </div>
+</div>
+
+<script>
+var 状態 = { 事業:'', 種別:'', 科目:'', 画像:null, 科目一覧:[], よく使う:{}, 送信中:false, 今日:'' };
+
+function $(id){ return document.getElementById(id); }
+function 表示(el, 出す){ el.classList.toggle('hide', !出す); }
+
+function 呼ぶ(名前, 引数, 成功, 失敗){
+  引数 = 引数 || {};
+  google.script.run
+    .withSuccessHandler(function(r){
+      if (r && r.ok) 成功(r.data);
+      else (失敗 || 知らせる)((r && r.error) || '不明なエラーが起きました', true);
+    })
+    .withFailureHandler(function(e){
+      (失敗 || 知らせる)('通信できませんでした：' + (e && e.message ? e.message : e), true);
+    })
+    .api(名前, 引数);
+}
+
+function 知らせる(文, エラー){
+  var m = $('msg');
+  m.innerHTML = '<div class="msg ' + (エラー ? 'err' : 'ok') + '">' + 逃がす(文) + '</div>';
+  if (!エラー) setTimeout(function(){ m.innerHTML = ''; }, 4000);
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+function 逃がす(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+// マイナスは「¥-15,000」ではなく「−¥15,000」と出す（記号のあとに符号が来ると読み違える）
+function 円(n){ n = Number(n) || 0; return (n < 0 ? '−' : '') + '¥' + Math.abs(n).toLocaleString('ja-JP'); }
+
+// ---- 画面の組み立て ----
+function 組み立てる(d){
+  状態.科目一覧 = d.科目 || [];
+  状態.よく使う = d.よく使う || {};
+  状態.今日 = (d.今日 || '').replace(/\//g, '-');
+  $('hizuke').value = 状態.今日;
+  日付の色を塗る();
+
+  var g = $('jigyo');
+  g.innerHTML = '';
+  (d.事業 || []).forEach(function(b){
+    var el = document.createElement('button');
+    el.className = 'chip'; el.textContent = b;
+    el.onclick = function(){ 事業を選ぶ(b); };
+    el.dataset.name = b;
+    g.appendChild(el);
+  });
+  if ((d.事業 || []).length === 1) 事業を選ぶ(d.事業[0]);
+  種別を選ぶ('支出');
+  直近を描く(d.直近 || []);
+}
+
+function 事業を選ぶ(b){
+  状態.事業 = b;
+  Array.prototype.forEach.call($('jigyo').children, function(el){
+    el.classList.toggle('on', el.dataset.name === b);
+  });
+  科目を描く();
+}
+
+function 種別を選ぶ(t){
+  状態.種別 = t;
+  $('sIn').classList.toggle('on', t === '収入');
+  $('sOut').classList.toggle('on', t === '支出');
+  状態.科目 = '';
+  科目を描く();
+}
+$('sIn').onclick  = function(){ 種別を選ぶ('収入'); };
+$('sOut').onclick = function(){ 種別を選ぶ('支出'); };
+
+function 科目を描く(){
+  var 候補 = 状態.科目一覧.filter(function(o){ return o.種別 === 状態.種別; }).map(function(o){ return o.名; });
+  var 順 = 状態.よく使う[状態.事業] || [];
+  候補.sort(function(a,b){
+    var ia = 順.indexOf(a), ib = 順.indexOf(b);
+    if (ia < 0) ia = 999; if (ib < 0) ib = 999;
+    return ia - ib;
+  });
+  if (候補.indexOf(状態.科目) < 0) 状態.科目 = 候補.length === 1 ? 候補[0] : '';
+
+  var g = $('kamoku');
+  g.innerHTML = '';
+  候補.forEach(function(k){
+    var el = document.createElement('button');
+    el.className = 'chip sm' + (k === 状態.科目 ? ' on' : '');
+    el.textContent = k;
+    el.onclick = function(){ 状態.科目 = k; 科目を描く(); };
+    g.appendChild(el);
+  });
+  $('kamokuHint').textContent = 候補.length === 0
+    ? '「設定」シートに ' + 状態.種別 + ' の勘定科目がありません。'
+    : (状態.事業 ? 'よく使う順に並んでいます。' : 'さきに事業を選んでください。');
+}
+
+// ---- 日付 ----
+// 「今日」の基準はサーバから来た日付（状態.今日）。端末の時計がずれていても、
+// シートに入る日付と食い違わないようにするため。
+function 日付文字(ずらす){
+  var 基準 = 状態.今日 ? new Date(状態.今日 + 'T00:00:00') : new Date();
+  基準.setDate(基準.getDate() + (ずらす || 0));
+  var p = function(n){ return ('0' + n).slice(-2); };
+  return 基準.getFullYear() + '-' + p(基準.getMonth()+1) + '-' + p(基準.getDate());
+}
+function 日付をずらす(日){
+  $('hizuke').value = 日付文字(日);
+  日付の色を塗る();
+}
+/** いま入っている日付が昨日／今日のどちらかなら、そのボタンだけ色をつける */
+function 日付の色を塗る(){
+  var v = $('hizuke').value;
+  $('dToday').classList.toggle('on', v === 日付文字(0));
+  $('dYest').classList.toggle('on', v === 日付文字(-1));
+}
+$('dToday').onclick = function(){ 日付をずらす(0); };
+$('dYest').onclick  = function(){ 日付をずらす(-1); };
+// カレンダーから直接選んだときも合わせる（昨日でも今日でもなければ両方消える）
+$('hizuke').addEventListener('change', 日付の色を塗る);
+$('hizuke').addEventListener('input', 日付の色を塗る);
+
+// ---- 金額（数字だけ・3桁区切り） ----
+$('kingaku').addEventListener('input', function(){
+  var n = this.value.replace(/[^0-9]/g, '');
+  this.value = n === '' ? '' : Number(n).toLocaleString('ja-JP');
+});
+
+// ---- レシート写真（送る前に小さくする） ----
+$('shashin').addEventListener('change', function(){
+  var f = this.files && this.files[0];
+  状態.画像 = null;
+  if (!f) { $('shashinInfo').textContent = '撮ると自動で小さくしてから送ります。'; return; }
+  $('shashinInfo').textContent = '読み込み中…';
+  var reader = new FileReader();
+  reader.onload = function(){
+    var img = new Image();
+    img.onload = function(){
+      var 最大 = 1600;
+      var w = img.width, h = img.height;
+      if (w > 最大 || h > 最大) { var r = 最大 / Math.max(w, h); w = Math.round(w*r); h = Math.round(h*r); }
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      var url = c.toDataURL('image/jpeg', 0.7);
+      状態.画像 = { base64: url.split(',')[1], mime: 'image/jpeg' };
+      $('shashinInfo').textContent = '✓ 写真を準備しました（約 ' +
+        Math.round(状態.画像.base64.length * 0.75 / 1024) + ' KB）';
+    };
+    img.onerror = function(){ $('shashinInfo').textContent = '⚠ 画像を読めませんでした。'; };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+// ---- 登録 ----
+$('submit').onclick = function(){
+  if (状態.送信中) return;
+  var 金額 = $('kingaku').value.replace(/[^0-9]/g, '');
+  if (!状態.事業)  return 知らせる('事業を選んでください', true);
+  if (!状態.科目)  return 知らせる('勘定科目を選んでください', true);
+  if (!金額 || Number(金額) <= 0) return 知らせる('金額を入力してください', true);
+  if (!$('hizuke').value) return 知らせる('日付を選んでください', true);
+
+  状態.送信中 = true;
+  this.disabled = true; this.textContent = '登録中…';
+  var 私 = this;
+  var 終わり = function(){ 状態.送信中 = false; 私.disabled = false; 私.textContent = '登録する'; };
+
+  呼ぶ('登録', {
+    日付: $('hizuke').value.replace(/-/g, '/'),
+    事業: 状態.事業, 科目: 状態.科目, 種別: 状態.種別, 金額: 金額,
+    取引先: $('torihiki').value, 備考: $('bikou').value, 画像: 状態.画像
+  }, function(d){
+    終わり();
+    知らせる('✓ ' + 状態.事業 + '　' + 状態.科目 + '　' + 円(金額) + ' を登録しました', false);
+    直近を描く(d.直近 || []);
+    // 日付と事業は残す（同じ日・同じ事業を続けて入れることが多い）
+    $('kingaku').value = ''; $('torihiki').value = ''; $('bikou').value = '';
+    $('shashin').value = ''; 状態.画像 = null;
+    $('shashinInfo').textContent = '撮ると自動で小さくしてから送ります。';
+    表示($('again'), true);
+  }, function(err){ 終わり(); 知らせる(err, true); });
+};
+
+$('again').onclick = function(){ 表示($('again'), false); $('kingaku').focus(); };
+
+// ---- 直近 ----
+function 直近を描く(一覧){
+  var box = $('recent');
+  if (!一覧.length) { box.innerHTML = '<div class="center">まだ記録がありません</div>'; return; }
+  box.innerHTML = '';
+  一覧.forEach(function(r){
+    var 収入 = r.収入 > 0;
+    var div = document.createElement('div');
+    div.className = 'rec';
+    div.innerHTML =
+      '<div class="m"><div class="t">' + 逃がす(r.事業) + '　' + 逃がす(r.科目) + '</div>' +
+      '<div class="d">' + 逃がす(r.日付) + (r.備考 ? '　' + 逃がす(r.備考) : '') + '</div></div>' +
+      '<div class="a ' + (収入 ? 'in' : 'out') + '">' + (収入 ? '+' : '−') + 円(収入 ? r.収入 : r.支出) + '</div>';
+    // ⚠ ここで confirm() を使ってはいけない。
+    //   Chrome は「別ドメインの iframe から出す確認ダイアログ」をブロックする（Chrome 92〜）。
+    //   GAS の画面は script.googleusercontent.com を script.google.com に埋めた構造なので必ず該当し、
+    //   ブロックされた confirm() は「キャンセル」＝ false を返す。
+    //   つまりエラーも出ないまま取消が素通りし、ボタンが死んでいるように見える（2026-08-04 に実際に踏んだ）。
+    //   代わりに、その場で「本当に取り消す？」に変わる2段押しにしている。
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '取消';
+    var 待ち = null;
+    var もどす = function(){
+      clearTimeout(待ち); 待ち = null;
+      b.textContent = '取消'; b.classList.remove('danger'); b.disabled = false;
+    };
+    b.onclick = function(){
+      if (!待ち) {
+        // 1回目：確認待ちにする。5秒さわらなければ自分で戻る（押し間違いをそのままにしない）
+        b.textContent = '本当に取り消す？';
+        b.classList.add('danger');
+        待ち = setTimeout(もどす, 5000);
+        return;
+      }
+      // 2回目：実行
+      clearTimeout(待ち); 待ち = null;
+      b.disabled = true; b.textContent = '…';
+      呼ぶ('取消', { 記録ID: r.記録ID }, function(d){
+        知らせる('取り消しました', false);
+        直近を描く(d.直近 || []);
+      }, function(err){ もどす(); 知らせる(err, true); });
+    };
+    div.appendChild(b);
+    box.appendChild(div);
+  });
+}
+
+// ---- 今月の収支 ----
+$('tabIn').onclick  = function(){ タブ('in'); };
+$('tabSum').onclick = function(){ タブ('sum'); サマリ(); };
+function タブ(t){
+  $('tabIn').classList.toggle('on', t === 'in');
+  $('tabSum').classList.toggle('on', t === 'sum');
+  表示($('paneIn'), t === 'in');
+  表示($('paneSum'), t === 'sum');
+  window.scrollTo(0, 0);
+}
+$('sumReload').onclick = サマリ;
+
+function サマリ(){
+  $('sumBody').innerHTML = '<tr><td colspan="5" class="center">読み込み中…</td></tr>';
+  呼ぶ('サマリ', {}, function(d){
+    $('sumTitle').textContent = d.見出し + '（' + d.年度 + '年度）';
+    var t = '';
+    var 計 = { 収:0, 支:0, 収支:0, 累:0 };
+    (d.事業 || []).forEach(function(b){
+      計.収 += b.当月収入; 計.支 += b.当月支出; 計.収支 += b.当月収支; 計.累 += b.累計収支;
+      t += '<tr><td>' + 逃がす(b.名) + '</td><td>' + 円(b.当月収入) + '</td><td>' + 円(b.当月支出) +
+        '</td><td class="' + (b.当月収支 >= 0 ? 'plus' : 'minus') + '">' + 円(b.当月収支) +
+        '</td><td class="' + (b.累計収支 >= 0 ? 'plus' : 'minus') + '">' + 円(b.累計収支) + '</td></tr>';
+    });
+    t += '<tr><td>合計</td><td>' + 円(計.収) + '</td><td>' + 円(計.支) +
+      '</td><td class="' + (計.収支 >= 0 ? 'plus' : 'minus') + '">' + 円(計.収支) +
+      '</td><td class="' + (計.累 >= 0 ? 'plus' : 'minus') + '">' + 円(計.累) + '</td></tr>';
+    $('sumBody').innerHTML = t;
+    $('sumFoot').textContent = '年度累計は、年度のはじめから今月までの合計です。　' + d.更新 + ' 時点';
+  }, function(err){
+    $('sumBody').innerHTML = '<tr><td colspan="5" class="center">' + 逃がす(err) + '</td></tr>';
+  });
+}
+
+// ---- 起動 ----
+// 合言葉は置いていないので、開いたらそのまま入力画面になる（制作者の判断＝使い勝手を優先）
+function はじめる(){
+  $('loadmsg').innerHTML = '';
+  呼ぶ('初期データ', {}, function(d){
+    表示($('loading'), false);
+    表示($('main'), true);
+    組み立てる(d);
+  }, function(err){
+    $('loadmsg').innerHTML =
+      '<div class="msg err">' + 逃がす(err) + '</div>' +
+      '<button class="btn" onclick="はじめる()">もう一度ためす</button>';
+  });
+}
+はじめる();
+</script>
+
+<script>
+Demo.init({
+  home: "../",
+  note: "これは<b>体験版</b>です。表示中の売上・仕入はすべて架空で、実在のお店にはつながっていません。",
+  about: {"title":"紙の伝票をなくさずに、スマホから3タップで","sub":"複数の事業をやっている個人事業主が、日々の売上と経費をその場で記録するための画面です。","points":[{"t":"入力の口を1つに決めている","d":"スプレッドシートに直接打つ人と、この画面から入れる人が混在すると、月末に必ず食い違います。入力はこの画面だけ、シートは見るだけ、と決めてあります。"},{"t":"よく使う勘定科目が上に来る","d":"過去300件の入力を数えて、その事業でよく使う科目から順に並べています。「店頭販売なら売上と仕入」のように、指が覚えている順番になります。"},{"t":"間違えたらすぐ取り消せる","d":"直前の5件がその場に出ていて、1タップで消せます。「あとで直す」と思った分は、たいてい直されないためです。"},{"t":"「今月」タブが月次の答え","d":"事業ごとの当月収支と年度累計を、その場で出します。年度の開始月は7月始まりのように設定で変えられます（確定申告の締めに合わせるため）。"}]}
+});
+
+</script>
+</body>
+</html>
