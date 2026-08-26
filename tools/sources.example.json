@@ -1,0 +1,29 @@
+{
+  "_note1": "納品コードの置き場所と、実名の置き換え表。実際の値は sources.local.json に書く（公開しない）",
+  "_note2": "anonymize は「置き換え表そのものが誰の案件かを明かす」ため、必ずこちら側に置く。長い名前から先に並べる",
+
+  "anonymize": [
+    ["お客さまの屋号（長いほう）", "架空の屋号"],
+    ["お客さまの屋号", "架空の屋号"],
+    ["制作者の姓さん", "制作者"]
+  ],
+
+  "seiniku": {
+    "shop":  "/Users/あなた/…/精肉店の案件/画面.html.txt",
+    "admin": "/Users/あなた/…/精肉店の案件/管理画面.html.txt"
+  },
+  "uriage": {
+    "form": "/Users/あなた/…/売上管理の案件/GASコード/②フォーム.html.txt"
+  },
+  "quizkikaku": {
+    "app": "/Users/あなた/…/クイズ企画の案件/index.html"
+  },
+  "nomikai": {
+    "app": "/Users/あなた/…/飲み会精算シート/webapp/index.html"
+  },
+  "juku": {
+    "repo": "/Users/あなた/…/塾システムのリポジトリ",
+    "anonymize": [["入力例に入っている実名", "架空の名前"]],
+    "dropExtra": ["src/app/◯◯", "public/◯◯"]
+  }
+}

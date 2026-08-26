@@ -10,3 +10,6 @@ Thumbs.db
 .idea/
 .vscode/
 node_modules/
+
+# 素材の実際の置き場所。お客さまのフォルダ名が入るので公開しない
+tools/sources.local.json

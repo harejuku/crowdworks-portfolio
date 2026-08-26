@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>みどり精肉店 注文管理（体験版）</title>
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/demo.css">
+<style>
+  .ss-next{
+    display:block;max-width:640px;margin:26px auto 34px;padding:15px 18px;
+    background:#161a20;color:#fff;border-radius:12px;text-decoration:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:15px;font-weight:700;text-align:center;
+  }
+</style>
+</head>
+<body>
+<script>window.DEMO_PAGE = "admin";</script>
+<script src="../assets/demo.js"></script>
+<script src="fake-server.js"></script>
+
+<!-- ============================================================
+     ここから下は、実際に納品したシステムのコードをそのまま置いたもの。
+     体験版のために向け先を変えているのは、サーバーを呼ぶところだけ。
+     （tools/build.mjs が自動で作っています。直接直さないこと）
+     ============================================================ -->
+<!-- 店主さんが見る管理画面。コード.gs の doGet（?admin=合言葉）から呼ばれます -->
+
+<!-- URLに入っている合言葉が Referer ヘッダーで外へ出ないように。
+     コード.gs 側で .addMetaTag('referrer', ...) と書くと
+     「指定したメタタグはこのコンテキストでは使用できません」で実行時に落ちるため、ここに置いています。
+
+     この画面が外へ出す通信は【商品写真の読み込みだけ】です（外部リンクなし・tel: のみ）。
+     写真は Googleドライブ（lh3.googleusercontent.com）から読みますが、
+     この no-referrer によって「どのURLから読んだか」は相手に送られないため、合言葉は漏れません。 -->
+<meta name="referrer" content="no-referrer">
+
+<style>
+  :root{
+    --ink:#22252b; --sub:#6b7280; --line:#e3e6ea; --bg:#f2f4f7; --card:#fff;
+    --accent:#b3352c; --blue:#1f6feb; --green:#177245; --amber:#b7791f; --amber-bg:#fff8e6;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:16px;line-height:1.6;padding-bottom:40px}
+  .wrap{max-width:640px;margin:0 auto;padding:0 12px}
+
+  header{background:var(--ink);color:#fff;padding:12px 0}
+  header .inner{max-width:640px;margin:0 auto;padding:0 12px;display:flex;align-items:center;gap:10px}
+  header h1{margin:0;font-size:17px;font-weight:700}
+  header .re{margin-left:auto;background:rgba(255,255,255,.14);color:#fff;border:0;
+    border-radius:8px;padding:9px 14px;font-size:14px;font-family:inherit;cursor:pointer}
+
+  nav{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);display:flex}
+  nav button{flex:1;min-height:56px;border:0;background:none;font-family:inherit;font-size:15px;
+    color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;padding:0}
+  nav button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+  nav .badge{display:inline-block;min-width:20px;padding:0 6px;margin-left:5px;background:var(--accent);
+    color:#fff;border-radius:999px;font-size:12px;font-weight:700;line-height:20px;vertical-align:1px}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:14px 0 4px;-webkit-overflow-scrolling:touch}
+  .chips button{flex:0 0 auto;min-height:40px;padding:0 15px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;font-size:14px;font-family:inherit;color:var(--sub);cursor:pointer}
+  .chips button.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+  .card.wait{border-left:5px solid var(--amber);background:var(--amber-bg)}
+  .card.done{opacity:.62}
+  .card.cancel{opacity:.5}
+  .card.cancel .nm{text-decoration:line-through}
+
+  .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .tag{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff;white-space:nowrap}
+  .tag.wait{background:var(--amber)} .tag.ok{background:var(--blue)}
+  .tag.fin{background:var(--sub)}    .tag.cxl{background:#9ca3af}
+  .no{margin-left:auto;font-size:12px;color:var(--sub);letter-spacing:.03em}
+
+  .nm{font-size:20px;font-weight:700;margin:0}
+  .when{margin:8px 0 0;font-size:15px}
+  .when b{font-weight:700}
+  .items{margin:10px 0 0;padding:10px 0 0;border-top:1px solid var(--line);
+    font-size:15px;white-space:pre-wrap}
+  .amt{margin:8px 0 0;font-size:15px}
+  .amt b{font-size:19px}
+  .memo{margin:8px 0 0;padding:9px 11px;background:#fffbe8;border-radius:8px;font-size:14px;white-space:pre-wrap}
+
+  a.call{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;margin-top:10px;
+    background:var(--green);color:#fff;border-radius:10px;font-size:18px;font-weight:700;text-decoration:none}
+  .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .acts button{flex:1;min-width:110px;min-height:48px;border:1px solid var(--line);background:#fff;
+    border-radius:10px;font-size:15px;font-family:inherit;color:var(--ink);cursor:pointer}
+  .acts button.pri{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+  .acts button.fin{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+  .acts button.thin{flex:0 0 auto;min-width:0;padding:0 14px;color:var(--sub);font-size:14px}
+  .acts button:disabled{opacity:.45}
+
+  .sw{display:flex;align-items:center;gap:12px}
+  .sw .lb{font-size:17px;font-weight:700}
+  .toggle{margin-left:auto;flex:0 0 auto;width:96px;min-height:46px;border:0;border-radius:999px;
+    font-size:15px;font-weight:700;font-family:inherit;color:#fff;cursor:pointer;background:var(--green)}
+  .toggle.off{background:#b9bec6}
+  .toggle:disabled{opacity:.5}
+
+  .pr{margin:6px 0 0;font-size:15px;color:var(--sub)}
+  .pr b{font-size:19px;color:var(--ink)}
+
+  .ph{display:block;width:96px;height:96px;object-fit:cover;border-radius:10px;
+    border:1px solid var(--line);background:#f6f7f9;margin:10px 0 0}
+  .ph.big{width:132px;height:132px}
+  .nophoto{display:flex;align-items:center;justify-content:center;width:132px;height:132px;margin:10px 0 0;
+    border:1px dashed #c7ccd3;border-radius:10px;color:var(--sub);font-size:13px;background:#fafbfc}
+  .thin{width:100%;min-height:44px;margin:8px 0 0;border:1px solid var(--line);background:#fff;
+    border-radius:10px;color:var(--sub);font-size:14px;font-family:inherit;cursor:pointer}
+  .thin:disabled{opacity:.5}
+
+  label{display:block;margin:12px 0 4px;font-size:14px;font-weight:700}
+  .hint{font-weight:400;color:var(--sub);font-size:12px}
+  input[type=text],input[type=tel],input[type=date],input[type=number],select,textarea{
+    width:100%;padding:12px;font-size:16px;font-family:inherit;color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;background:#fff}
+  textarea{min-height:76px;resize:vertical}
+  .save{width:100%;min-height:52px;margin-top:14px;border:0;border-radius:10px;background:var(--accent);
+    color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer}
+  .save:disabled{background:#cbd0d6}
+  .add{width:100%;min-height:52px;margin:6px 0 20px;border:2px dashed #c7ccd3;background:#fff;
+    border-radius:12px;color:var(--sub);font-size:15px;font-family:inherit;cursor:pointer}
+
+  .line{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .line select{flex:1}
+  .line input{width:96px}
+  .line .del{flex:0 0 auto;width:44px;min-height:46px;border:1px solid var(--line);background:#fff;
+    border-radius:10px;color:var(--sub);font-size:18px;cursor:pointer}
+
+  .empty{text-align:center;color:var(--sub);padding:44px 16px;font-size:15px}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;z-index:50;
+    background:var(--ink);color:#fff;padding:13px 22px;border-radius:999px;font-size:15px;
+    box-shadow:0 6px 22px rgba(0,0,0,.25);opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+  .toast.bad{background:var(--accent)}
+  .hidden{display:none}
+  h2.sec{font-size:15px;color:var(--sub);margin:20px 0 0}
+
+  /* 消す系のボタン。色は style="" で直に書かないこと（下の .danger に勝ってしまい、
+     「本当に消す？」の赤地に赤文字＝読めない状態になります） */
+  .thin.warn{color:var(--accent)}
+
+  /* 「本当に◯◯する？」の2段目。ここで赤くなることが「もう一度押す」の合図です。
+     この画面では確認ダイアログ（confirm）が使えないため、こうしています。理由は下の twoStep のコメント。
+     .acts button.thin などに負けないよう、同じ強さの書き方を並べています */
+  button.danger, .acts button.danger, .thin.danger, .toggle.danger{
+    background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .toggle.danger{width:auto;padding:0 14px}   /* 96px幅のままだと「本当に止める？」が入りません */
+</style>
+
+<header>
+  <div class="inner">
+    <h1 id="hTitle">注文管理</h1>
+    <button class="re" id="btnReload">🔄 更新</button>
+  </div>
+</header>
+
+<nav>
+  <button id="tabOrders" class="on">📋 注文<span class="badge hidden" id="waitBadge">0</span></button>
+  <button id="tabProducts">🥩 商品</button>
+  <button id="tabSettings">⚙️ 設定</button>
+</nav>
+
+<div class="wrap">
+
+  <!-- ===== 注文 ===== -->
+  <section id="secOrders">
+    <div class="chips" id="chips"></div>
+    <div id="orderList"></div>
+    <button class="add" id="btnNewOrder">＋ 電話・DMで受けた注文を入れる</button>
+
+    <div id="newOrder" class="card hidden">
+      <h2 style="margin:0 0 4px;font-size:17px">電話・DMで受けた注文</h2>
+      <p class="hint" style="margin:0">お客さまと話がついている前提なので、「確認済」で入ります。</p>
+
+      <label>お客さまのお名前</label>
+      <input type="text" id="nName" placeholder="山田 太郎">
+
+      <label>お電話番号 <span class="hint">分からなければ空でも構いません</span></label>
+      <input type="tel" id="nTel" inputmode="numeric" placeholder="09012345678">
+
+      <label>お渡しする日</label>
+      <input type="date" id="nDate">
+
+      <label>時間帯</label>
+      <select id="nSlot"></select>
+
+      <label>ご注文の品</label>
+      <div id="nLines"></div>
+      <button class="add" style="margin:10px 0 0;min-height:44px" id="btnAddLine">＋ 品を足す</button>
+
+      <label>メモ</label>
+      <textarea id="nNote" placeholder="例）厚めに切る／取り置き"></textarea>
+
+      <button class="save" id="btnSaveOrder">この注文を登録する</button>
+      <button class="add" style="margin:8px 0 0;min-height:44px" id="btnCancelOrder">やめる</button>
+    </div>
+  </section>
+
+  <!-- ===== 商品 ===== -->
+  <section id="secProducts" class="hidden">
+    <h2 class="sec">スイッチを切ると、お客さまの画面からその商品が消えます</h2>
+    <div id="productList"></div>
+    <button class="add" id="btnNewProduct">＋ 商品を増やす</button>
+
+    <div id="newProduct" class="card hidden">
+      <h2 style="margin:0;font-size:17px">商品を増やす</h2>
+      <label>商品名</label>
+      <input type="text" id="pName" placeholder="牛タン">
+      <!-- 売り方（量り売り／セット・個数）と、それに応じた値段の欄は
+           buildKindFields がここに作ります。商品を直す画面と同じ作りにするためです -->
+      <div id="pKind"></div>
+      <label>説明 <span class="hint">空でも構いません。セットなら中身をここに書けます</span></label>
+      <textarea id="pDesc" placeholder="厚切りでご用意します。"></textarea>
+      <p class="hint" style="margin:10px 0 0">
+        写真は、追加したあとに「✏️ 名前・値段・写真を直す」から入れられます。
+      </p>
+      <button class="save" id="btnSaveNewProduct">この商品を追加する</button>
+      <button class="add" style="margin:8px 0 0;min-height:44px" id="btnCancelProduct">やめる</button>
+    </div>
+  </section>
+
+  <!-- ===== 設定 ===== -->
+  <section id="secSettings" class="hidden">
+    <div class="card">
+      <div class="sw">
+        <span class="lb">注文の受付</span>
+        <button class="toggle" id="swAccept">受付中</button>
+      </div>
+      <p class="hint" id="acceptHint" style="margin:10px 0 0"></p>
+    </div>
+
+    <div class="card">
+      <label style="margin-top:0">お知らせ <span class="hint">お客さまの画面の上に出ます。空なら何も出ません</span></label>
+      <textarea id="setNotice" placeholder="例）本日ハラミ入荷しました！"></textarea>
+      <button class="save" id="btnSaveNotice">お知らせを保存する</button>
+    </div>
+
+    <div class="card">
+      <label style="margin-top:0">注文の通知先メール</label>
+      <div id="setMail" style="font-size:15px;word-break:break-all"></div>
+      <p class="hint" style="margin:8px 0 0">
+        ここを変えるにはスプレッドシートの「設定」シートを直してください。
+        打ち間違えると注文に気づけなくなるため、この画面からは変えられないようにしています。
+      </p>
+    </div>
+
+    <div class="card">
+      <label style="margin-top:0">このページのURLについて</label>
+      <p class="hint" style="margin:0">
+        このURLを知っている人は、お客さまのお名前と電話番号を見られます。
+        人に送ったり、SNSに貼ったりしないでください。
+      </p>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var DATA = DEMO_BOOTSTRAP;
+  var TOKEN = DATA.token;
+
+  var filter = '未対応';
+  var busy = false;
+
+  var SET = 'セット';   // コード.gs の SELL_SET と同じ文字。これなら個数で売る商品
+  var isSet = function (p) { return p && p.kind === SET; };
+
+  var $  = function (id) { return document.getElementById(id); };
+  var yen = function (n) { return '¥' + Number(n || 0).toLocaleString('ja-JP'); };
+  var WD = ['日','月','火','水','木','金','土'];
+
+  function fmtDate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s || '')) return s || '';
+    var p = s.split('-');
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    var head = s === DATA.today ? '今日 ' : (s === DATA.tomorrow ? '明日 ' : '');
+    return head + Number(p[1]) + '月' + Number(p[2]) + '日(' + WD[d.getDay()] + ')';
+  }
+
+  function toast(msg, bad) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (bad ? ' bad' : '');
+    clearTimeout(t._t);
+    t._t = setTimeout(function () { t.className = 'toast'; }, bad ? 4200 : 2200);
+  }
+
+  /**
+   * サーバー呼び出しの共通処理。合言葉は必ず毎回いっしょに送ります。
+   *
+   * 第4引数 onFail は【押したボタンを元に戻す処理】です。必ず渡してください。
+   * サーバーが「商品名を入れてください」などで断ったとき、これが無いとボタンは
+   * 「追加中…」のまま二度と押せなくなり、店主さんは画面を開き直すしかなくなります
+   * （画面を作り直す render() は、HTMLに最初から書いてあるボタンには触らないため）。
+   * 画面の中で作り直されるボタン（注文カードの中など）は render() で作り直されるので渡さなくても直りますが、
+   * 迷ったら渡しておくほうが安全です。
+   */
+  function call(fnName, args, onOk, onFail) {
+    if (busy) return;
+    busy = true;
+
+    var failed = function (msg) {
+      busy = false;
+      toast(msg, true);
+      // onFail をもらっているときは、呼び出し側が元に戻します。
+      // ここで画面を作り直してしまうと、断られた理由（値段が0など）を直そうにも、
+      // 書きかけの商品名や値段、お知らせの文章まで消えてしまうためです。
+      if (onFail) { try { onFail(); } catch (e) { console.error(e); } }
+      else render();
+    };
+
+    var runner = google.script.run
+      .withSuccessHandler(function (res) {
+        busy = false;
+        if (!res || !res.ok) { failed((res && res.message) || '保存できませんでした'); return; }
+        onOk(res.data);
+      })
+      .withFailureHandler(function (err) {
+        failed('通信できませんでした。電波を確認してもう一度お試しください');
+        console.error(err);
+      });
+    runner[fnName].apply(runner, [TOKEN].concat(args));
+  }
+
+  /**
+   * 「本当に◯◯しますか？」を、ボタン自身を2回押させることで確かめます。
+   *
+   * 【この画面で window.confirm を使ってはいけない理由】
+   * GASの画面は、script.googleusercontent.com のページを script.google.com の中に
+   * 埋め込んだ作りになっています。Chrome は 92 以降、こういう「別ドメインの枠」から出す
+   * 確認ダイアログを表示しない決まりになりました。
+   * やっかいなのは、【エラーにならず、静かに「キャンセル」＝false が返る】ことです。
+   * つまり confirm を使ったボタンは、押しても何も起きないボタンになります
+   * （2026-08-04 にさくら商店で実際に踏み、この画面にも同じものが3つ残っていました）。
+   *
+   * 代わりに、1回目でボタンの文字が「本当に◯◯？」に変わって赤くなり、
+   * 2回目で実行します。5秒さわらなければ自分で元に戻るので、押し間違いが残りません。
+   *
+   * run(back) の back は「元の見た目に戻す」関数です。通信に失敗したときに呼んでください。
+   */
+  function twoStep(btn, askText, run) {
+    var normalText  = btn.textContent;
+    var normalClass = btn.className;
+    var timer = null;
+
+    var back = function () {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      btn.textContent = normalText;
+      btn.className   = normalClass;
+      btn.disabled    = false;
+    };
+
+    btn.onclick = function () {
+      if (!timer) {                     // 1回目：確かめ待ちにする
+        btn.textContent = askText;
+        btn.classList.add('danger');
+        timer = setTimeout(back, 5000);
+        return;
+      }
+      clearTimeout(timer);              // 2回目：実行する
+      timer = null;
+      run(back);
+    };
+    return back;
+  }
+
+  function reload(msg) {
+    call('adminReload', [], function (d) {
+      DATA = d; TOKEN = d.token;
+      render();
+      if (msg) toast(msg);
+    });
+  }
+
+  // ---------- タブ ----------
+  function showTab(which) {
+    ['Orders','Products','Settings'].forEach(function (n) {
+      $('sec' + n).classList.toggle('hidden', n !== which);
+      $('tab' + n).classList.toggle('on', n === which);
+    });
+    window.scrollTo(0, 0);
+  }
+  $('tabOrders').onclick   = function () { showTab('Orders'); };
+  $('tabProducts').onclick = function () { showTab('Products'); };
+  $('tabSettings').onclick = function () { showTab('Settings'); };
+  $('btnReload').onclick   = function () { reload('最新にしました'); };
+
+  // ---------- 注文 ----------
+  function matches(o) {
+    if (filter === '未対応')  return o.status === '未対応';
+    if (filter === '今日')    return o.date === DATA.today   && o.status !== 'キャンセル';
+    if (filter === '明日')    return o.date === DATA.tomorrow && o.status !== 'キャンセル';
+    return true;
+  }
+
+  function renderChips() {
+    var counts = {
+      '未対応': DATA.orders.filter(function (o) { return o.status === '未対応'; }).length,
+      '今日'  : DATA.orders.filter(function (o) { return o.date === DATA.today && o.status !== 'キャンセル'; }).length,
+      '明日'  : DATA.orders.filter(function (o) { return o.date === DATA.tomorrow && o.status !== 'キャンセル'; }).length,
+      'すべて': DATA.orders.length
+    };
+    var box = $('chips');
+    box.textContent = '';
+    ['未対応','今日','明日','すべて'].forEach(function (k) {
+      var b = document.createElement('button');
+      b.textContent = k + '（' + counts[k] + '）';
+      if (k === filter) b.className = 'on';
+      b.onclick = function () { filter = k; render(); };
+      box.appendChild(b);
+    });
+
+    var badge = $('waitBadge');
+    badge.textContent = counts['未対応'];
+    badge.classList.toggle('hidden', counts['未対応'] === 0);
+  }
+
+  var TAGS = { '未対応': ['wait','未対応'], '確認済': ['ok','確認済'], '完了': ['fin','完了'], 'キャンセル': ['cxl','取消'] };
+
+  function renderOrders() {
+    var box = $('orderList');
+    box.textContent = '';
+    var list = DATA.orders.filter(matches);
+
+    if (!list.length) {
+      var e = document.createElement('p');
+      e.className = 'empty';
+      e.textContent = filter === '未対応' ? '未対応の注文はありません。' : '該当する注文はありません。';
+      box.appendChild(e);
+      return;
+    }
+
+    list.forEach(function (o) {
+      var c = document.createElement('div');
+      c.className = 'card' + (o.status === '未対応' ? ' wait' : o.status === '完了' ? ' done' : o.status === 'キャンセル' ? ' cancel' : '');
+
+      var top = document.createElement('div');
+      top.className = 'top';
+      var tag = document.createElement('span');
+      tag.className = 'tag ' + TAGS[o.status][0];
+      tag.textContent = TAGS[o.status][1];
+      var no = document.createElement('span');
+      no.className = 'no';
+      no.textContent = (o.orderNo || '手入力') + '　' + o.at;
+      top.appendChild(tag); top.appendChild(no);
+      c.appendChild(top);
+
+      var nm = document.createElement('p');
+      nm.className = 'nm';
+      nm.textContent = o.name + ' 様';
+      c.appendChild(nm);
+
+      var wh = document.createElement('p');
+      wh.className = 'when';
+      var b = document.createElement('b');
+      b.textContent = fmtDate(o.date);
+      wh.appendChild(document.createTextNode('🗓 '));
+      wh.appendChild(b);
+      wh.appendChild(document.createTextNode('　' + (o.slot || '時間指定なし')));
+      c.appendChild(wh);
+
+      if (o.detail) {
+        var it = document.createElement('div');
+        it.className = 'items';
+        it.textContent = o.detail;
+        c.appendChild(it);
+      }
+
+      // セットだけのご注文は金額が決まっています。「概算（実重量で確定）」と出すと、
+      // 量らないといけない気がしてしまうので、そこだけ言い方を変えます
+      var am = document.createElement('p');
+      am.className = 'amt';
+      var ab = document.createElement('b');
+      ab.textContent = yen(o.amount);
+      am.appendChild(document.createTextNode(o.estimated === false ? '合計 ' : '概算 '));
+      am.appendChild(ab);
+      am.appendChild(document.createTextNode(o.estimated === false ? '（この金額で確定）' : '（実重量で確定）'));
+      c.appendChild(am);
+
+      if (o.note) {
+        var mm = document.createElement('div');
+        mm.className = 'memo';
+        mm.textContent = '📝 ' + o.note;
+        c.appendChild(mm);
+      }
+
+      if (o.tel && o.status !== 'キャンセル') {
+        var a = document.createElement('a');
+        a.className = 'call';
+        a.href = 'tel:' + o.tel;
+        a.textContent = '📞 ' + o.tel + ' にかける';
+        c.appendChild(a);
+      }
+
+      c.appendChild(buildActions(o));
+      box.appendChild(c);
+    });
+  }
+
+  function buildActions(o) {
+    var acts = document.createElement('div');
+    acts.className = 'acts';
+
+    // askText を渡したボタンは2段押しになります（confirm は使えません。twoStep のコメント参照）
+    var mk = function (text, cls, next, askText) {
+      var b = document.createElement('button');
+      b.textContent = text;
+      if (cls) b.className = cls;
+
+      var go = function (back) {
+        b.disabled = true;
+        b.textContent = '…';
+        call('adminSetOrderStatus', [o.row, o.orderNo, next], function () {
+          o.status = next;
+          reload(next === 'キャンセル' ? '取消にしました' : next + 'にしました');
+        }, back);
+      };
+
+      if (askText) twoStep(b, askText, go);
+      else b.onclick = function () { go(); };
+      return b;
+    };
+
+    if (o.status === '未対応') {
+      acts.appendChild(mk('✅ 電話で確認した', 'pri', '確認済'));
+      acts.appendChild(mk('✖️ 取消', 'thin', 'キャンセル', '本当に取消？もう一度押す'));
+    } else if (o.status === '確認済') {
+      acts.appendChild(mk('🏁 お渡し完了', 'fin', '完了'));
+      acts.appendChild(mk('↩︎ 未対応に戻す', 'thin', '未対応'));
+      acts.appendChild(mk('✖️ 取消', 'thin', 'キャンセル', '本当に取消？もう一度押す'));
+    } else {
+      acts.appendChild(mk('↩︎ 未対応に戻す', 'thin', '未対応'));
+    }
+    return acts;
+  }
+
+  // ---------- 電話・DMの注文を手で足す ----------
+  function slotOptions(sel) {
+    sel.textContent = '';
+    var none = document.createElement('option');
+    none.value = ''; none.textContent = '指定なし';
+    sel.appendChild(none);
+    DATA.timeSlots.forEach(function (s) {
+      var o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+  }
+
+  function addLine() {
+    var wrap = document.createElement('div');
+    wrap.className = 'line';
+
+    var byName = {};
+    var sel = document.createElement('select');
+    DATA.products.forEach(function (p) {
+      byName[p.name] = p;
+      var o = document.createElement('option');
+      o.value = p.name;
+      o.textContent = p.name + '（' + (isSet(p)
+        ? yen(p.setPrice) + '/1' + p.unitLabel
+        : yen(p.unitPrice) + '/100g') + '）';
+      sel.appendChild(o);
+    });
+
+    var g = document.createElement('input');
+    g.type = 'number'; g.inputMode = 'numeric'; g.min = 0;
+
+    var unit = document.createTextNode('g');
+
+    var del = document.createElement('button');
+    del.className = 'del'; del.textContent = '×'; del.type = 'button';
+    del.onclick = function () { wrap.remove(); };
+
+    // 選ばれた商品に合わせて、グラムと個数を入れ替えます。
+    // ここが「g」のままだと、セットの商品に 100 と入れて 100セット の注文になります
+    var sync = function () {
+      var p = byName[sel.value];
+      var s = isSet(p);
+      unit.nodeValue = s ? p.unitLabel : 'g';
+      g.step  = s ? 1 : 10;
+      g.value = s ? 1 : 100;
+    };
+    sel.onchange = sync;
+
+    wrap.appendChild(sel); wrap.appendChild(g);
+    wrap.appendChild(unit); wrap.appendChild(del);
+    $('nLines').appendChild(wrap);
+    sync();
+  }
+
+  $('btnNewOrder').onclick = function () {
+    if (!DATA.products.length) { toast('先に「商品」タブで商品を登録してください', true); return; }
+    $('newOrder').classList.remove('hidden');
+    $('btnNewOrder').classList.add('hidden');
+    slotOptions($('nSlot'));
+    $('nDate').value = DATA.today;
+    $('nLines').textContent = '';
+    addLine();
+    $('newOrder').scrollIntoView({ block: 'start' });
+  };
+  $('btnCancelOrder').onclick = function () {
+    $('newOrder').classList.add('hidden');
+    $('btnNewOrder').classList.remove('hidden');
+    ['nName','nTel','nNote'].forEach(function (i) { $(i).value = ''; });
+  };
+  $('btnAddLine').onclick = addLine;
+
+  $('btnSaveOrder').onclick = function () {
+    var byName = {};
+    DATA.products.forEach(function (p) { byName[p.name] = p; });
+
+    var items = [].map.call($('nLines').querySelectorAll('.line'), function (l) {
+      var id = l.querySelector('select').value;
+      var n  = Number(l.querySelector('input').value) || 0;
+      return isSet(byName[id]) ? { id: id, qty: n } : { id: id, grams: n };
+    }).filter(function (i) { return (i.grams || i.qty) > 0; });
+
+    if (!$('nName').value.trim()) { toast('お名前を入れてください', true); return; }
+    if (!items.length)            { toast('商品と、グラム数または個数を入れてください', true); return; }
+
+    var btn = $('btnSaveOrder');
+    var reset = function () { btn.disabled = false; btn.textContent = 'この注文を登録する'; };
+    btn.disabled = true; btn.textContent = '登録中…';
+    call('adminAddOrder', [{
+      name: $('nName').value.trim(), tel: $('nTel').value.trim(),
+      date: $('nDate').value, slot: $('nSlot').value,
+      note: $('nNote').value.trim(), items: items
+    }], function (d) {
+      reset();
+      $('btnCancelOrder').onclick();
+      filter = 'すべて';
+      reload('登録しました（' + d.orderNo + '）');
+    }, reset);
+  };
+
+  // ---------- 商品 ----------
+  function renderProducts() {
+    var box = $('productList');
+    box.textContent = '';
+
+    if (!DATA.products.length) {
+      var e = document.createElement('p');
+      e.className = 'empty';
+      e.textContent = 'まだ商品がありません。下のボタンから追加してください。';
+      box.appendChild(e);
+      return;
+    }
+
+    DATA.products.forEach(function (p) {
+      var c = document.createElement('div');
+      c.className = 'card';
+
+      var sw = document.createElement('div');
+      sw.className = 'sw';
+      var lb = document.createElement('span');
+      lb.className = 'lb';
+      lb.textContent = p.name;
+
+      var tg = document.createElement('button');
+      tg.className = 'toggle' + (p.onSale ? '' : ' off');
+      tg.textContent = p.onSale ? '販売中' : '品切れ';
+      tg.onclick = function () {
+        tg.disabled = true;
+        call('adminToggleProduct', [p.row, p.name, !p.onSale], function () {
+          p.onSale = !p.onSale;
+          reload(p.name + 'を' + (p.onSale ? '販売中' : '品切れ') + 'にしました');
+        });
+      };
+      sw.appendChild(lb); sw.appendChild(tg);
+      c.appendChild(sw);
+
+      var pr = document.createElement('p');
+      pr.className = 'pr';
+      var pb = document.createElement('b');
+      pb.textContent = yen(isSet(p) ? p.setPrice : p.unitPrice);
+      pr.appendChild(pb);
+      pr.appendChild(document.createTextNode(isSet(p)
+        ? ' / 1' + p.unitLabel + '　（個数で売る商品）'
+        : ' / 100g　（' + p.minGrams + 'gから' + p.stepGrams + 'g単位）'));
+      c.appendChild(pr);
+
+      if (p.imageUrl) {
+        var th = document.createElement('img');
+        th.className = 'ph';
+        th.src = p.imageUrl;
+        th.alt = '';
+        th.loading = 'lazy';
+        th.onerror = function () { th.remove(); };   // 写真が出せなくても画面は崩さない
+        c.appendChild(th);
+      }
+
+      var ed = document.createElement('button');
+      ed.className = 'add';
+      ed.style.margin = '10px 0 0';
+      ed.style.minHeight = '44px';
+      ed.textContent = '✏️ 名前・値段・写真を直す';
+      var form = buildEditForm(p);
+      ed.onclick = function () {
+        var open = !form.classList.contains('hidden');
+        form.classList.toggle('hidden', open);
+        ed.textContent = open ? '✏️ 名前・値段・写真を直す' : '✕ 閉じる';
+      };
+      c.appendChild(ed);
+      c.appendChild(form);
+      box.appendChild(c);
+    });
+  }
+
+  /**
+   * 「売り方」を選ばせて、選ばれたほうの欄だけを出します。
+   * 商品を増やすときと直すときの両方から使います（同じ言葉・同じ並びにするため）。
+   *
+   * 戻り値の read() が、そのままサーバーへ送る形になります。
+   */
+  function buildKindFields(box, p) {
+    // 入れ先を毎回渡します（量り売り用の欄とセット用の欄で別の入れ物に入るため）
+    var mk = function (parent, labelText, hint, type, value) {
+      var l = document.createElement('label');
+      l.textContent = labelText;
+      if (hint) { var h = document.createElement('span'); h.className = 'hint'; h.textContent = ' ' + hint; l.appendChild(h); }
+      var i = document.createElement(type === 'textarea' ? 'textarea' : 'input');
+      if (type !== 'textarea') i.type = type;
+      if (type === 'number') i.inputMode = 'numeric';
+      i.value = (value == null ? '' : value);
+      parent.appendChild(l); parent.appendChild(i);
+      return i;
+    };
+
+    var kl = document.createElement('label');
+    kl.textContent = '売り方';
+    var kh = document.createElement('span');
+    kh.className = 'hint';
+    kh.textContent = ' 量り売り＝グラムで注文／セット・個数＝1つあたりの値段';
+    kl.appendChild(kh);
+    var kind = document.createElement('select');
+    [['量り売り', '量り売り（100gあたりの値段）'], [SET, 'セット・個数（1つあたりの値段）']]
+      .forEach(function (v) {
+        var o = document.createElement('option');
+        o.value = v[0]; o.textContent = v[1];
+        kind.appendChild(o);
+      });
+    kind.value = isSet(p) ? SET : '量り売り';
+    box.appendChild(kl); box.appendChild(kind);
+
+    var 量 = document.createElement('div');
+    var セ = document.createElement('div');
+    box.appendChild(量); box.appendChild(セ);
+
+    var iPrice = mk(量, '100gあたりの値段（税込）', '', 'number', p && p.unitPrice ? p.unitPrice : '');
+    var iMin   = mk(量, '最低グラム数', '例：100', 'number', p && p.minGrams ? p.minGrams : 100);
+    var iStep  = mk(量, '何g単位で注文できるか', '例：100', 'number', p && p.stepGrams ? p.stepGrams : 100);
+
+    var iSetPrice = mk(セ, '1つあたりの値段（税込）', '例：3500', 'number',
+                       p && p.setPrice ? p.setPrice : '');
+    var iUnit     = mk(セ, '数え方', '例：セット／パック／本／個', 'text',
+                       isSet(p) ? p.unitLabel : 'セット');
+
+    var sync = function () {
+      var s = (kind.value === SET);
+      量.classList.toggle('hidden', s);
+      セ.classList.toggle('hidden', !s);
+    };
+    kind.onchange = sync;
+    sync();
+
+    return {
+      kindSelect: kind,
+      read: function () {
+        return (kind.value === SET)
+          ? { kind: SET, setPrice: iSetPrice.value, unitLabel: iUnit.value.trim() }
+          : { kind: '量り売り', unitPrice: iPrice.value, minGrams: iMin.value, stepGrams: iStep.value };
+      },
+      // 送る前にここで止めます。サーバーも同じことを見ていますが、
+      // 断りが返るまでボタンが「保存中…」のままになり、何が悪いのか分からないためです
+      complain: function () {
+        if (kind.value === SET) {
+          if (!(Number(iSetPrice.value) > 0)) { iSetPrice.focus(); return '1つあたりの値段を数字で入れてください'; }
+          return '';
+        }
+        if (!(Number(iPrice.value) > 0)) { iPrice.focus(); return '100gあたりの値段を数字で入れてください'; }
+        return '';
+      }
+    };
+  }
+
+  function buildEditForm(p) {
+    var f = document.createElement('div');
+    f.className = 'hidden';
+
+    var nl = document.createElement('label');
+    nl.textContent = '商品名';
+    var iName = document.createElement('input');
+    iName.type = 'text';
+    iName.value = p.name;
+    f.appendChild(nl); f.appendChild(iName);
+
+    var kf = buildKindFields(f, p);
+
+    var dl = document.createElement('label');
+    dl.textContent = '説明';
+    var dh = document.createElement('span');
+    dh.className = 'hint';
+    dh.textContent = isSet(p) ? ' セットの中身をここに書けます' : ' 空でも構いません';
+    dl.appendChild(dh);
+    var iDesc = document.createElement('textarea');
+    iDesc.value = p.desc;
+    f.appendChild(dl); f.appendChild(iDesc);
+
+    var save = document.createElement('button');
+    save.className = 'save';
+    save.textContent = '保存する';
+    var saveReset = function () { save.disabled = false; save.textContent = '保存する'; };
+    save.onclick = function () {
+      if (!iName.value.trim()) { toast('商品名を入れてください', true); iName.focus(); return; }
+      var ng = kf.complain();
+      if (ng) { toast(ng, true); return; }
+
+      var body = kf.read();
+      body.row = p.row; body.originalName = p.name;
+      body.name = iName.value.trim(); body.desc = iDesc.value.trim();
+
+      save.disabled = true; save.textContent = '保存中…';
+      call('adminSaveProduct', [body], function () {
+        saveReset();
+        reload('保存しました');
+      }, saveReset);
+    };
+    f.appendChild(save);
+
+    // 写真は【押したその場で保存】します。上の「保存する」とは別扱いです。
+    // 名前や値段を書きかけたまま写真を選んでも、書きかけが消えないようにするためです。
+    f.appendChild(buildPhotoBlock(p));
+
+    // 【この商品を消す】いちばん下に置いています。
+    // ふだんの「今日は無い」は上の「品切れ」スイッチで足りるので、そちらへ誘導したうえで、
+    // 間違えて足した商品を店主さんが自分で片づけられるようにしています。
+    var dh = document.createElement('p');
+    dh.className = 'hint';
+    dh.style.margin = '22px 0 0';
+    dh.textContent = '今日だけ無いのなら、上の「品切れ」スイッチで十分です。'
+      + 'ここで消すと元に戻せません（これまでの注文の記録は残ります）。';
+    f.appendChild(dh);
+
+    var del = document.createElement('button');
+    del.className = 'thin warn';
+    del.style.margin = '6px 0 0';
+    del.textContent = '🗑 この商品を消す';
+    twoStep(del, '本当に消す？もう一度押す', function (back) {
+      del.disabled = true;
+      del.textContent = '消しています…';
+      call('adminDeleteProduct', [{ row: p.row, name: p.name }], function () {
+        reload(p.name + ' を消しました');
+      }, back);
+    });
+    f.appendChild(del);
+
+    return f;
+  }
+
+  /** 商品1つぶんの写真の欄。選ぶ／消す／URLを貼る の3つ */
+  function buildPhotoBlock(p) {
+    var box = document.createElement('div');
+
+    var l = document.createElement('label');
+    l.textContent = '写真';
+    var h = document.createElement('span');
+    h.className = 'hint';
+    h.textContent = ' 選んだ時点で保存されます（上の「保存する」は不要）';
+    l.appendChild(h);
+    box.appendChild(l);
+
+    if (p.imageUrl) {
+      var im = document.createElement('img');
+      im.className = 'ph big';
+      im.src = p.imageUrl;
+      im.alt = '';
+      im.onerror = function () {
+        im.remove();
+        var w = document.createElement('div');
+        w.className = 'nophoto';
+        w.textContent = '表示できません';
+        box.insertBefore(w, box.children[1] || null);
+      };
+      box.appendChild(im);
+    } else {
+      var none = document.createElement('div');
+      none.className = 'nophoto';
+      none.textContent = 'まだありません';
+      box.appendChild(none);
+    }
+
+    var fi = document.createElement('input');
+    fi.type = 'file';
+    fi.accept = 'image/*';
+    fi.className = 'hidden';
+    box.appendChild(fi);
+
+    var pick = document.createElement('button');
+    pick.className = 'add';
+    pick.style.margin = '10px 0 0';
+    pick.style.minHeight = '48px';
+    pick.textContent = p.imageUrl ? '📷 写真を撮り直す・選び直す' : '📷 写真を選ぶ';
+    pick.onclick = function () { fi.click(); };
+    box.appendChild(pick);
+
+    var reset = function () { pick.disabled = false; pick.textContent = p.imageUrl ? '📷 写真を撮り直す・選び直す' : '📷 写真を選ぶ'; };
+
+    fi.onchange = function () {
+      var file = fi.files && fi.files[0];
+      fi.value = '';                       // 同じ写真をもう一度選べるように空に戻します
+      if (!file) return;
+
+      pick.disabled = true;
+      pick.textContent = '写真を小さくしています…';
+      shrinkImage(file, function (dataUrl) {
+        pick.textContent = '送っています…';
+        call('adminUploadProductImage', [{ row: p.row, name: p.name, dataUrl: dataUrl }], function () {
+          reset();
+          reload('写真を保存しました');
+        }, reset);
+      }, function (msg) {
+        reset();
+        toast(msg, true);
+      });
+    };
+
+    if (p.image) {
+      var del = document.createElement('button');
+      del.className = 'thin';
+      del.textContent = '🗑 写真を消す';
+      twoStep(del, '本当に消す？もう一度押す', function (back) {
+        del.disabled = true;
+        del.textContent = '消しています…';
+        call('adminClearProductImage', [{ row: p.row, name: p.name }], function () {
+          reload('写真を消しました');
+        }, back);
+      });
+      box.appendChild(del);
+    }
+
+    // インスタなど、ドライブ以外に置いた写真を使いたい人向け。普段は畳んでおきます。
+    var more = document.createElement('button');
+    more.className = 'thin';
+    more.textContent = '別の場所にある写真のURLを使う';
+    var urlBox = document.createElement('div');
+    urlBox.className = 'hidden';
+    more.onclick = function () { urlBox.classList.toggle('hidden'); };
+    box.appendChild(more);
+
+    var ui = document.createElement('input');
+    ui.type = 'text';
+    ui.placeholder = 'https://…';
+    ui.value = /^https:\/\//.test(p.image || '') ? p.image : '';
+    var uh = document.createElement('p');
+    uh.className = 'hint';
+    uh.style.margin = '6px 0 0';
+    uh.textContent = '画像そのもののURLを貼ってください。'
+      + 'インスタの投稿ページのURLは写真ではないので表示できません。';
+    var ub = document.createElement('button');
+    ub.className = 'thin';
+    ub.textContent = 'このURLを使う';
+    ub.onclick = function () {
+      var ubReset = function () { ub.disabled = false; };
+      ub.disabled = true;
+      call('adminSetProductImageUrl', [{ row: p.row, name: p.name, url: ui.value.trim() }], function () {
+        ubReset();
+        reload('写真を変えました');
+      }, ubReset);
+    };
+    urlBox.appendChild(ui); urlBox.appendChild(uh); urlBox.appendChild(ub);
+    box.appendChild(urlBox);
+
+    return box;
+  }
+
+  /**
+   * 写真をその場で小さくしてから送ります。
+   * ・スマホで撮った写真はそのままだと3〜8MBあり、送るのも表示するのも重いため
+   * ・iPhoneのHEICは、ここでJPEGに焼き直されます（サーバーはJPEG/PNG/WebPだけ受け取ります）
+   * ・撮った向き（EXIF）は createImageBitmap の imageOrientation で立て直します
+   *   （これが無いと、横向きに寝た写真がそのまま商品ページに出ます）
+   */
+  function shrinkImage(file, ok, ng) {
+    var TRIES = [[1000, 0.78], [1000, 0.55], [700, 0.5]];
+    var MAX_CHARS = 1200000;          // これを超えたら、次の設定でやり直します
+    var done = false;
+    var ok1 = function (v) { if (!done) { done = true; ok(v); } };
+    var ng1 = function (m) { if (!done) { done = true; ng(m); } };
+
+    var render = function (src, w, h) {
+      if (!w || !h) { ng1('写真の大きさが分かりませんでした。'); return; }
+      var out = '';
+      try {
+        for (var i = 0; i < TRIES.length; i++) {
+          var scale = Math.min(1, TRIES[i][0] / Math.max(w, h));
+          var cw = Math.max(1, Math.round(w * scale));
+          var ch = Math.max(1, Math.round(h * scale));
+          var cv = document.createElement('canvas');
+          cv.width = cw; cv.height = ch;
+          var ctx = cv.getContext('2d');
+          ctx.fillStyle = '#ffffff';    // PNGの透明な部分が黒くならないように
+          ctx.fillRect(0, 0, cw, ch);
+          ctx.drawImage(src, 0, 0, cw, ch);
+          out = cv.toDataURL('image/jpeg', TRIES[i][1]);
+          if (out.length <= MAX_CHARS) break;
+        }
+      } catch (e) {
+        ng1('写真を小さくできませんでした。別の写真でお試しください。');
+        return;
+      }
+      if (!out || out.length > MAX_CHARS) { ng1('この写真は大きすぎて送れませんでした。別の写真でお試しください。'); return; }
+      ok1(out);
+    };
+
+    var viaImg = function () {
+      var fr = new FileReader();
+      fr.onerror = function () { ng1('写真を読み込めませんでした。'); };
+      fr.onload = function () {
+        var im = new Image();
+        im.onload  = function () { render(im, im.naturalWidth, im.naturalHeight); };
+        im.onerror = function () { ng1('この形式の写真は読み込めませんでした。JPEGかPNGでお試しください。'); };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    };
+
+    var pr = null;
+    if (window.createImageBitmap) {
+      try { pr = createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { pr = null; }
+    }
+    if (pr && pr.then) {
+      pr.then(function (bm) { render(bm, bm.width, bm.height); })['catch'](function () { viaImg(); });
+    } else {
+      viaImg();
+    }
+  }
+
+  // 「商品を増やす」の売り方の欄。開くたびに作り直します（前に入れた値を残さないため）
+  var newKind = null;
+
+  $('btnNewProduct').onclick = function () {
+    $('pKind').textContent = '';
+    newKind = buildKindFields($('pKind'), null);
+    $('newProduct').classList.remove('hidden');
+    $('btnNewProduct').classList.add('hidden');
+    $('newProduct').scrollIntoView({ block: 'start' });
+  };
+  $('btnCancelProduct').onclick = function () {
+    $('newProduct').classList.add('hidden');
+    $('btnNewProduct').classList.remove('hidden');
+    ['pName','pDesc'].forEach(function (i) { $(i).value = ''; });
+    $('pKind').textContent = '';
+    newKind = null;
+  };
+  $('btnSaveNewProduct').onclick = function () {
+    var btn  = $('btnSaveNewProduct');
+    var name = $('pName').value.trim();
+
+    // 空のまま押されたら、送る前にここで止めます。
+    // （サーバーも同じことを見ていますが、その断りが返ってくるまでボタンが「追加中…」になり、
+    //   何が悪いのか分からないまま待たせることになるため）
+    if (!name)   { toast('商品名を入れてください', true); $('pName').focus(); return; }
+    if (!newKind) { toast('画面を開き直してください', true); return; }
+    var ng = newKind.complain();
+    if (ng) { toast(ng, true); return; }
+
+    var body = newKind.read();
+    body.name = name;
+    body.desc = $('pDesc').value.trim();
+
+    var reset = function () { btn.disabled = false; btn.textContent = 'この商品を追加する'; };
+    btn.disabled = true; btn.textContent = '追加中…';
+    call('adminAddProduct', [body], function (d) {
+      reset();
+      $('btnCancelProduct').onclick();
+      reload(d.name + ' を追加しました');
+    }, reset);   // 同じ名前の商品があった等でサーバーに断られても、押せる状態に戻します
+  };
+
+  // ---------- 設定 ----------
+  var acceptArmed = null;   // 「本当に止める？」の2段押し待ち。renderSettings で必ず解けます
+
+  function renderSettings() {
+    if (acceptArmed) { clearTimeout(acceptArmed); acceptArmed = null; }
+    var on = DATA.settings['受付'] === 'ON';
+    var sw = $('swAccept');
+    sw.className = 'toggle' + (on ? '' : ' off');
+    sw.textContent = on ? '受付中' : '停止中';
+    sw.disabled = false;   // 保存に失敗しても押せなくならないように、描き直すたびに戻します
+    $('acceptHint').textContent = on
+      ? 'お客さまは今この瞬間も注文できます。仕入れが無い日や貸切の日は停止にしてください。'
+      : '停止中です。お客さまの画面には「受付を停止しております」と出ています。';
+    $('setNotice').value = DATA.settings['お知らせ'] || '';
+    $('setMail').textContent = DATA.settings['通知先メール'] || '（未設定：このままでは注文に気づけません）';
+  }
+
+  $('swAccept').onclick = function () {
+    var sw   = $('swAccept');
+    var next = DATA.settings['受付'] === 'ON' ? 'OFF' : 'ON';
+
+    // 止めるときだけ2段押しで確かめます（再開は間違って押しても害がないので、そのまま実行）。
+    // 確認ダイアログ（confirm）はこの画面では出せません → twoStep のコメント参照
+    if (next === 'OFF' && !acceptArmed) {
+      sw.textContent = '本当に止める？';
+      sw.classList.add('danger');
+      acceptArmed = setTimeout(renderSettings, 5000);   // 5秒さわらなければ元に戻ります
+      return;
+    }
+    if (acceptArmed) { clearTimeout(acceptArmed); acceptArmed = null; }
+
+    sw.disabled = true;
+    call('adminSaveSettings', [{ 受付: next }], function () {
+      sw.disabled = false;
+      reload(next === 'ON' ? '受付を再開しました' : '受付を停止しました');
+    }, renderSettings);   // 失敗したら見た目を元に戻します
+  };
+
+  $('btnSaveNotice').onclick = function () {
+    var btn = $('btnSaveNotice');
+    var reset = function () { btn.disabled = false; btn.textContent = 'お知らせを保存する'; };
+    btn.disabled = true; btn.textContent = '保存中…';
+    call('adminSaveSettings', [{ お知らせ: $('setNotice').value }], function () {
+      reset();
+      reload('お知らせを保存しました');
+    }, reset);
+  };
+
+  // ---------- 描画 ----------
+  function render() {
+    $('hTitle').textContent = (DATA.shopName || '') + ' 注文管理';
+    renderChips();
+    renderOrders();
+    renderProducts();
+    renderSettings();
+  }
+
+  render();
+</script>
+
+<a class="ss-next" href="./">お客さんが見る注文画面をひらく →</a>
+<script>
+Demo.init({
+  home: "../",
+  note: "これは<b>体験版</b>です。表示中の注文・商品はすべて架空で、実在の店舗にはつながっていません。",
+  about: {"title":"店主が、スマホ1台で全部さわれる管理画面","sub":"注文の確認、商品の追加、受付の停止まで。パソコンを開かなくても回るように作っています。","points":[{"t":"スプレッドシートを直接さわらせない","d":"データはGoogleスプレッドシートに入っていますが、店主が開くのはこの画面だけです。行を消した・列をずらした、という事故が起きないようにしています。"},{"t":"「本当に消しますか？」を出さない理由","d":"この画面はGoogleの仕組み上、確認ダイアログを出しても【エラーにならず静かに無視される】ことがあります。そこで、ボタン自身が1回目で「本当に消す？」に変わり、2回目で実行する形にしました。5秒さわらなければ元に戻ります。"},{"t":"電話で入った注文もここに入れる","d":"ネット注文だけを別管理にすると、結局2か所を見ることになります。手入力した注文も同じ一覧に並ぶので、受け取り日ごとの一覧がそのまま作業表になります。"},{"t":"商品写真はその場で撮って載せられる","d":"写真を選ぶと、送る前にブラウザ側で縮小してから保存します。体験版でも実際に試せます（画像はこのタブの中だけに残り、外へは一切送っていません）。"}]}
+});
+
+</script>
+</body>
+</html>

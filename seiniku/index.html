@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>みどり精肉店 ご注文（体験版）</title>
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/demo.css">
+<style>
+  .ss-next{
+    display:block;max-width:640px;margin:26px auto 34px;padding:15px 18px;
+    background:#161a20;color:#fff;border-radius:12px;text-decoration:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:15px;font-weight:700;text-align:center;
+  }
+</style>
+</head>
+<body>
+<script>window.DEMO_PAGE = "shop";</script>
+<script src="../assets/demo.js"></script>
+<script src="fake-server.js"></script>
+
+<!-- ============================================================
+     ここから下は、実際に納品したシステムのコードをそのまま置いたもの。
+     体験版のために向け先を変えているのは、サーバーを呼ぶところだけ。
+     （tools/build.mjs が自動で作っています。直接直さないこと）
+     ============================================================ -->
+<!-- お客さんが見る画面。コード.gs の doGet から呼ばれます -->
+<style>
+  :root{
+    --ink:#2b211c; --sub:#7a6b62; --line:#e6ded5;
+    --bg:#faf7f2; --card:#ffffff; --accent:#b3352c; --accent-d:#8f271f;
+    --ok:#2f7d4f; --warn:#8a6d1f; --warn-bg:#fff8e1;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    line-height:1.7;font-size:16px;padding-bottom:104px}
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+  header{background:var(--ink);color:#fff;padding:18px 0 16px;text-align:center}
+  header h1{margin:0;font-size:20px;letter-spacing:.08em}
+  header p{margin:4px 0 0;font-size:12px;color:#cbbfb5;letter-spacing:.04em}
+
+  .banner{margin:14px 0;padding:12px 14px;border-radius:10px;font-size:14px}
+  .banner.notice{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent)}
+  .banner.warn{background:var(--warn-bg);border:1px solid #f0e2b0;color:var(--warn)}
+  .banner.closed{background:#fff;border:1px solid var(--line);text-align:center;padding:28px 16px}
+
+  .lead{margin:16px 0 8px;font-size:13px;color:var(--sub)}
+  .weigh{margin:12px 0 18px;padding:12px 14px;background:#fff;border:1px dashed var(--accent);
+    border-radius:10px;font-size:13px;color:var(--accent-d)}
+  .weigh b{display:block;font-size:14px;margin-bottom:2px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    margin-bottom:12px;overflow:hidden}
+  .card .thumb{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#eee}
+  .card .body{padding:14px}
+  .card h3{margin:0;font-size:17px}
+  .price{margin:2px 0 0;font-size:14px;color:var(--sub)}
+  .price b{font-size:21px;color:var(--accent);font-weight:700}
+  .desc{margin:8px 0 0;font-size:13px;color:var(--sub)}
+
+  .picker{display:flex;align-items:center;gap:10px;margin-top:12px;
+    padding-top:12px;border-top:1px solid var(--line)}
+  .step{width:44px;height:44px;flex:0 0 44px;border:1px solid var(--line);background:#fff;
+    border-radius:10px;font-size:22px;color:var(--ink);cursor:pointer;line-height:1}
+  .step:disabled{opacity:.3;cursor:default}
+  /* 単位が「g」から「パック」に変わると、この行の横幅が足りなくなることがあります（iPhone SE 幅で
+     44+88+単位+44+小計）。数の欄だけを縮ませ、単位と小計は折り返さないようにしています。
+     縮んでも押せるよう下限を決めてあります */
+  .gram{width:88px;min-width:64px;height:44px;text-align:center;font-size:17px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink);font-family:inherit}
+  .unit{font-size:14px;color:var(--sub);white-space:nowrap}
+  .sub{margin-left:auto;font-size:15px;font-weight:700;white-space:nowrap}
+  .sub.zero{color:#c3b8b0;font-weight:400}
+
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:20}
+  .bar .inner{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px}
+  .bar .amt{font-size:12px;color:var(--sub);line-height:1.4}
+  .bar .amt b{display:block;font-size:22px;color:var(--ink)}
+
+  button.go{flex:1;min-height:52px;border:0;border-radius:12px;background:var(--accent);color:#fff;
+    font-size:16px;font-weight:700;font-family:inherit;cursor:pointer}
+  button.go:disabled{background:#d5cbc3;cursor:default}
+  button.ghost{width:100%;min-height:48px;margin-top:10px;border:1px solid var(--line);
+    border-radius:12px;background:#fff;color:var(--sub);font-size:15px;font-family:inherit;cursor:pointer}
+
+  h2.sec{font-size:16px;margin:22px 0 10px;padding-left:10px;border-left:4px solid var(--accent)}
+  label{display:block;margin:14px 0 4px;font-size:14px;font-weight:700}
+  label .req{color:var(--accent);font-size:12px;margin-left:6px}
+  .hint{font-size:12px;color:var(--sub);font-weight:400;margin-top:2px}
+  input[type=text],input[type=tel],input[type=date],select,textarea{
+    width:100%;padding:13px;font-size:16px;font-family:inherit;color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;background:#fff}
+  textarea{min-height:88px;resize:vertical}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+  .review{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:8px}
+  .review dl{margin:0;display:grid;grid-template-columns:88px 1fr;gap:6px 10px;font-size:14px}
+  .review dt{color:var(--sub)}
+  .review dd{margin:0;word-break:break-word}
+  .review .row{display:flex;justify-content:space-between;gap:10px;font-size:14px;
+    padding:8px 0;border-bottom:1px solid var(--line)}
+  .review .row:last-of-type{border-bottom:0}
+  .review .total{display:flex;justify-content:space-between;align-items:baseline;
+    margin-top:10px;padding-top:10px;border-top:2px solid var(--ink);font-weight:700}
+  .review .total b{font-size:21px}
+
+  .err{margin:12px 0 0;padding:11px 13px;background:#fdecea;border:1px solid #f5c6c2;
+    border-radius:10px;color:var(--accent-d);font-size:14px}
+
+  .done{text-align:center;padding:26px 16px}
+  .done .mark{font-size:44px;color:var(--ok);line-height:1}
+  .done h2{margin:10px 0 4px;font-size:20px}
+  .no{display:inline-block;margin:10px 0;padding:8px 18px;background:#fff;border:1px solid var(--line);
+    border-radius:999px;font-size:17px;font-weight:700;letter-spacing:.06em}
+
+  footer{margin:34px 0 0;padding:20px 0 30px;border-top:1px solid var(--line);
+    text-align:center;font-size:13px;color:var(--sub)}
+  footer a{color:var(--accent);font-weight:700;text-decoration:none}
+
+  /* 規約（ご注文について／プライバシーポリシー）。footer のリンクから開きます */
+  .doc{font-size:14px;color:var(--ink)}
+  .doc h2{font-size:19px;margin:22px 0 4px}
+  .doc h3{font-size:15px;margin:20px 0 4px;padding-left:10px;border-left:4px solid var(--accent)}
+  .doc p{margin:6px 0}
+  .doc ul{margin:6px 0;padding-left:1.2em}
+  .doc li{margin:5px 0}
+  .doc .box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px}
+  .doc .meta{font-size:12px;color:var(--sub);margin-top:18px}
+
+  .hidden{display:none}
+</style>
+
+<header>
+  <h1 id="shopName"></h1>
+  <p>精肉ご注文ページ</p>
+</header>
+
+<div class="wrap">
+
+  <!-- 受付停止中 -->
+  <div id="closed" class="banner closed hidden">
+    <p id="closedMsg" style="margin:0 0 10px"></p>
+    <p style="margin:0;font-size:13px">お急ぎの場合はお電話にてご相談ください。</p>
+    <p style="margin:10px 0 0"><a id="closedTel" href="#" style="color:var(--accent);font-weight:700"></a></p>
+  </div>
+
+  <!-- ① 商品を選ぶ -->
+  <section id="screenPick">
+    <div id="notice" class="banner notice hidden"></div>
+
+    <p class="lead" id="lead"></p>
+
+    <!-- 量り売りの商品が1つも無いときは、この案内を出しません（セットだけなら金額は確定するため）。
+         initOrderScreens が中身ごと出し分けます -->
+    <div class="weigh hidden" id="weighNote"></div>
+
+    <div id="products"></div>
+    <p id="noProducts" class="banner warn hidden">ただいまご用意できる商品がございません。</p>
+  </section>
+
+  <!-- ② お客さま情報 -->
+  <section id="screenForm" class="hidden">
+    <h2 class="sec">お受け取りとご連絡先</h2>
+
+    <label>お名前<span class="req">必須</span></label>
+    <input type="text" id="fName" autocomplete="name" placeholder="山田 太郎">
+
+    <label>お電話番号<span class="req">必須</span>
+      <span class="hint">確認のお電話をおかけします。日中つながる番号をご記入ください</span>
+    </label>
+    <input type="tel" id="fTel" inputmode="numeric" autocomplete="tel" placeholder="09012345678">
+
+    <label>お受け取り希望日<span class="req">必須</span></label>
+    <!-- カレンダーではなく一覧にしています。定休日や受け付けていない日を
+         そもそも選べないようにするためです（コード.gs の pickupDateRange_ が作った日だけ並びます） -->
+    <select id="fDate"></select>
+    <p id="dateHint" class="hint"></p>
+    <p id="noDate" class="banner warn hidden">
+      ただいまお受け取りいただける日がございません。お手数ですがお電話にてご相談ください。
+    </p>
+
+    <label>お受け取り希望の時間帯<span class="req">必須</span></label>
+    <select id="fSlot"></select>
+
+    <label>ご要望など<span class="hint">切り方・厚さ・小分けのご希望などがあればご記入ください</span></label>
+    <textarea id="fNote" placeholder="例）BBQ用に少し厚めに切ってください"></textarea>
+
+    <!-- 自動送信よけ。人には見えません -->
+    <div class="hp" aria-hidden="true"><label>ここは入力しないでください</label><input type="text" id="fHp" tabindex="-1" autocomplete="off"></div>
+
+    <div id="formErr" class="err hidden"></div>
+    <button class="ghost" id="backToPick">← 商品を選び直す</button>
+  </section>
+
+  <!-- ③ 確認 -->
+  <section id="screenConfirm" class="hidden">
+    <h2 class="sec">ご注文内容の確認</h2>
+    <div class="review">
+      <div id="cItems"></div>
+      <div class="total"><span id="cTotalLabel">概算合計</span><b id="cTotal"></b></div>
+      <p style="margin:8px 0 0;font-size:12px;color:var(--sub)">
+        <span id="cTotalNote"></span><br>
+        このご注文は<b>ご予約の受付</b>で、売買契約は店頭でのお渡し時に成立します。<br>
+        ご入力いただいたお名前とお電話番号は、ご注文の確認のご連絡にのみ使用します。
+        （<a href="#" class="policyOpen" style="color:var(--accent);font-weight:700">ご注文について・プライバシーポリシー</a>）
+      </p>
+    </div>
+    <div class="review" style="margin-top:12px">
+      <dl>
+        <dt>お名前</dt><dd id="cName"></dd>
+        <dt>お電話</dt><dd id="cTel"></dd>
+        <dt>お受け取り</dt><dd id="cWhen"></dd>
+        <dt>ご要望</dt><dd id="cNote"></dd>
+      </dl>
+    </div>
+    <div id="confirmErr" class="err hidden"></div>
+    <button class="ghost" id="backToForm">← 入力し直す</button>
+  </section>
+
+  <!-- ④ 完了 -->
+  <section id="screenDone" class="hidden">
+    <div class="done">
+      <div class="mark">✓</div>
+      <h2>ご注文を承りました</h2>
+      <div class="no" id="dNo"></div>
+      <p style="font-size:14px">
+        <span id="dWhen"></span> のお受け取りで承りました。<br>
+        スタッフより確認のお電話をさせていただきます。
+      </p>
+      <p style="font-size:13px;color:var(--sub)">
+        ※ お電話がつながらない場合、ご注文が確定しないことがございます。<br>
+        ※ このページは記録として残りませんので、注文番号をお控えください。
+      </p>
+      <p style="margin-top:18px"><a id="dTel" href="#" style="color:var(--accent);font-weight:700"></a></p>
+    </div>
+  </section>
+
+  <!-- ⑤ 規約（ご注文について／プライバシーポリシー）。footer のリンクから開きます -->
+  <section id="screenPolicy" class="doc hidden">
+
+    <h2>ご注文について</h2>
+    <ul>
+      <li>このページからのご注文は<b>ご予約の受付</b>です。売買契約は、店頭でお品物をお渡しした時点で成立します。</li>
+      <li>グラム数でご注文いただく商品は量り売りのため、<b>表示金額は概算</b>です。
+        実際にお切りした重量でお会計が確定します。</li>
+      <li>セット・パックなど<b>個数でご注文いただく商品は、表示の金額のまま</b>です。</li>
+      <li><b>お支払いは店頭</b>でお願いいたします。このページでお支払いをいただくことはありません。
+        クレジットカード番号など、お支払いに関する情報をご入力いただく欄はありません。</li>
+      <li>ご注文後、当店より確認のお電話をいたします。
+        <b>お電話がつながらない場合、ご用意できないことがございます。</b></li>
+      <li>キャンセル・ご変更は、お電話にてできるだけお早めにご連絡ください。
+        生鮮品のため、お切りしたあとのキャンセルはお受けできない場合がございます。</li>
+      <li>ご注文が集中した場合や、仕入れの都合により、ご希望に添えないことがございます。
+        その場合はお電話にてご相談させていただきます。</li>
+    </ul>
+
+    <h2>プライバシーポリシー</h2>
+    <p><span class="polShop"></span>（以下「当店」）は、このページでお預かりするお客さまの個人情報を、
+      次のとおり取り扱います。</p>
+
+    <h3>1. 取得する情報</h3>
+    <p>お名前／お電話番号／お受け取り希望日・時間帯／ご注文の内容／ご要望欄にご記入いただいた内容</p>
+
+    <h3>2. 利用目的</h3>
+    <ul>
+      <li>ご注文内容の確認のためのご連絡</li>
+      <li>ご注文の品のご用意と、店頭でのお引き渡し</li>
+      <li>ご注文の記録、およびお問い合わせをいただいた際の確認</li>
+    </ul>
+    <p>上記以外の目的には利用いたしません。<b>広告・宣伝のご連絡には使用しません。</b></p>
+
+    <h3>3. 第三者への提供</h3>
+    <p>法令に基づく場合を除き、お客さまの情報を第三者へ提供することはありません。</p>
+
+    <h3>4. 保管</h3>
+    <p>ご注文の内容は Google LLC が提供するサービス（Google スプレッドシート・Gmail）上に保存し、
+      当店の担当者のみが閲覧できるようにしています。
+      ご注文の記録は、お問い合わせへの対応のため、ご注文の日から1年を目安に保管し、その後は削除します。</p>
+
+    <h3>5. Cookie・アクセス解析</h3>
+    <p>このページでは、アクセス解析や広告のための Cookie は使用していません。
+      お客さまの閲覧履歴を取得することもありません。</p>
+
+    <h3>6. 開示・訂正・削除のご請求</h3>
+    <p>ご自身の情報の開示・訂正・削除をご希望の場合は、下記までお電話ください。
+      ご本人であることを確認のうえ、対応いたします。</p>
+
+    <h3>7. お問い合わせ先</h3>
+    <div class="box">
+      <div class="polShop" style="font-weight:700"></div>
+      <div class="polAddr" style="margin-top:2px"></div>
+      <div style="margin-top:8px"><a class="polTel" href="#"></a></div>
+    </div>
+
+    <p class="meta">制定日：2026年8月3日</p>
+
+    <button class="ghost" id="policyBack">← ご注文のページへ戻る</button>
+  </section>
+
+  <footer>
+    <div id="fShop"></div>
+    <div id="fAddr" style="margin-top:2px"></div>
+    <div style="margin-top:8px"><a id="fTelLink" href="#"></a></div>
+    <div style="margin-top:12px">
+      <a href="#" id="policyLink">ご注文について・プライバシーポリシー</a>
+    </div>
+  </footer>
+</div>
+
+<!-- 下部固定バー -->
+<div class="bar hidden" id="bar">
+  <div class="inner">
+    <div class="amt"><span id="barLabel">概算合計</span><b id="barTotal">¥0</b></div>
+    <button class="go" id="goBtn">ご注文へ進む</button>
+  </div>
+</div>
+
+<script>
+  var BOOT = DEMO_BOOTSTRAP;
+
+  // 量り売りの品はグラム数、セット・個数の品は個数が入ります。
+  // どちらなのかは商品の kind で決まるので、ここでは数だけを持ちます
+  var cart  = {};                 // { 商品名: グラム数 または 個数 }
+  var stage = 'pick';             // pick / form / confirm / done
+  var sending = false;
+
+  var SET = 'セット';             // p.kind がこれならセット・個数売り（コード.gs の SELL_SET と同じ文字）
+  var isSet = function (p) { return p.kind === SET; };
+  // その品の「2パック」「300g」にあたる言い方。画面のどこでも同じ言葉になるよう1か所にまとめます
+  function amountText(p, n) {
+    return isSet(p) ? (n + p.unitLabel) : (n + 'g');
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var yen = function (n) { return '¥' + Number(n || 0).toLocaleString('ja-JP'); };
+  var WD  = ['日', '月', '火', '水', '木', '金', '土'];
+
+  function fmtDate(s) {
+    var p = s.split('-');
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    return Number(p[1]) + '月' + Number(p[2]) + '日（' + WD[d.getDay()] + '）';
+  }
+  // ---------- 初期表示 ----------
+  function init() {
+    $('shopName').textContent = BOOT.shop.name;
+    $('fShop').textContent    = BOOT.shop.name;
+    $('fAddr').textContent    = BOOT.shop.addr;
+    setTel($('fTelLink'), BOOT.shop.tel);
+    setTel($('closedTel'), BOOT.shop.tel);
+    setTel($('dTel'), BOOT.shop.tel);
+
+    // 規約は受付OFFのときも読めなければいけないので、注文画面の組み立てより先に用意します
+    setupPolicy();
+
+    initOrderScreens();
+
+    // ?privacy=1 で開かれたときは、最初から規約を表示します
+    if (BOOT.openPolicy) openPolicy();
+  }
+
+  function initOrderScreens() {
+    if (!BOOT.accepting) {
+      $('screenPick').classList.add('hidden');
+      $('closedMsg').textContent = BOOT.closedMessage;
+      $('closed').classList.remove('hidden');
+      return;
+    }
+    if (BOOT.notice) {
+      $('notice').textContent = BOOT.notice;
+      $('notice').classList.remove('hidden');
+    }
+
+    // 量り売りの品が1つも無いお店（セット・パックだけ）では、
+    // 「表示金額は概算です」の案内そのものを出しません。金額が確定するのに不安にさせるためです
+    var 量り売りあり = BOOT.products.some(function (p) { return !isSet(p); });
+    var セットあり   = BOOT.products.some(isSet);
+    $('lead').textContent = 量り売りあり
+      ? (セットあり
+          ? 'ご希望のお肉のグラム数、セットの個数をお選びください。ご注文後、スタッフよりお電話にて内容を確認させていただきます。'
+          : 'ご希望のお肉とグラム数をお選びください。ご注文後、スタッフよりお電話にて内容を確認させていただきます。')
+      : 'ご希望の商品と個数をお選びください。ご注文後、スタッフよりお電話にて内容を確認させていただきます。';
+    if (量り売りあり) {
+      var w = $('weighNote');
+      var wb = document.createElement('b');
+      wb.textContent = セットあり ? 'グラム数でご注文の品は、表示金額が概算です' : '表示金額は概算です';
+      w.appendChild(wb);
+      w.appendChild(document.createTextNode(
+        '量り売りのため、実際にお切りした重量でお会計が確定します。表示より多少前後する場合がございます。' +
+        (セットあり ? 'セットなど個数でご注文の品は、表示の金額のままです。' : '')));
+      w.classList.remove('hidden');
+    }
+
+    renderProducts();
+    buildForm();
+
+    $('goBtn').addEventListener('click', onGo);
+    $('backToPick').addEventListener('click', function () { show('pick'); });
+    $('backToForm').addEventListener('click', function () { show('form'); });
+    $('fDate').addEventListener('change', checkDate);
+
+    show('pick');
+  }
+
+  // ---------- 規約（ご注文について／プライバシーポリシー） ----------
+  // 画面の切り替え（show）とは独立させています。受付OFFのときも、注文の途中でも、
+  // いま見ている画面を壊さずに開いて戻れるようにするためです。
+  var POLICY_HIDES = ['closed', 'screenPick', 'screenForm', 'screenConfirm', 'screenDone', 'bar'];
+  var policyReturn = null;   // 規約を開く前の表示状態。閉じるときにそのまま戻します
+
+  function setupPolicy() {
+    var i, els;
+    els = document.querySelectorAll('.polShop');
+    for (i = 0; i < els.length; i++) els[i].textContent = BOOT.shop.name;
+    els = document.querySelectorAll('.polAddr');
+    for (i = 0; i < els.length; i++) els[i].textContent = BOOT.shop.addr;
+    els = document.querySelectorAll('.polTel');
+    for (i = 0; i < els.length; i++) setTel(els[i], BOOT.shop.tel);
+
+    $('policyBack').addEventListener('click', closePolicy);
+
+    // footer のリンクと、確認画面の中のリンク（class="policyOpen"）の両方から開けます
+    els = document.querySelectorAll('#policyLink, .policyOpen');
+    for (i = 0; i < els.length; i++) {
+      els[i].addEventListener('click', function (e) { e.preventDefault(); openPolicy(); });
+    }
+  }
+
+  function openPolicy() {
+    if (policyReturn) return;
+    policyReturn = POLICY_HIDES.map(function (id) {
+      return { id: id, hidden: $(id).classList.contains('hidden') };
+    });
+    POLICY_HIDES.forEach(function (id) { $(id).classList.add('hidden'); });
+    $('screenPolicy').classList.remove('hidden');
+    window.scrollTo(0, 0);
+  }
+
+  function closePolicy() {
+    if (!policyReturn) return;
+    $('screenPolicy').classList.add('hidden');
+    policyReturn.forEach(function (s) { $(s.id).classList.toggle('hidden', s.hidden); });
+    policyReturn = null;
+    window.scrollTo(0, 0);
+  }
+
+  function setTel(el, tel) {
+    if (!tel) { el.classList.add('hidden'); return; }
+    el.href = 'tel:' + tel.replace(/[^\d]/g, '');
+    el.textContent = '☎ ' + tel + ' に電話する';
+  }
+
+  // ---------- 商品一覧 ----------
+  function renderProducts() {
+    var box = $('products');
+    if (!BOOT.products.length) { $('noProducts').classList.remove('hidden'); return; }
+
+    BOOT.products.forEach(function (p) {
+      var card = document.createElement('div');
+      card.className = 'card';
+
+      if (p.image) {
+        var img = document.createElement('img');
+        img.className = 'thumb';
+        img.src = p.image;
+        img.alt = p.name;
+        img.loading = 'lazy';
+        img.onerror = function () { img.remove(); };   // 画像が出せなくても崩れないように
+        card.appendChild(img);
+      }
+
+      var body = document.createElement('div');
+      body.className = 'body';
+
+      var h3 = document.createElement('h3');
+      h3.textContent = p.name;                         // textContent で入れる（HTMLとして解釈させない）
+      body.appendChild(h3);
+
+      var price = document.createElement('p');
+      price.className = 'price';
+      var b = document.createElement('b');
+      b.textContent = yen(isSet(p) ? p.setPrice : p.unitPrice);
+      price.appendChild(b);
+      price.appendChild(document.createTextNode(isSet(p)
+        ? ' / 1' + p.unitLabel + '（税込・この金額で確定します）'
+        : ' / 100g（税込）'));
+      body.appendChild(price);
+
+      if (p.desc) {
+        var d = document.createElement('p');
+        d.className = 'desc';
+        d.textContent = p.desc;
+        body.appendChild(d);
+      }
+
+      body.appendChild(buildPicker(p));
+      card.appendChild(body);
+      box.appendChild(card);
+    });
+  }
+
+  /**
+   * 商品1つぶんの「−／数／＋」。量り売りならグラム数、セット・個数なら個数を選びます。
+   * 違うのは【1つぶんの単位・最小・上限・値段の出し方】だけなので、そこだけを先に決めて共通で作ります。
+   */
+  function buildPicker(p) {
+    var 単位  = isSet(p) ? p.unitLabel : 'g';
+    var 刻み  = isSet(p) ? 1 : p.stepGrams;
+    var 最小  = isSet(p) ? 1 : p.minGrams;
+    // 上限も刻みに合わせて【切り下げ】ます。切り上げると、画面では選べるのに
+    // サーバーが「上限を超えています」で断る数になります（例：上限5000g・刻み300g）
+    var 上限  = isSet(p) ? Math.max(1, BOOT.maxSets || 20)
+                         : Math.floor((BOOT.maxGrams || 0) / 刻み) * 刻み;
+    var 値段  = function (n) { return isSet(p) ? p.setPrice * n : Math.round(p.unitPrice * n / 100); };
+
+    var wrap = document.createElement('div');
+    wrap.className = 'picker';
+
+    var minus = document.createElement('button');
+    minus.className = 'step'; minus.type = 'button'; minus.textContent = '−';
+    minus.setAttribute('aria-label', p.name + ' を減らす');
+
+    var input = document.createElement('input');
+    input.className = 'gram'; input.type = 'number'; input.inputMode = 'numeric';
+    input.min = 0; input.step = 刻み; input.value = 0;
+    input.setAttribute('aria-label', p.name + ' の' + (isSet(p) ? '個数' : 'グラム数'));
+
+    var plus = document.createElement('button');
+    plus.className = 'step'; plus.type = 'button'; plus.textContent = '＋';
+    plus.setAttribute('aria-label', p.name + ' を増やす');
+
+    var unit = document.createElement('span');
+    unit.className = 'unit'; unit.textContent = 単位;
+
+    var sub = document.createElement('span');
+    sub.className = 'sub zero'; sub.textContent = '—';
+
+    function apply(n) {
+      if (!(n > 0)) {
+        n = 0;
+      } else {
+        n = Math.round(n / 刻み) * 刻み;
+        if (n > 上限) n = 上限;
+        if (n < 最小) n = 最小;
+      }
+
+      input.value = n;
+      if (n > 0) {
+        cart[p.id] = n;
+        sub.textContent = yen(値段(n));
+        sub.className = 'sub';
+      } else {
+        delete cart[p.id];
+        sub.textContent = '—';
+        sub.className = 'sub zero';
+      }
+      minus.disabled = (n <= 0);
+      updateBar();
+    }
+
+    minus.addEventListener('click', function () {
+      var n = Number(input.value) || 0;
+      apply(n <= 最小 ? 0 : n - 刻み);
+    });
+    plus.addEventListener('click', function () {
+      var n = Number(input.value) || 0;
+      apply(n <= 0 ? 最小 : n + 刻み);
+    });
+    input.addEventListener('change', function () { apply(Number(input.value) || 0); });
+
+    minus.disabled = true;
+    [minus, input, unit, plus, sub].forEach(function (el) { wrap.appendChild(el); });
+    return wrap;
+  }
+
+  function cartLines() {
+    return BOOT.products.filter(function (p) { return cart[p.id] > 0; }).map(function (p) {
+      var n = cart[p.id];
+      if (isSet(p)) {
+        return { id: p.id, name: p.name, set: true, qty: n,
+                 label: p.name + '　' + amountText(p, n), amount: p.setPrice * n };
+      }
+      return { id: p.id, name: p.name, set: false, grams: n,
+               label: p.name + '　' + amountText(p, n), amount: Math.round(p.unitPrice * n / 100) };
+    });
+  }
+  function cartTotal() {
+    return cartLines().reduce(function (s, l) { return s + l.amount; }, 0);
+  }
+  /** 量り売りの品が1つでも入っていれば概算。セットだけなら金額は確定します */
+  function cartEstimated() {
+    return cartLines().some(function (l) { return !l.set; });
+  }
+  function totalLabel() { return cartEstimated() ? '概算合計' : '合計'; }
+
+  // ---------- 入力フォーム ----------
+  function buildForm() {
+    // 受け取れる日だけを並べます。定休日・締切前後の判定はサーバー側で済んでいるので、
+    // ここは受け取った配列をそのまま出すだけです（画面とサーバーで判定がズレないように）。
+    var d = $('fDate');
+    var days = BOOT.pickup.days || [];
+    days.forEach(function (v, i) {
+      var o = document.createElement('option');
+      o.value = v; o.textContent = fmtDate(v);
+      if (i === 0) o.selected = true;
+      d.appendChild(o);
+    });
+    if (!days.length) {
+      d.disabled = true;
+      $('noDate').classList.remove('hidden');
+    }
+
+    var msg = BOOT.deadline + 'までのご注文は翌日以降、' +
+              BOOT.deadline + '以降のご注文は翌々日以降のお受け取りになります。';
+    if (BOOT.closedDays.length) {
+      msg += ' 定休日（' + BOOT.closedDays.map(function (n) { return WD[n]; }).join('・') + '曜日）は一覧に出ません。';
+    }
+    $('dateHint').textContent = msg;
+
+    var sel = $('fSlot');
+    BOOT.timeSlots.forEach(function (s, i) {
+      var o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      if (i === 0) o.selected = true;
+      sel.appendChild(o);
+    });
+    if (!BOOT.timeSlots.length) {
+      var o = document.createElement('option');
+      o.value = ''; o.textContent = '指定なし';
+      sel.appendChild(o);
+    }
+  }
+
+  // 一覧に出していない日は選びようがありませんが、念のため最後にもう一度だけ確かめます
+  // （画面を開いたまま日をまたいだ場合など。サーバー側でも同じ判定をしています）
+  function checkDate() {
+    var v = $('fDate').value;
+    if (!v) return true;
+    if ((BOOT.pickup.days || []).indexOf(v) < 0) {
+      showErr('formErr', 'お受け取り希望日をお選び直しください。画面を再読み込みすると最新の日程が出ます。');
+      return false;
+    }
+    hideErr('formErr');
+    return true;
+  }
+
+  // ---------- 画面の出し分け ----------
+  function show(next) {
+    stage = next;
+    $('screenPick').classList.toggle('hidden',    next !== 'pick');
+    $('screenForm').classList.toggle('hidden',    next !== 'form');
+    $('screenConfirm').classList.toggle('hidden', next !== 'confirm');
+    $('screenDone').classList.toggle('hidden',    next !== 'done');
+    $('bar').classList.toggle('hidden',           next === 'done');
+    hideErr('formErr'); hideErr('confirmErr');
+    updateBar();
+    window.scrollTo(0, 0);
+  }
+
+  function updateBar() {
+    var total = cartTotal();
+    $('barTotal').textContent = yen(total);
+    var btn = $('goBtn');
+
+    $('barLabel').textContent = totalLabel();
+
+    if (stage === 'pick') {
+      btn.textContent = 'ご注文へ進む';
+      btn.disabled = (total === 0);
+    } else if (stage === 'form') {
+      btn.textContent = '確認画面へ';
+      btn.disabled = false;
+    } else if (stage === 'confirm') {
+      btn.textContent = sending ? '送信中…' : 'この内容で注文する';
+      btn.disabled = sending;
+    }
+  }
+
+  function onGo() {
+    if (stage === 'pick')    { show('form'); return; }
+    if (stage === 'form')    { if (validateForm()) { renderConfirm(); show('confirm'); } return; }
+    if (stage === 'confirm') { send(); }
+  }
+
+  function validateForm() {
+    var name = $('fName').value.trim();
+    var tel  = $('fTel').value.replace(/[０-９]/g, function (c) {
+      return String.fromCharCode(c.charCodeAt(0) - 0xFEE0);
+    }).replace(/[^\d]/g, '');
+
+    if (!name)                        { return showErr('formErr', 'お名前をご入力ください。'), false; }
+    if (!/^0\d{9,10}$/.test(tel))     { return showErr('formErr', '電話番号をご確認ください（ハイフンなしの10桁または11桁）。'), false; }
+    if (!$('fDate').value)            { return showErr('formErr', 'お受け取り希望日をお選びください。'), false; }
+    if (!checkDate())                 { return false; }
+    if (!cartLines().length)          { return showErr('formErr', 'ご注文の商品をお選びください。'), false; }
+    hideErr('formErr');
+    return true;
+  }
+
+  function renderConfirm() {
+    var box = $('cItems');
+    box.textContent = '';
+    cartLines().forEach(function (l) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      var left = document.createElement('span');
+      left.textContent = l.label;
+      var right = document.createElement('span');
+      right.textContent = yen(l.amount);
+      row.appendChild(left); row.appendChild(right);
+      box.appendChild(row);
+    });
+    $('cTotal').textContent      = yen(cartTotal());
+    $('cTotalLabel').textContent = totalLabel();
+    $('cTotalNote').textContent  = cartEstimated()
+      ? 'グラム数でご注文の品は、実重量でお会計が確定します。お支払いは店頭でお願いいたします。'
+      : 'この金額でお受けいたします。お支払いは店頭でお願いいたします。';
+    $('cName').textContent  = $('fName').value.trim() + ' 様';
+    $('cTel').textContent   = $('fTel').value.trim();
+    $('cWhen').textContent  = fmtDate($('fDate').value) + '　' + ($('fSlot').value || '指定なし');
+    $('cNote').textContent  = $('fNote').value.trim() || '（なし）';
+  }
+
+  // ---------- 送信 ----------
+  function send() {
+    if (sending) return;
+    sending = true;
+    updateBar();
+    hideErr('confirmErr');
+
+    var payload = {
+      name : $('fName').value.trim(),
+      tel  : $('fTel').value.trim(),
+      date : $('fDate').value,
+      slot : $('fSlot').value,
+      note : $('fNote').value.trim(),
+      hp   : $('fHp').value,
+      items: cartLines().map(function (l) {
+        return l.set ? { id: l.id, qty: l.qty } : { id: l.id, grams: l.grams };
+      })
+    };
+
+    google.script.run
+      .withSuccessHandler(function (res) {
+        sending = false;
+        if (!res || !res.ok) {
+          showErr('confirmErr', (res && res.message) || '送信できませんでした。時間をおいてお試しください。');
+          updateBar();
+          return;
+        }
+        $('dNo').textContent   = res.orderNo;
+        $('dWhen').textContent = fmtDate(res.date) + '　' + (res.slot || '時間指定なし');
+        show('done');
+      })
+      .withFailureHandler(function (err) {
+        sending = false;
+        showErr('confirmErr', '通信に失敗しました。電波の良い場所でもう一度お試しいただくか、お電話にてご注文ください。');
+        updateBar();
+        console.error(err);
+      })
+      .submitOrder(payload);
+  }
+
+  function showErr(id, msg) {
+    var el = $(id);
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    el.scrollIntoView({ block: 'center' });
+  }
+  function hideErr(id) { $(id).classList.add('hidden'); }
+
+  init();
+</script>
+
+<a class="ss-next" href="kanri.html">店主が見る管理画面をひらく →</a>
+<script>
+Demo.init({
+  home: "../",
+  note: "これは<b>体験版</b>です。お店も商品も注文もすべて架空で、実在の店舗にはつながっていません。",
+  about: {"title":"街の精肉店の「電話注文」を、そのまま画面にしたもの","sub":"お客さん側の画面です。店主が見る管理画面は、この下のリンクから。","points":[{"t":"注文を受けるところだけに絞っている","d":"会員登録も、ログインも、クレジット決済もありません。お支払いは受け取りのときに店頭で。「ネットで注文できる」ために本当に要るものだけを残しています。"},{"t":"グラム売りの「金額が確定しない」問題","d":"精肉店は100gいくらで売るので、注文の時点では金額が決まりません。そこで量り売りの品が1つでも入っていれば「概算」、セット商品だけなら「確定」と、画面・注文控え・お店への通知メールの言葉づかいを1つの判定でそろえています。"},{"t":"押せない選択肢は最初から出さない","d":"受け取り日のカレンダーには、定休日と、締切時刻を過ぎた当日分が出てきません。選んでから断られるのがいちばん腹立たしいためです。"},{"t":"体験版で省いたこと","d":"注文を送るとお店へ通知メールが飛びますが、体験版では飛びません。同じ電話番号からの連続送信をはじく仕組みも、何度も試せるように外しています。"}]}
+});
+
+</script>
+</body>
+</html>

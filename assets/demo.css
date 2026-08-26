@@ -1,0 +1,87 @@
+/* ------------------------------------------------------------------
+   体験版の「外枠」だけを受け持つCSS。
+   中身（各システムの画面）は本番のコードをそのまま貼っているので、
+   ここで定義する名前は必ず ss- を頭に付け、中身の名前と衝突しないようにする。
+   色も変数を使わずここで閉じている。中身のページが :root をどう塗っていても、
+   この帯だけは同じ見た目で出したいため。
+   ------------------------------------------------------------------ */
+
+.ss-bar{
+  position:sticky;top:0;z-index:99999;
+  background:#161a20;color:#e9e6df;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  font-size:12px;line-height:1.5;
+  border-bottom:1px solid #333b45;
+}
+.ss-bar *{box-sizing:border-box}
+.ss-bar-in{
+  max-width:1120px;margin:0 auto;padding:7px 12px;
+  display:flex;align-items:center;gap:10px;
+}
+.ss-bar a,.ss-bar button{
+  font-family:inherit;font-size:12px;
+  color:#e9e6df;background:transparent;border:1px solid #4a545f;
+  border-radius:999px;padding:5px 11px;cursor:pointer;text-decoration:none;
+  white-space:nowrap;line-height:1.2;
+}
+.ss-bar a:hover,.ss-bar button:hover{background:#232a33;border-color:#6c7885}
+.ss-bar .ss-note{
+  flex:1;min-width:0;color:#a9b1ba;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ss-bar .ss-note b{color:#f0c46a;font-weight:700}
+/* 狭い画面では説明文を2行目に落とす。省略記号で読めなくなるのを避ける */
+@media (max-width:640px){
+  .ss-bar-in{flex-wrap:wrap;gap:8px}
+  .ss-bar .ss-note{order:3;flex-basis:100%;white-space:normal;overflow:visible}
+  .ss-bar .ss-spacer{flex:1}
+}
+
+/* ---------- 「しくみ」の中身 ---------- */
+.ss-sheet{
+  position:fixed;inset:0;z-index:100000;
+  background:rgba(12,14,18,.62);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0;
+}
+.ss-sheet[hidden]{display:none}
+.ss-sheet-in{
+  width:100%;max-width:620px;max-height:82vh;overflow:auto;
+  background:#fffefb;color:#1f2328;
+  border-radius:16px 16px 0 0;
+  padding:22px 22px calc(26px + env(safe-area-inset-bottom));
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  font-size:14.5px;line-height:1.8;
+  box-shadow:0 -8px 40px rgba(0,0,0,.3);
+}
+@media (min-width:720px){
+  .ss-sheet{align-items:center;padding:24px}
+  .ss-sheet-in{border-radius:16px}
+}
+.ss-sheet h2{margin:0 0 4px;font-size:18px;line-height:1.5}
+.ss-sheet .ss-sub{margin:0 0 16px;font-size:12.5px;color:#77808a}
+.ss-sheet dl{margin:0}
+.ss-sheet dt{
+  margin:16px 0 3px;font-size:14px;font-weight:700;color:#1f2328;
+  padding-left:11px;border-left:3px solid #b3352b;
+}
+.ss-sheet dd{margin:0;color:#4b535c}
+.ss-sheet .ss-close{
+  display:block;width:100%;margin-top:22px;padding:13px;
+  border:0;border-radius:11px;background:#161a20;color:#fff;
+  font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;
+}
+
+/* ---------- 本番にしか無い動きを押されたときの吹き出し ---------- */
+.ss-toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  z-index:100001;max-width:min(92vw,460px);
+  background:#161a20;color:#fff;border-radius:12px;
+  padding:13px 17px;font-size:13.5px;line-height:1.65;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  box-shadow:0 8px 30px rgba(0,0,0,.32);
+  animation:ss-toast-in .18s ease-out;
+}
+.ss-toast b{display:block;color:#f0c46a;font-size:12px;margin-bottom:2px;letter-spacing:.04em}
+@keyframes ss-toast-in{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:reduce){.ss-toast{animation:none}}
