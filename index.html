@@ -120,7 +120,8 @@ section{padding:46px 0 0}
   padding:7px 9px;border-radius:8px;border:1px solid var(--kei);
   background:var(--kami);color:var(--sumi);
 }
-.calc .unit{font-size:13px;color:var(--sumi-3)}
+.calc .numunit{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.calc .unit{font-size:13px;color:var(--sumi-3);white-space:nowrap}
 .calc .hint{margin-top:6px;font-size:12px;color:var(--sumi-3)}
 
 .calc .out{border-left:3px solid var(--kei);padding-left:18px}
@@ -271,8 +272,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <label for="wage">社長の時給</label>
         <div class="row">
           <input id="wage" type="range" min="1000" max="30000" step="500" value="5000">
-          <input id="wage-n" type="number" min="0" max="200000" step="500" value="5000" inputmode="numeric">
-          <span class="unit">円</span>
+          <span class="numunit"><input id="wage-n" type="number" min="0" max="200000" step="500" value="5000" inputmode="numeric"><span class="unit">円</span></span>
         </div>
         <p class="hint">例として5,000円を入れてあります。ご自身の数字に変えてください。</p>
       </div>
@@ -280,8 +280,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <label for="hours">毎月、手作業や転記・電話番に使っている時間</label>
         <div class="row">
           <input id="hours" type="range" min="0" max="80" step="1" value="10">
-          <input id="hours-n" type="number" min="0" max="500" step="1" value="10" inputmode="numeric">
-          <span class="unit">時間</span>
+          <span class="numunit"><input id="hours-n" type="number" min="0" max="500" step="1" value="10" inputmode="numeric"><span class="unit">時間</span></span>
         </div>
         <p class="hint">例として月10時間を入れてあります。社長ご本人と事務の分を合わせても構いません。</p>
       </div>
