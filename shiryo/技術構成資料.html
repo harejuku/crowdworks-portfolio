@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>業務システムの技術構成と実績（企業向け）</title>
+<style>
+  /* ── ページ数が合わないときは、ここだけ動かす ────────── */
+  :root {
+    --fs: 10.5pt;    /* 本文サイズ */
+    --lh: 1.6;       /* 行間 */
+    --gap: 4.5mm;    /* セクション間隔 */
+    --tfs: 8pt;      /* 表の文字サイズ */
+  }
+  @page { size: A4 portrait; margin: 16mm 16mm 14mm; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3",
+                 "Hiragino Sans", sans-serif;
+    font-size: var(--fs);
+    line-height: var(--lh);
+    color: #1a1a1a;
+    margin: 0;
+  }
+  p { margin: 0; }
+  section { margin-bottom: var(--gap); }
+
+  /* ── 表題 ───────────────────────────── */
+  .title {
+    text-align: center;
+    font-size: calc(var(--fs) * 1.6);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-bottom: 2.5mm;
+  }
+  .date { text-align: center; font-size: calc(var(--fs) * 0.86); color: #555; }
+  .title-rule { border: none; border-top: 1.4pt solid #444; margin: 3mm 0 6mm; }
+
+  /* ── 見出し ──────────────────────────── */
+  h2 {
+    font-size: calc(var(--fs) * 1.1);
+    font-weight: 700;
+    margin: 0 0 2.4mm;
+    padding: 0.6mm 0 0.6mm 2.6mm;
+    border-left: 3.2pt solid #444;
+    letter-spacing: 0.04em;
+  }
+  h3 {
+    font-size: calc(var(--fs) * 0.98);
+    font-weight: 700;
+    margin: 3.4mm 0 1.4mm;
+  }
+
+  .lead { margin-bottom: 4mm; text-align: justify; }
+
+  /* ── ラベル＋値 ───────────────────────── */
+  .kv {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 5mm;
+    row-gap: 1.6mm;
+    margin: 0 0 0 3mm;
+  }
+  .kv dt { font-weight: 700; white-space: nowrap; }
+  .kv dd { margin: 0; }
+
+  /* ── 箇条書き ────────────────────────── */
+  .list { list-style: none; margin: 0; padding: 0 0 0 3mm; }
+  .list > li { margin-bottom: 1.8mm; }
+  .list > li::before {
+    content: "●";
+    font-size: calc(var(--fs) * 0.6);
+    vertical-align: 0.18em;
+    margin-right: 2mm;
+    color: #666;
+  }
+  .list .desc {
+    display: block;
+    margin: 0 0 0 5.5mm;
+    font-size: calc(var(--fs) * 0.9);
+    line-height: 1.58;
+    color: #444;
+  }
+  .items { margin: 0; padding-left: 7mm; }
+  .items li { margin-bottom: 1.2mm; }
+
+  /* ── 表 ─────────────────────────────── */
+  table { border-collapse: collapse; width: 100%; font-size: var(--tfs); line-height: 1.5; }
+  th, td { border: 0.5pt solid #999; padding: 1.4mm 1.6mm; text-align: left; vertical-align: top; }
+  thead th { background: #ececec; font-weight: 700; white-space: nowrap; }
+  tbody th { font-weight: 700; background: #f7f7f7; }
+  .t-works col.c1 { width: 21mm; }
+  .t-works col.c2 { width: 21mm; }
+  .t-works col.c3 { width: 27mm; }
+  .t-works col.c4 { width: 25mm; }
+  .t-works col.c5 { width: 25mm; }
+  .t-works col.c6 { width: 33mm; }
+  .t-works col.c7 { width: 14mm; }
+  .t-stage col.s1 { width: 12mm; }
+  .t-stage col.s2 { width: 40mm; }
+  .t-stage col.s3 { width: 58mm; }
+  .t-stage col.s4 { width: 40mm; }
+  .tbl-note { margin-top: 2mm; font-size: calc(var(--fs) * 0.84); color: #444; line-height: 1.6; }
+
+  .closing {
+    margin-top: 3.5mm;
+    padding-top: 2.4mm;
+    border-top: 0.8pt solid #ccc;
+    text-align: justify;
+    font-size: calc(var(--fs) * 0.9);
+    color: #333;
+  }
+
+  /* 表の行・見出しの直後・箇条書きの1項目は、ページの切れ目でちぎらない */
+  tr { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  .list > li { break-inside: avoid; }
+  table { break-inside: auto; }
+  thead { display: table-header-group; }
+  .pagebreak { break-after: page; }
+</style>
+</head>
+<body>
+
+<p class="title">業務システムの技術構成と実績</p>
+<p class="date">2026年9月</p>
+<hr class="title-rule">
+
+<section>
+  <h2>1. 概要</h2>
+  <p class="lead">
+    既製のパッケージに業務を合わせるのではなく、いまの業務のやり方に画面のほうを合わせて業務システムを制作しています。
+    対象は、注文・予約の受付、売上と経費の記録、伝票や帳票の転記、集計と印刷といった、
+    人の手が毎月同じだけ止まっている作業です。要件定義書のご用意は不要で、
+    現在のやり方を伺ったうえで、先に動く試作をお出しして詰めていきます。
+  </p>
+
+  <h3>提供形態</h3>
+  <dl class="kv">
+    <dt>無料構成</dt>
+    <dd>Googleスプレッドシート＋Google Apps Script で構築し、月々の利用料が発生しない形。
+        お客さまのGoogleアカウントの中で完結します。</dd>
+    <dt>定額プラン</dt>
+    <dd>初期費用0円（既存の型に収まる案件の場合）＋月額。改修は月1回まとめて反映します。
+        月額に含む範囲は機能ではなく時間で区切っています。</dd>
+  </dl>
+
+  <h3>制作の範囲</h3>
+  <ul class="list">
+    <li>要件の聞き取り、画面設計、実装、実データでの検証、本番への切り替え、その後の改修まで一貫して担当します。</li>
+    <li>納品後の日常の操作（商品を足す、値段を変える、受付を止める）は、
+      必ずお客さま自身が画面から行える形にしています。
+      <span class="desc">操作のたびに開発側への連絡が要る作りにすると、運用が続かないためです。</span></li>
+    <li>全案件に自己診断の仕組みを標準で入れ、異常の有無をお客さま側でも判定できるようにしています。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>2. 制作物一覧</h2>
+  <p class="lead">
+    お客さまの屋号・所在地・取引先・商品名は記載していません。用途と技術構成のみを示します。
+  </p>
+  <table class="t-works">
+    <colgroup>
+      <col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>制作物</th><th>用途・業種</th><th>フロントエンド</th><th>バックエンド・言語</th>
+        <th>データ置き場</th><th>外部サービス・API</th><th>状態</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>学習塾 統合管理システム</th>
+        <td>学習塾の会員・課金・予約・学習記録</td>
+        <td>Next.js 14（App Router）／React 18／TypeScript／Tailwind CSS</td>
+        <td>TypeScript（Next.js のサーバー処理）</td>
+        <td>Supabase（PostgreSQL・Row Level Security による権限分離）</td>
+        <td>Vercel（配信）／Google Calendar API／Google Apps Script（周辺自動化・バックアップ）</td>
+        <td>自社で運用中</td>
+      </tr>
+      <tr>
+        <th>オンライン注文受付</th>
+        <td>精肉店の予約注文</td>
+        <td>GAS HTML Service（HTML／CSS／JavaScript）</td>
+        <td>Google Apps Script</td>
+        <td>Googleスプレッドシート</td>
+        <td>Googleドライブ（商品写真）／Gmail（注文通知）</td>
+        <td>稼働中</td>
+      </tr>
+      <tr>
+        <th>売上管理</th>
+        <td>個人事業主の売上・経費の記録と集計</td>
+        <td>GAS HTML Service／Googleフォーム</td>
+        <td>Google Apps Script</td>
+        <td>Googleスプレッドシート</td>
+        <td>Googleドライブ（日次バックアップ・世代管理）</td>
+        <td>稼働中</td>
+      </tr>
+      <tr>
+        <th>会員制クイズ企画</th>
+        <td>飲食店の販促・会員企画</td>
+        <td>GAS HTML Service（QRコードから起動）</td>
+        <td>Google Apps Script</td>
+        <td>Googleスプレッドシート</td>
+        <td>QRコード（印刷して配布）</td>
+        <td>稼働中</td>
+      </tr>
+      <tr>
+        <th>発送業務の自動化</th>
+        <td>ネット通販の発送・追跡番号の登録</td>
+        <td>GAS HTML Service（操作画面）</td>
+        <td>Google Apps Script</td>
+        <td>Googleスプレッドシート／Googleドライブ</td>
+        <td>GoogleドライブのOCR／CSVの文字コード変換（Shift_JIS・cp932）</td>
+        <td>稼働中</td>
+      </tr>
+      <tr>
+        <th>手書き伝票の読み取り</th>
+        <td>手書きの仕入伝票の台帳化</td>
+        <td>GAS HTML Service／確認用の画面（HTML＋JavaScript）</td>
+        <td>Google Apps Script／Node.js（手元での検算）</td>
+        <td>Googleスプレッドシート／Googleドライブ</td>
+        <td>Google Cloud Vision API／AIによる読み取り（溜まった紙の一度きり）</td>
+        <td>構築中</td>
+      </tr>
+      <tr>
+        <th>精算ウェブアプリ</th>
+        <td>個人向けの割り勘・立替の精算</td>
+        <td>HTML＋CSS＋JavaScript（単一ファイル・外部ライブラリなし）</td>
+        <td>なし（サーバーを持たない構成）</td>
+        <td>閲覧している端末の中だけ（外部へ送信しない）</td>
+        <td>—</td>
+        <td>公開中</td>
+      </tr>
+      <tr>
+        <th>店舗ホームページ</th>
+        <td>店舗・教室の告知と問い合わせ</td>
+        <td>Next.js（静的書き出し）／React／TypeScript</td>
+        <td>なし（静的ファイルのみ）</td>
+        <td>—</td>
+        <td>GitHub Pages（配信）</td>
+        <td>稼働中</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="tbl-note">
+    「GAS HTML Service」は、Google Apps Script がウェブ画面を配信する仕組みです。
+    追加のサーバー契約が不要で、月々の利用料が発生しない構成になります。
+  </p>
+
+  <h3>実測して確認している数字</h3>
+  <ul class="list">
+    <li>発送業務の自動化：伝票の控え27枚を61秒で処理。
+      <span class="desc">1桁の誤読が最終出力まで通り抜ける経路は、3段構成の検算により14,040通り中0通り。構築にかかった時間は実作業11時間＋打合せ2時間。</span></li>
+    <li>精算ウェブアプリ：元にした表計算ファイルと、2,639項目の数値が全一致することを確認。</li>
+    <li>学習塾 統合管理システム：Gitコミット565件、TypeScript 約31,000行（2026年9月時点）。
+      <span class="desc">2026年1月から継続して開発し、実際の生徒・保護者・スタッフが日常的に利用しています。</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>3. 開発環境と品質の仕組み</h2>
+
+  <h3>使用している言語・環境</h3>
+  <dl class="kv">
+    <dt>言　　語</dt>
+    <dd>TypeScript／JavaScript／Google Apps Script／Python（検証用のスクリプト）</dd>
+    <dt>ソース管理</dt>
+    <dd>Git／GitHub（案件ごとに非公開リポジトリを1つ持ち、仕様・手順・つまずきの記録を同じ場所に残す）</dd>
+    <dt>配信・実行</dt>
+    <dd>Google Apps Script／Vercel／GitHub Pages</dd>
+  </dl>
+
+  <h3>本番へ反映する手順（Google Apps Script の案件）</h3>
+  <p class="lead">
+    clasp（Google公式のコマンドライン）を使い、次の順で1コマンドにまとめています。
+    手作業の手順を残すと、どこかで抜けるためです。
+  </p>
+  <ul class="items">
+    <li>① 本番のコードを取得する（pull）— 画面から直接編集された変更を取りこぼさないため</li>
+    <li>② 差分ガード — 想定外の差分があれば、そこで止める</li>
+    <li>③ 自動チェック — 検証用のスクリプトを走らせ、落ちたら反映しない</li>
+    <li>④ 反映（push）とデプロイの更新</li>
+    <li>⑤ 版番号の突合 — 実際に公開されている版が、いま反映したものと一致するかを機械で確かめる</li>
+  </ul>
+  <p class="tbl-note">
+    ⑤を必ず行うのは、Google Apps Script では「保存はされたが公開はされていない」状態が起こり、
+    見た目には成功したように見えるためです。版番号を突き合わせるまでは、反映が終わったとみなしません。
+  </p>
+
+  <h3>品質を保つための仕組み</h3>
+  <ul class="list">
+    <li>自己診断を全案件の標準にしています。
+      <span class="desc">画面のURLに決められたパラメータ（<code>?check=</code>）を付けて開くだけで、
+      データの整合・設定の欠落・版のずれを点検し、異常の有無をその場で表示します。
+      開発側が立ち会わなくても、お客さま側で生死の判定ができます。</span></li>
+    <li>実データでの検証を重視しています。
+      <span class="desc">試験用に作ったデータだけで通したテストは、実運用では通用しないことが多いためです。
+      偽のデータで通しただけの状態を「確認済み」とは扱いません。</span></li>
+    <li>データの日次バックアップ（世代管理つき）。
+      <span class="desc">誤削除や操作ミスに備え、日ごとの控えを一定期間残します。
+      ごみ箱に入っただけの状態も検知の対象にしています。</span></li>
+    <li>印刷物の組版はブラウザの印刷機能で行います。
+      <span class="desc">帳票・品書き・案内などを、環境によって崩れない形で出力します。</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>4. 企業へ展開できる構成</h2>
+  <p class="lead">
+    規模と要件によって、次の3段階から選びます。①は上の一覧の多くで実際に運用しているものです。
+    ②③は対応できる構成として挙げており、③については学習塾のシステムで稼働実績があります。
+  </p>
+  <table class="t-stage">
+    <colgroup><col class="s1"><col class="s2"><col class="s3"><col class="s4"></colgroup>
+    <thead>
+      <tr><th>段階</th><th>構成</th><th>向いている状況</th><th>実績</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>①</th>
+        <td>Googleスプレッドシート＋Google Apps Script</td>
+        <td>月額0円で始めたい。データは自社のGoogleアカウントの中に置きたい。
+            利用者が社内と常連のお客さまに限られる。</td>
+        <td>稼働実績あり（上の一覧の5件）</td>
+      </tr>
+      <tr>
+        <th>②</th>
+        <td>独自ドメイン＋静的ホスティング＋Google Apps Script（データ置き場・API として）</td>
+        <td>お客さまに配る画面から、Googleの帯・長いURLを消したい。
+            自社ドメインの短いURLで案内したい。データの持ち方は①のままでよい。</td>
+        <td>対応できる構成（①からの移行を想定）</td>
+      </tr>
+      <tr>
+        <th>③</th>
+        <td>Next.js＋Supabase（PostgreSQL）</td>
+        <td>ログインと権限の分離が要る。データが数万行を超える。
+            社員やお客さまがスマホから日常的に使う。</td>
+        <td>稼働実績あり（学習塾の統合管理システム）</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="tbl-note">
+    ①で始めて、必要になった時点で②③へ移すことができます。
+    最初から③で作らないのは、月々の費用と運用の手間が先に発生し、規模が伴わないうちは負担だけが残るためです。
+  </p>
+</section>
+
+<section>
+  <h2>5. 帰属と引き渡し</h2>
+  <ul class="list">
+    <li>データはお客さまのGoogleアカウント側に置きます。
+      <span class="desc">スプレッドシートの中身は、開発側を介さずいつでもご覧いただけます。
+      表計算ファイルとしての書き出しも、お客さまの操作だけで行えます。</span></li>
+    <li>無料構成の間、スクリプトの実行環境は開発者のアカウントに置いたままで運用します。
+      <span class="desc">お客さま側で新たな契約や設定をしていただく必要がないためです。
+      この点は導入時に必ずお伝えしています。</span></li>
+    <li>お客さまのアカウントへ移すことができます。
+      <span class="desc">ご希望のタイミングで、スクリプトと配信先をお客さま側のアカウントへ移管します。
+      移管後は開発側のアカウントに依存しない形になります。</span></li>
+    <li>お客さまの実データや伝票の画像を、事前にお伝えしていない外部サービスへ送ることはありません。
+      <span class="desc">送り先を増やす必要が生じた場合は、その都度ご説明のうえで判断していただきます。</span></li>
+  </ul>
+</section>
+
+<p class="closing">
+  本資料の記載内容は2026年9月時点のものです。数字はいずれも実測値で、推計は含みません。
+  制作物の具体的な画面は、体験できる形でご用意しています。
+</p>
+
+</body>
+</html>

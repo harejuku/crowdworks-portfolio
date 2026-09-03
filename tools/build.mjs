@@ -47,7 +47,7 @@ const jobs = [
     title: 'みどり精肉店 ご注文（体験版）',
     page: 'shop',
     scripts: ['fake-server.js'],
-    home: '../',
+    home: '../taiken/',
     note: 'これは<b>体験版</b>です。お店も商品も注文もすべて架空で、実在の店舗にはつながっていません。',
     about: {
       title: '街の精肉店の「電話注文」を、そのまま画面にしたもの',
@@ -73,7 +73,7 @@ const jobs = [
     title: 'みどり精肉店 注文管理（体験版）',
     page: 'admin',
     scripts: ['fake-server.js'],
-    home: '../',
+    home: '../taiken/',
     note: 'これは<b>体験版</b>です。表示中の注文・商品はすべて架空で、実在の店舗にはつながっていません。',
     about: {
       title: '店主が、スマホ1台で全部さわれる管理画面',
@@ -98,7 +98,7 @@ const jobs = [
     src: 'uriage.form',
     title: 'さくら商店 売上入力（体験版）',
     scripts: ['fake-server.js'],
-    home: '../',
+    home: '../taiken/',
     note: 'これは<b>体験版</b>です。表示中の売上・仕入はすべて架空で、実在のお店にはつながっていません。',
     about: {
       title: '紙の伝票をなくさずに、スマホから3タップで',
@@ -167,7 +167,7 @@ jobs.push(
     src: 'quizkikaku.app',
     title: 'まるやまベーカリー クイズ（体験版・レジ横の画面）',
     scripts: ['fake-server.js'],
-    home: '../',
+    home: '../taiken/',
     replacements: QUIZ_REPLACE('kiosk', 'S07'),
     note: 'これは<b>体験版</b>です。お店も子どもの名前も記録もすべて架空で、実在の店舗にはつながっていません。',
     about: {
@@ -188,7 +188,7 @@ jobs.push(
     src: 'quizkikaku.app',
     title: 'まるやまベーカリー クイズ 名簿（体験版）',
     scripts: ['fake-server.js'],
-    home: '../',
+    home: '../taiken/',
     replacements: QUIZ_REPLACE('register', ''),
     note: 'これは<b>体験版</b>です。名簿も記録もすべて架空で、実在の店舗にはつながっていません。',
     about: {
@@ -206,7 +206,7 @@ jobs.push(
     src: 'quizkikaku.app',
     title: 'まるやまベーカリー クイズ 成果（体験版）',
     scripts: ['fake-server.js'],
-    home: '../',
+    home: '../taiken/',
     replacements: QUIZ_REPLACE('admin', ''),
     note: 'これは<b>体験版</b>です。表示中の数字はすべて架空で、実在の店舗にはつながっていません。',
     about: {
@@ -236,7 +236,7 @@ jobs.push({
   title: '飲み会の割り勘・精算（体験版）',
   // サーバーを使わない道具なので偽サーバーは要らない。見本の飲み会を1件だけ先に入れる
   scripts: ['demo-data.js'],
-  home: '../',
+  home: '../taiken/',
   note: 'これは<b>体験版</b>です。名前も金額も自由に書き換えられます。入力はこのタブの中だけに残ります。',
   about: {
     title: '均等割りではない飲み会のための、1画面の道具',

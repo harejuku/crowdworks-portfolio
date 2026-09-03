@@ -5,14 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <link rel="icon" href="assets/favicon.svg">
-<title>お店・教室のための業務システム</title>
+<title>会社ごとに作る業務システム</title>
 </head>
 <body>
+
+<script>
+/* ------------------------------------------------------------------
+   実績カードに出す「月◯時間分の手作業がなくなりました」の数字。
+
+   ⚠ 実測した値だけ入れること。
+      見込み・概算・「たぶんこれくらい」は入れない。null のままなら、
+      そのカードには時間の行が出ない（出ないことは問題ではない）。
+
+   例：seiniku: 6  と書くと、精肉店のカードに
+       「月6時間分の手作業がなくなりました」が1行出る。
+   ------------------------------------------------------------------ */
+var CASE_HOURS = {
+  juku:    null,   // 学習塾（自社運用）
+  seiniku: null,   // 精肉店の注文受付
+  uriage:  null,   // 個人事業主の売上管理
+  quiz:    null,   // パン屋の会員企画
+  ec:      null,   // ネット通販の発送
+  nomikai: null    // 幹事の精算
+};
+</script>
+
 <style>
 /* ------------------------------------------------------------------
    紙（かみ）＝背景、墨（すみ）＝文字、朱（しゅ）＝見出しの差し色、
    藍（あい）＝操作できるものの目じるし。
-   下層の「開発の中身」と同じ配色にして、1つのサイトとして読めるようにしている。
+   下層の体験版・「開発の中身」と同じ配色にして、1つのサイトとして読めるようにしている。
    ------------------------------------------------------------------ */
 :root{
   --kami:#f6f3ec; --men:#fffefb; --men-2:#f0ede5;
@@ -64,13 +86,16 @@ header h1 .em{
 header .sub{
   margin-top:20px;max-width:640px;font-size:15.5px;color:var(--sumi-2);
 }
-
-.caution{
-  margin:30px 0 6px;padding:13px 17px;border-radius:11px;
-  background:var(--men);border:1px solid var(--kei);border-left:4px solid var(--shu);
-  font-size:13.5px;line-height:1.75;color:var(--sumi-2);
+header .lead-act{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
+header .lead-act a{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:13.5px;font-weight:700;text-decoration:none;
+  padding:11px 18px;border-radius:10px;
+  background:var(--ai);color:#fff;border:1px solid var(--ai);
 }
-.caution b{color:var(--sumi)}
+header .lead-act a.sub{background:transparent;color:var(--ai);border-color:var(--kei)}
+header .lead-act a:hover{filter:brightness(1.12)}
+header .lead-act a.sub:hover{background:var(--ai-usu);filter:none}
 
 /* ---------- 節 ---------- */
 section{padding:46px 0 0}
@@ -79,7 +104,37 @@ section{padding:46px 0 0}
 .sec-h .n{font-size:12px;letter-spacing:.2em;color:var(--sumi-3)}
 .sec-lead{margin-bottom:24px;font-size:14px;color:var(--sumi-2);max-width:660px}
 
-/* ---------- 作品カード ---------- */
+/* ---------- 01 計算機 ---------- */
+.calc{
+  background:var(--men);border:1px solid var(--kei);border-radius:15px;
+  padding:22px;display:grid;gap:26px;grid-template-columns:1fr;
+}
+@media (min-width:760px){.calc{grid-template-columns:1fr 1fr;gap:30px}}
+.calc .field{margin-bottom:20px}
+.calc .field:last-child{margin-bottom:0}
+.calc label{display:block;font-size:14px;font-weight:700;margin-bottom:8px}
+.calc .row{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.calc input[type=range]{flex:1 1 150px;min-width:0;accent-color:var(--ai)}
+.calc input[type=number]{
+  width:104px;flex:0 0 auto;font:inherit;font-size:15px;text-align:right;
+  padding:7px 9px;border-radius:8px;border:1px solid var(--kei);
+  background:var(--kami);color:var(--sumi);
+}
+.calc .unit{font-size:13px;color:var(--sumi-3)}
+.calc .hint{margin-top:6px;font-size:12px;color:var(--sumi-3)}
+
+.calc .out{border-left:3px solid var(--kei);padding-left:18px}
+@media (max-width:759px){.calc .out{border-left:none;border-top:1px solid var(--kei);padding:20px 0 0}}
+.calc .out .line{margin-bottom:16px}
+.calc .out .line:last-child{margin-bottom:0}
+.calc .out .k{font-size:13px;color:var(--sumi-2)}
+.calc .out .v{font-size:clamp(23px,4.6vw,30px);font-weight:700;letter-spacing:.01em}
+.calc .out .v.shu{color:var(--shu)}
+.calc .out .v.midori{color:var(--midori)}
+.calc .out .v small{font-size:15px;font-weight:400;color:var(--sumi-2);margin-left:3px}
+.calc .out .sub{font-size:12.5px;color:var(--sumi-3);margin-top:2px}
+
+/* ---------- 02 作ったもの ---------- */
 .cards{display:grid;gap:20px;grid-template-columns:1fr}
 @media (min-width:760px){.cards{grid-template-columns:1fr 1fr}}
 
@@ -94,10 +149,29 @@ section{padding:46px 0 0}
   padding:4px 11px;margin-bottom:13px;align-self:flex-start;
 }
 .card .tag.mine{color:var(--midori);background:transparent;border:1px solid currentColor}
-.card h3{font-size:19px;margin-bottom:4px}
-.card .who{font-size:12.5px;color:var(--sumi-3);margin-bottom:12px}
-.card .body{font-size:14px;color:var(--sumi-2);margin-bottom:16px}
-.card .body b{color:var(--sumi)}
+.card h3{font-size:19px;margin-bottom:12px}
+
+/* 前 → 後（1行ずつ） */
+.ba{margin:0 0 14px;display:grid;gap:7px}
+.ba div{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:baseline;font-size:14px}
+.ba .m{
+  font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap;
+  padding:1px 8px;border-radius:999px;border:1px solid var(--kei);color:var(--sumi-3);
+}
+.ba .after .m{color:var(--ai);border-color:currentColor}
+.ba .before span:last-child{color:var(--sumi-2)}
+
+.card .fact{
+  margin:0 0 14px;padding:12px 14px;border-radius:10px;
+  background:var(--kami);border:1px solid var(--kei-2);
+  font-size:13px;color:var(--sumi-2);line-height:1.75;
+}
+.card .fact b{color:var(--sumi)}
+.card .fact li{margin:0 0 3px}
+.card .fact ul{margin:0;padding-left:1.15em}
+.card .hours{
+  margin:0 0 14px;font-size:13.5px;font-weight:700;color:var(--midori);
+}
 
 .card .try{margin-top:auto;display:flex;flex-wrap:wrap;gap:9px}
 .card .try a{
@@ -111,24 +185,54 @@ section{padding:46px 0 0}
 .card .try a.sub:hover{background:var(--ai-usu);filter:none}
 .card .note{margin-top:12px;font-size:12px;color:var(--sumi-3)}
 
-/* ---------- できることの一覧 ---------- */
-.can{display:grid;gap:2px;grid-template-columns:1fr;background:var(--kei);
+/* ---------- 03 進め方 ---------- */
+.flow{display:grid;gap:2px;grid-template-columns:1fr;background:var(--kei);
   border:1px solid var(--kei);border-radius:13px;overflow:hidden}
-@media (min-width:620px){.can{grid-template-columns:1fr 1fr}}
-@media (min-width:900px){.can{grid-template-columns:1fr 1fr 1fr}}
-.can div{background:var(--men);padding:16px 18px}
-.can dt{font-size:14px;font-weight:700;margin-bottom:3px}
-.can dd{margin:0;font-size:13px;color:var(--sumi-2);line-height:1.7}
-/* a{color:inherit} を上書きする。ここだけ実物へ飛べるので、藍＝触れる目じるしを付ける */
-.can dd a{color:var(--ai);text-decoration:underline;text-underline-offset:3px;white-space:nowrap;margin-left:4px}
-.can dd .side{display:block;margin-top:4px;font-size:11.5px;color:var(--sumi-3)}
+@media (min-width:700px){.flow{grid-template-columns:1fr 1fr 1fr 1fr}}
+.flow div{background:var(--men);padding:17px 18px}
+.flow .n{font-size:11px;letter-spacing:.18em;color:var(--sumi-3);margin-bottom:5px}
+.flow h3{font-size:15px;margin-bottom:5px}
+.flow p{font-size:13px;color:var(--sumi-2);line-height:1.7}
+.burden{
+  margin-top:16px;padding:13px 17px;border-radius:11px;
+  background:var(--men);border:1px solid var(--kei);border-left:4px solid var(--shu);
+  font-size:13.5px;line-height:1.75;color:var(--sumi-2);
+}
+.burden b{color:var(--sumi)}
 
-/* ---------- 考え方 ---------- */
+/* ---------- 04 費用 ---------- */
+.price-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;
+  border:1px solid var(--kei);border-radius:13px;background:var(--men)}
+table.price{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
+table.price th,table.price td{padding:12px 14px;text-align:left;white-space:nowrap}
+table.price thead th{
+  font-size:12px;letter-spacing:.06em;color:var(--sumi-3);font-weight:700;
+  border-bottom:2px solid var(--sumi);
+}
+table.price tbody th{font-weight:700;font-size:14px}
+table.price tbody tr+tr th,table.price tbody tr+tr td{border-top:1px solid var(--kei-2)}
+table.price tbody tr.reco th{color:var(--shu)}
+table.price tbody tr.reco{background:var(--shu-usu)}
+table.price .yen{font-variant-numeric:tabular-nums}
+.price-note{margin-top:14px;font-size:12.5px;color:var(--sumi-3);line-height:1.8}
+
+/* ---------- 05 考え方 ---------- */
 .think{display:grid;gap:18px;grid-template-columns:1fr}
 @media (min-width:760px){.think{grid-template-columns:1fr 1fr 1fr}}
 .think div{border-top:2px solid var(--sumi);padding-top:14px}
 .think h3{font-size:15.5px;margin-bottom:6px}
 .think p{font-size:13.5px;color:var(--sumi-2)}
+
+/* ---------- 06 資料 ---------- */
+.docs{display:grid;gap:2px;grid-template-columns:1fr;background:var(--kei);
+  border:1px solid var(--kei);border-radius:13px;overflow:hidden}
+@media (min-width:700px){.docs{grid-template-columns:1fr 1fr 1fr}}
+.docs a{
+  background:var(--men);padding:18px;text-decoration:none;display:block;
+}
+.docs a:hover{background:var(--ai-usu)}
+.docs .t{font-size:15px;font-weight:700;color:var(--ai);margin-bottom:4px}
+.docs .d{font-size:13px;color:var(--sumi-2);line-height:1.7}
 
 footer{
   margin-top:60px;border-top:1px solid var(--kei);padding:26px 0 60px;
@@ -141,25 +245,73 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
 <div class="wrap">
 
 <header>
-  <p class="eyebrow">お店・教室のための業務システム</p>
-  <h1 class="mincho">お店のやり方は変えずに、<br><span class="em">手間だけをなくします。</span></h1>
+  <p class="eyebrow">会社ごとに作る業務システム</p>
+  <h1 class="mincho">社長の時間を、<br><span class="em">社長の仕事に戻す。</span></h1>
   <p class="sub">
-    既製品に合わせて仕事のしかたを変えるのではなく、<b>いまのやり方に画面のほうを合わせて</b>作ります。
-    下に並んでいるのは実際に納品して動いているシステムそのもので、スクリーンショットではありません。
-    説明を読むより、ボタンを押してみるのが早いと思います。
+    既製品に合わせて仕事のやり方を変えるのではなく、<b>いまのやり方に画面のほうを合わせて</b>作ります。
+    転記・電話番・月末の集計といった、社長や事務の手が止まっている作業を引き受ける画面です。
+    作ったものは、このページの下で実際に触れます。
   </p>
-  <p class="caution">
-    <b>どのデモも、出てくるお店・商品・氏名・金額はすべて架空です。</b>
-    実在のデータベースにはつながっていないので、何を押しても実在のお店や生徒の記録は変わりません。
-    触った結果はご覧になっているブラウザの中だけに残り、タブを閉じると消えます。
+  <p class="lead-act">
+    <a href="#works">これまでに作ったものを見る</a>
+    <a class="sub" href="shiryo/技術構成資料.pdf">技術構成資料（PDF）</a>
   </p>
 </header>
 
-<section>
-  <div class="sec-h"><span class="n">01</span><h2>触れるもの</h2></div>
+<section id="cost">
+  <div class="sec-h"><span class="n">01</span><h2>社長の1時間は、いくらか</h2></div>
   <p class="sec-lead">
-    それぞれ「お客さん側の画面」と「お店側の画面」の両方を用意しています。
-    片方で入れた注文が、もう片方にちゃんと出てくるところまで試せます。
+    手作業そのものより、その時間に社長が本来やれたはずのことのほうが高くつきます。
+    ご自身の数字を入れてみてください。計算はこの画面の中だけで行われ、どこにも送信されません。
+  </p>
+
+  <div class="calc">
+    <div>
+      <div class="field">
+        <label for="wage">社長の時給</label>
+        <div class="row">
+          <input id="wage" type="range" min="1000" max="30000" step="500" value="5000">
+          <input id="wage-n" type="number" min="0" max="200000" step="500" value="5000" inputmode="numeric">
+          <span class="unit">円</span>
+        </div>
+        <p class="hint">例として5,000円を入れてあります。ご自身の数字に変えてください。</p>
+      </div>
+      <div class="field">
+        <label for="hours">毎月、手作業や転記・電話番に使っている時間</label>
+        <div class="row">
+          <input id="hours" type="range" min="0" max="80" step="1" value="10">
+          <input id="hours-n" type="number" min="0" max="500" step="1" value="10" inputmode="numeric">
+          <span class="unit">時間</span>
+        </div>
+        <p class="hint">例として月10時間を入れてあります。社長ご本人と事務の分を合わせても構いません。</p>
+      </div>
+    </div>
+
+    <div class="out">
+      <div class="line">
+        <p class="k">その作業に、1年で使っている時間の価値</p>
+        <p class="v shu"><span id="out-loss">600,000</span><small>円／年</small></p>
+        <p class="sub">時給 × 月の時間 × 12か月</p>
+      </div>
+      <div class="line">
+        <p class="k">同じ業務をシステムに置き換えた場合（ベーシック・年一括）</p>
+        <p class="v"><span id="out-plan">121,000</span><small>円／年（月額換算 11,000円）</small></p>
+        <p class="sub">下の04に3つのプランを載せています。</p>
+      </div>
+      <div class="line">
+        <p class="k">差額</p>
+        <p class="v midori" id="out-diff-wrap"><span id="out-diff">479,000</span><small>円／年</small></p>
+        <p class="sub" id="out-note">この差が、社長の手元に戻る時間の分です。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="works">
+  <div class="sec-h"><span class="n">02</span><h2>これまでに作ったもの</h2></div>
+  <p class="sec-lead">
+    どれも既製品ではなく、その会社・その店のやり方に合わせて作ったものです。
+    「触ってみる」を押すと、実際に納品して動いているシステムそのものが開きます（中の氏名・金額・商品はすべて架空です）。
   </p>
 
   <div class="cards">
@@ -167,19 +319,24 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     <div class="card wide">
       <span class="tag mine">自分の事業で開発・運用中／6か月以上</span>
       <h3>学習塾｜授業の準備が、教室に入る前に終わる</h3>
-      <p class="who">生徒の学習アプリ／教材づくり／つまずきの分析／授業の予約／月謝の請求／プリント発行</p>
-      <p class="body">
-        自分が経営する学習塾のために作り、実際の生徒・保護者・スタッフが毎日使っているシステムです。
-        <b>生徒はゲームとして遊び、その記録がそのまま先生の授業準備の材料になります。</b>
-        「誰がどの問題で詰まっているか」を、授業が始まる前に把握できるのがいちばんの目的です。
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>誰がどこで詰まっているかは、授業が始まってから分かる</span></div>
+        <div class="after"><span class="m">後</span><span>生徒が遊んだ記録がそのまま分析画面に出て、教室に入る前に決められる</span></div>
+        <div class="before"><span class="m">前</span><span>月謝の計算・予約の受付・保護者への連絡が、それぞれ別の場所にある</span></div>
+        <div class="after"><span class="m">後</span><span>1つのシステムに入り、生徒・保護者・スタッフがそれぞれの画面から使う</span></div>
+      </div>
+      <p class="fact">
+        自分が経営する学習塾のために作り、実際の生徒・保護者・スタッフが毎日使っています。
+        規模は<b>コミット565件・TypeScript 約31,000行</b>（2026年9月時点の実測）。
       </p>
+      <p class="hours" data-case="juku" hidden></p>
       <div class="try">
-        <a href="juku/?screen=quiz">🎮 生徒の画面を触ってみる</a>
-        <a class="sub" href="juku/?screen=analytics">📊 つまずきを見る画面</a>
-        <a class="sub" href="juku/?screen=admin">📚 教材をつくる画面</a>
-        <a class="sub" href="juku/?screen=booking">📅 予約をさばく画面</a>
-        <a class="sub" href="juku/?screen=billing">💰 月謝を請求する画面</a>
-        <a class="sub" href="juku/?screen=hp">🌐 この塾のホームページ</a>
+        <a href="juku/?screen=quiz">生徒の画面を触ってみる</a>
+        <a class="sub" href="juku/?screen=analytics">つまずきを見る画面</a>
+        <a class="sub" href="juku/?screen=admin">教材をつくる画面</a>
+        <a class="sub" href="juku/?screen=booking">予約をさばく画面</a>
+        <a class="sub" href="juku/?screen=billing">月謝を請求する画面</a>
+        <a class="sub" href="juku/?screen=hp">この塾のホームページ</a>
       </div>
       <p class="note">クイズは最後まで遊べます。クリアすると順位表に載り、その記録が分析画面にもすぐ反映されます。</p>
     </div>
@@ -187,15 +344,18 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     <div class="card">
       <span class="tag">受託・店舗向け</span>
       <h3>精肉店｜注文の電話番がなくなる</h3>
-      <p class="who">お客さんの注文画面／店主の管理画面</p>
-      <p class="body">
-        電話で受けていた予約注文を、そのまま画面にしたものです。
-        会員登録もクレジット決済もありません。<b>お支払いは受け取りのときに店頭で。</b>
-        グラム売りなので注文時点では金額が決まらない、という商売の事情に画面のほうを合わせています。
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>予約注文を電話で受け、手元の紙に書き取る</span></div>
+        <div class="after"><span class="m">後</span><span>画面から受け、店主の一覧に並ぶ</span></div>
+      </div>
+      <p class="fact">
+        会員登録もクレジット決済もありません。お支払いは受け取りのときに店頭で。
+        <b>グラム売りなので注文時点では金額が決まらない</b>、という商売の事情に画面のほうを合わせています。
       </p>
+      <p class="hours" data-case="seiniku" hidden></p>
       <div class="try">
-        <a href="seiniku/">🥩 注文してみる</a>
-        <a class="sub" href="seiniku/kanri.html">店主の画面を見る</a>
+        <a href="seiniku/">触ってみる</a>
+        <a class="sub" href="seiniku/kanri.html">店主の画面</a>
       </div>
       <p class="note">注文すると、店主の画面に「未対応」として並びます。</p>
     </div>
@@ -203,14 +363,17 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     <div class="card">
       <span class="tag">受託・個人事業主向け</span>
       <h3>個人事業主｜月末の集計がなくなる</h3>
-      <p class="who">スマホからの入力／月次の収支</p>
-      <p class="body">
-        いくつも事業をやっている個人事業主が、日々の売上と経費をその場で入れるための画面です。
-        <b>3タップで1件。</b>よく使う勘定科目が上に来るので、指が覚えます。
-        月末には事業ごとの収支と年度累計がそのまま出ます。
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>売上と経費を紙とばらばらの記録に残し、月末にまとめて集計する</span></div>
+        <div class="after"><span class="m">後</span><span>その場でスマホから入れ、事業ごとの収支と年度累計が自動で出る</span></div>
+      </div>
+      <p class="fact">
+        いくつも事業をやっている個人事業主のための画面です。<b>3タップで1件。</b>
+        よく使う勘定科目が上に来るので、指が覚えます。
       </p>
+      <p class="hours" data-case="uriage" hidden></p>
       <div class="try">
-        <a href="uriage/">🧾 入力してみる</a>
+        <a href="uriage/">触ってみる</a>
       </div>
       <p class="note">「今月の収支」タブを開くと、入れた分がすぐ集計に反映されます。</p>
     </div>
@@ -218,14 +381,17 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     <div class="card">
       <span class="tag">受託・販促の企画</span>
       <h3>パン屋｜子どもが、もう一度来る</h3>
-      <p class="who">レジ横のタブレット／名簿／成果のダッシュボード</p>
-      <p class="body">
-        子どもに「また来たい」と思ってもらうための企画です。
-        会員証のQRをかざすと、その子の学年の問題が<b>1日1問だけ</b>出ます。
-        正解を貯めるとお店でごほうびと交換。効いているかどうかは、正答率ではなくリピート率で見ます。
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>また来てもらうきっかけが、値引きしかない</span></div>
+        <div class="after"><span class="m">後</span><span>会員証のQRをかざすと1日1問だけ出て、正解を貯めると店でごほうびと交換できる</span></div>
+      </div>
+      <p class="fact">
+        効いているかどうかは、正答率ではなく<b>リピート率</b>で見ます。
+        追加の月額費用をかけずに、会員制の仕組みをGoogleアカウントの範囲だけで動かしています。
       </p>
+      <p class="hours" data-case="quiz" hidden></p>
       <div class="try">
-        <a href="quiz-kikaku/">🥐 クイズを解いてみる</a>
+        <a href="quiz-kikaku/">触ってみる</a>
         <a class="sub" href="quiz-kikaku/dashboard.html">成果を見る</a>
         <a class="sub" href="quiz-kikaku/kanri.html">名簿を見る</a>
       </div>
@@ -233,16 +399,37 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     </div>
 
     <div class="card">
+      <span class="tag">受託・発送業務</span>
+      <h3>ネット通販の発送｜番号の転記がなくなる</h3>
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>発送伝票の控えを見ながら、追跡番号を1件ずつ手で打ち直す</span></div>
+        <div class="after"><span class="m">後</span><span>控えをスキャナーに通すだけで、注文と突き合わせて発送のお知らせまで出る</span></div>
+      </div>
+      <div class="fact">
+        <ul>
+          <li><b>控え27枚を61秒で処理</b></li>
+          <li>1桁の誤読が最終出力まで通り抜ける経路は<b>14,040通り中0通り</b>（3段構成の検算）</li>
+          <li>実作業11時間＋打合せ2時間で構築</li>
+        </ul>
+      </div>
+      <p class="hours" data-case="ec" hidden></p>
+      <p class="note">お客さまのシステムのため、画面は公開していません。</p>
+    </div>
+
+    <div class="card">
       <span class="tag">受託・その場で使う道具</span>
       <h3>幹事｜割り勘の計算と集金が、その場で終わる</h3>
-      <p class="who">幹事がその場で開く1画面</p>
-      <p class="body">
-        均等割りではない飲み会のための画面です。
-        <b>「先輩は多め・学生は少なめ」を係数で決められ、端数は100円単位に切り上げます。</b>
-        受け渡しは幹事にまとめるので、参加者どうしの送金が発生しません。アプリの用意も登録も要りません。
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>手元の表計算で割り、参加者どうしで送金し合う</span></div>
+        <div class="after"><span class="m">後</span><span>スマホの1画面で割り、受け渡しは幹事にまとまる</span></div>
+      </div>
+      <p class="fact">
+        「先輩は多め・学生は少なめ」を係数で決められ、端数は100円単位に切り上げます。
+        元にした表計算と<b>2,639項目の数値が全一致</b>することを突き合わせて確認しました。
       </p>
+      <p class="hours" data-case="nomikai" hidden></p>
       <div class="try">
-        <a href="nomikai/">🍻 精算してみる</a>
+        <a href="nomikai/">触ってみる</a>
       </div>
     </div>
 
@@ -250,25 +437,86 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
 </section>
 
 <section>
-  <div class="sec-h"><span class="n">02</span><h2>どんなことができるか</h2></div>
+  <div class="sec-h"><span class="n">03</span><h2>進め方</h2></div>
   <p class="sec-lead">
-    上のデモはどれも既製品ではなく、そのお店のやり方に合わせて作ったものです。
-    よくお引き受けするのは、こういう作業です。
+    要件定義書を書いてもらう必要はありません。いまのやり方をそのまま話していただければ、こちらで形にします。
   </p>
-  <dl class="can">
-    <div><dt>お店のホームページを作る</dt><dd>スマホでも崩れず、検索で見つけてもらえる形に。料金表・よくある質問・問い合わせまでを1ページにまとめます。<a href="juku/?screen=hp">実物を見る</a></dd></div>
-    <div><dt>注文・予約を受ける</dt><dd>電話とLINEで受けていたものを、画面から受けられるようにする。締切や定休日も自動で反映。</dd></div>
-    <div><dt>売上・経費を記録する</dt><dd>紙の伝票やレシートを、その場でスマホから入力。月末の集計を自動にする。</dd></div>
-    <div><dt>お客さまに知らせる</dt><dd>注文が入ったらお店へ通知。予約の前日にお客さまへリマインド。</dd></div>
-    <div><dt>手作業の変換をなくす</dt><dd>注文データを、別のソフトが読める形式へ自動で変換。転記のまちがいがなくなります。</dd></div>
-    <div><dt>紙をスキャンして、システムと突き合わせる</dt><dd>発送のときに手元へ残る伝票の控えを、スキャナーに通すだけ。写真から追跡番号と注文番号を読み取り、ネットショップ側の注文と突き合わせて、お客さまへの発送のお知らせまで自動で出します。読み取りが正しいかは機械が検算し、人が見るべきものだけを一覧に出します。<span class="side">ネット通販の発送で稼働中（お客さまのシステムのため画面は非公開）</span></dd></div>
-    <div><dt>紙に印刷する</dt><dd>画面のデータを、そのまま崩れない体裁で印刷。品書き・案内・帳票など。</dd></div>
-    <div><dt>数字を見えるようにする</dt><dd>「どれが売れているか」「誰が来なくなったか」を、判断に使える形で出す。</dd></div>
-  </dl>
+  <div class="flow">
+    <div>
+      <p class="n">STEP 1</p>
+      <h3>いまのやり方を聞く</h3>
+      <p>誰が、いつ、何を見て、どこに書いているか。困っている順番も伺います。</p>
+    </div>
+    <div>
+      <p class="n">STEP 2</p>
+      <h3>試作を触ってもらう</h3>
+      <p>先に動くものをお出しします。画面を見ていただくと「そこは違う」が具体的に出ます。</p>
+    </div>
+    <div>
+      <p class="n">STEP 3</p>
+      <h3>本番へ反映する</h3>
+      <p>実際の業務のデータで動かして確かめてから切り替えます。使い方もその場でお渡しします。</p>
+    </div>
+    <div>
+      <p class="n">STEP 4</p>
+      <h3>毎月1回、まとめて改修を反映する</h3>
+      <p>使ううちに出た要望は月に1度まとめて反映します。毎月アップデートが届く形です。</p>
+    </div>
+  </div>
+  <p class="burden">
+    <b>社長側の負担は、最初の打合せ1回と、試作を触る時間だけです。</b>
+    資料づくり・仕様の文書化・社内での取りまとめをお願いすることはありません。
+  </p>
+</section>
+
+<!-- ------------------------------------------------------------------
+     04 費用の節。
+     相手や場面によって金額を出したくないことがあります。すぐ下の行にある
+     data-show の中身を true から false に書き換えると、この節が丸ごと
+     表示されなくなります（他はどこも直さなくて構いません）。
+       true  … 費用の節を出す
+       false … 費用の節を隠す
+     ------------------------------------------------------------------ -->
+<section id="price" data-show="true">
+  <div class="sec-h"><span class="n">04</span><h2>費用</h2></div>
+  <p class="sec-lead">
+    <b>初期費用は0円</b>です（既存の型に収まる案件の場合）。型を外れる一点物は、初期費用を別途お見積りします。
+    金額はすべて税込です。
+  </p>
+  <div class="price-scroll">
+    <table class="price">
+      <thead>
+        <tr>
+          <th>プラン</th><th>月額</th><th>年一括</th><th>含む改修時間</th><th>返信の目安</th><th>最低契約期間</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>ライト</th>
+          <td class="yen">5,500円</td><td class="yen">60,500円</td>
+          <td>月1時間</td><td>翌営業日</td><td>なし（月単位）</td>
+        </tr>
+        <tr class="reco">
+          <th>ベーシック</th>
+          <td class="yen">11,000円</td><td class="yen">121,000円</td>
+          <td>月2時間</td><td>翌営業日</td><td>12か月</td>
+        </tr>
+        <tr>
+          <th>スタンダード</th>
+          <td class="yen">33,000円</td><td class="yen">363,000円</td>
+          <td>月6時間</td><td>当日</td><td>12か月</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="price-note">
+    改修は月1回まとめて反映します（都度対応にすると検証が毎回必要になり、その分が費用に乗るためです）。<br>
+    独自ドメインやデータベースの利用料など、外部にお支払いいただく費用は月額に含みません。
+  </p>
 </section>
 
 <section>
-  <div class="sec-h"><span class="n">03</span><h2>作るときに決めていること</h2></div>
+  <div class="sec-h"><span class="n">05</span><h2>作るときに決めていること</h2></div>
   <div class="think">
     <div>
       <h3>安く始められる形から考える</h3>
@@ -290,17 +538,114 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
   </div>
 </section>
 
+<section>
+  <div class="sec-h"><span class="n">06</span><h2>資料</h2></div>
+  <div class="docs">
+    <a href="shiryo/技術構成資料.pdf">
+      <p class="t">技術構成資料（PDF）</p>
+      <p class="d">制作物ごとの使用言語・サービス・データの置き場所と、品質を保つ仕組みをまとめたものです。</p>
+    </a>
+    <a href="taiken/">
+      <p class="t">体験版一覧</p>
+      <p class="d">納品したシステムを架空のデータで触れる形にしたものを、まとめて置いています。</p>
+    </a>
+    <a href="shikumi/">
+      <p class="t">開発の中身</p>
+      <p class="d">設計をどう判断したか、どこでつまずき、どう直したかの記録です。</p>
+    </a>
+  </div>
+</section>
+
 <footer>
   <p class="deep">
     技術的な中身（設計の判断・つまずいた点・どう直したか）は、
     <a href="shikumi/">開発の中身</a> にまとめています。
   </p>
   <p>
-    このページのデモはすべて架空のデータで動いています。
+    このページの体験版はすべて架空のデータで動いています。
     ご相談・お見積りは、このページをお渡しした際の連絡先までお願いいたします。
   </p>
 </footer>
 
 </div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- 04 費用の表示・非表示 ---------- */
+  var price = document.getElementById('price');
+  if (price && price.getAttribute('data-show') === 'false') price.hidden = true;
+
+  /* ---------- 02 「月◯時間分の手作業がなくなりました」 ---------- */
+  var hourEls = document.querySelectorAll('.hours[data-case]');
+  for (var i = 0; i < hourEls.length; i++) {
+    var el = hourEls[i];
+    var v = CASE_HOURS[el.getAttribute('data-case')];
+    if (typeof v === 'number' && isFinite(v) && v > 0) {
+      el.textContent = '月' + v + '時間分の手作業がなくなりました';
+      el.hidden = false;
+    }
+  }
+
+  /* ---------- 01 計算機 ----------
+     ベーシックの年一括だけを比べる相手にしている（既定のプランのため）。
+     金額を変えるときは、下の PLAN_YEAR と04の表の両方を直すこと。 */
+  var PLAN_YEAR = 121000;
+
+  var wage = document.getElementById('wage');
+  var wageN = document.getElementById('wage-n');
+  var hours = document.getElementById('hours');
+  var hoursN = document.getElementById('hours-n');
+  var outLoss = document.getElementById('out-loss');
+  var outPlan = document.getElementById('out-plan');
+  var outDiff = document.getElementById('out-diff');
+  var outDiffWrap = document.getElementById('out-diff-wrap');
+  var outNote = document.getElementById('out-note');
+
+  function yen(n) { return Math.round(n).toLocaleString('ja-JP'); }
+  function num(el, max) {
+    var v = parseFloat(el.value);
+    if (!isFinite(v) || v < 0) v = 0;
+    if (v > max) v = max;
+    return v;
+  }
+
+  function draw() {
+    var w = num(wageN, 200000);
+    var h = num(hoursN, 500);
+    var loss = w * h * 12;
+
+    outLoss.textContent = yen(loss);
+    outPlan.textContent = yen(PLAN_YEAR);
+
+    var diff = loss - PLAN_YEAR;
+    if (diff >= 0) {
+      outDiff.textContent = yen(diff);
+      outDiffWrap.className = 'v midori';
+      outNote.textContent = 'この差が、社長の手元に戻る時間の分です。';
+    } else {
+      outDiff.textContent = yen(-diff);
+      outDiffWrap.className = 'v';
+      outNote.textContent = 'この時間数では費用のほうが上回ります。もっと時間のかかっている業務からご相談ください。';
+    }
+  }
+
+  /* つまみと数値欄は、どちらを動かしても互いに追いかける。
+     つまみの範囲より大きい数を数値欄へ直接入れられるようにしてあるので、
+     その場合つまみは端で止まる（値は数値欄のほうを使う）。 */
+  function pair(range, number) {
+    range.addEventListener('input', function () { number.value = range.value; draw(); });
+    number.addEventListener('input', function () {
+      var v = parseFloat(number.value);
+      if (isFinite(v)) range.value = v;
+      draw();
+    });
+  }
+  pair(wage, wageN);
+  pair(hours, hoursN);
+  draw();
+})();
+</script>
 </body>
 </html>

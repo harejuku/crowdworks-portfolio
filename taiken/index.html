@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg">
+<title>体験版一覧｜会社ごとに作る業務システム</title>
+</head>
+<body>
+<style>
+/* ------------------------------------------------------------------
+   紙（かみ）＝背景、墨（すみ）＝文字、朱（しゅ）＝見出しの差し色、
+   藍（あい）＝操作できるものの目じるし。
+   下層の「開発の中身」と同じ配色にして、1つのサイトとして読めるようにしている。
+   ------------------------------------------------------------------ */
+:root{
+  --kami:#f6f3ec; --men:#fffefb; --men-2:#f0ede5;
+  --sumi:#1f2328; --sumi-2:#59616a; --sumi-3:#8b9199;
+  --kei:#ded8cb; --kei-2:#eae5da;
+  --shu:#b3352b; --shu-usu:#f8eeec;
+  --ai:#1d4e79; --ai-usu:#eaf1f7;
+  --midori:#1f6b4d;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --kami:#14161a; --men:#1c2026; --men-2:#242a32;
+    --sumi:#e8e4db; --sumi-2:#a5abb3; --sumi-3:#767d86;
+    --kei:#333b45; --kei-2:#282f38;
+    --shu:#e8776a; --shu-usu:#2b1c1a;
+    --ai:#86b2d9; --ai-usu:#16222d;
+    --midori:#43a67f;
+  }
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--kami);color:var(--sumi);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+  font-size:15.5px;line-height:1.85;
+}
+p{margin:0}
+h1,h2,h3{margin:0;font-weight:700;line-height:1.45}
+a{color:inherit}
+.mincho{font-family:"Hiragino Mincho ProN","Hiragino Mincho Pro","Yu Mincho",YuMincho,"Noto Serif JP",serif}
+:focus-visible{outline:2px solid var(--ai);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+
+.wrap{max-width:1000px;margin:0 auto;padding:0 22px}
+
+/* ---------- 上へ戻る ---------- */
+.back{padding:22px 0 0;font-size:13px}
+.back a{color:var(--ai);text-decoration:none;font-weight:700}
+.back a:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- 見出し ---------- */
+header{padding:26px 0 8px}
+header .eyebrow{
+  font-size:12px;letter-spacing:.24em;color:var(--sumi-3);margin-bottom:16px;
+}
+header h1{
+  font-size:clamp(27px,5.4vw,42px);line-height:1.35;letter-spacing:.01em;
+}
+header h1 .em{
+  background:linear-gradient(transparent 64%, var(--shu-usu) 64%);
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;
+}
+header .sub{
+  margin-top:20px;max-width:640px;font-size:15.5px;color:var(--sumi-2);
+}
+
+.caution{
+  margin:30px 0 6px;padding:13px 17px;border-radius:11px;
+  background:var(--men);border:1px solid var(--kei);border-left:4px solid var(--shu);
+  font-size:13.5px;line-height:1.75;color:var(--sumi-2);
+}
+.caution b{color:var(--sumi)}
+
+/* ---------- 節 ---------- */
+section{padding:46px 0 0}
+.sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+.sec-h h2{font-size:20px}
+.sec-h .n{font-size:12px;letter-spacing:.2em;color:var(--sumi-3)}
+.sec-lead{margin-bottom:24px;font-size:14px;color:var(--sumi-2);max-width:660px}
+
+/* ---------- 作品カード ---------- */
+.cards{display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:760px){.cards{grid-template-columns:1fr 1fr}}
+
+.card{
+  background:var(--men);border:1px solid var(--kei);border-radius:15px;
+  padding:22px 22px 20px;display:flex;flex-direction:column;
+}
+.card.wide{grid-column:1/-1}
+.card .tag{
+  display:inline-block;font-size:11px;letter-spacing:.1em;font-weight:700;
+  color:var(--sumi-2);background:var(--men-2);border-radius:999px;
+  padding:4px 11px;margin-bottom:13px;align-self:flex-start;
+}
+.card .tag.mine{color:var(--midori);background:transparent;border:1px solid currentColor}
+.card h3{font-size:19px;margin-bottom:4px}
+.card .who{font-size:12.5px;color:var(--sumi-3);margin-bottom:12px}
+.card .body{font-size:14px;color:var(--sumi-2);margin-bottom:16px}
+.card .body b{color:var(--sumi)}
+
+.card .try{margin-top:auto;display:flex;flex-wrap:wrap;gap:9px}
+.card .try a{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:13.5px;font-weight:700;text-decoration:none;
+  padding:10px 16px;border-radius:10px;
+  background:var(--ai);color:#fff;border:1px solid var(--ai);
+}
+.card .try a:hover{filter:brightness(1.12)}
+.card .try a.sub{background:transparent;color:var(--ai);border-color:var(--kei)}
+.card .try a.sub:hover{background:var(--ai-usu);filter:none}
+.card .note{margin-top:12px;font-size:12px;color:var(--sumi-3)}
+
+/* ---------- できることの一覧 ---------- */
+.can{display:grid;gap:2px;grid-template-columns:1fr;background:var(--kei);
+  border:1px solid var(--kei);border-radius:13px;overflow:hidden}
+@media (min-width:620px){.can{grid-template-columns:1fr 1fr}}
+@media (min-width:900px){.can{grid-template-columns:1fr 1fr 1fr}}
+.can div{background:var(--men);padding:16px 18px}
+.can dt{font-size:14px;font-weight:700;margin-bottom:3px}
+.can dd{margin:0;font-size:13px;color:var(--sumi-2);line-height:1.7}
+/* a{color:inherit} を上書きする。ここだけ実物へ飛べるので、藍＝触れる目じるしを付ける */
+.can dd a{color:var(--ai);text-decoration:underline;text-underline-offset:3px;white-space:nowrap;margin-left:4px}
+.can dd .side{display:block;margin-top:4px;font-size:11.5px;color:var(--sumi-3)}
+
+/* ---------- 考え方 ---------- */
+.think{display:grid;gap:18px;grid-template-columns:1fr}
+@media (min-width:760px){.think{grid-template-columns:1fr 1fr 1fr}}
+.think div{border-top:2px solid var(--sumi);padding-top:14px}
+.think h3{font-size:15.5px;margin-bottom:6px}
+.think p{font-size:13.5px;color:var(--sumi-2)}
+
+footer{
+  margin-top:60px;border-top:1px solid var(--kei);padding:26px 0 60px;
+  font-size:13px;color:var(--sumi-3);
+}
+footer a{color:var(--ai)}
+footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
+</style>
+
+<div class="wrap">
+
+<p class="back"><a href="../">◀ トップへ戻る</a></p>
+
+<header>
+  <p class="eyebrow">会社ごとに作る業務システム</p>
+  <h1 class="mincho">体験版一覧</h1>
+  <p class="sub">
+    実際に納品して動いているシステムそのものを、架空のデータで触れる形にしたものです。
+    スクリーンショットではありません。説明を読むより、ボタンを押してみるのが早いと思います。
+  </p>
+  <p class="caution">
+    <b>どのデモも、出てくるお店・商品・氏名・金額はすべて架空です。</b>
+    実在のデータベースにはつながっていないので、何を押しても実在のお店や生徒の記録は変わりません。
+    触った結果はご覧になっているブラウザの中だけに残り、タブを閉じると消えます。
+  </p>
+</header>
+
+<section>
+  <div class="sec-h"><span class="n">01</span><h2>触れるもの</h2></div>
+  <p class="sec-lead">
+    それぞれ「お客さん側の画面」と「お店側の画面」の両方を用意しています。
+    片方で入れた注文が、もう片方にちゃんと出てくるところまで試せます。
+  </p>
+
+  <div class="cards">
+
+    <div class="card wide">
+      <span class="tag mine">自分の事業で開発・運用中／6か月以上</span>
+      <h3>学習塾｜授業の準備が、教室に入る前に終わる</h3>
+      <p class="who">生徒の学習アプリ／教材づくり／つまずきの分析／授業の予約／月謝の請求／プリント発行</p>
+      <p class="body">
+        自分が経営する学習塾のために作り、実際の生徒・保護者・スタッフが毎日使っているシステムです。
+        <b>生徒はゲームとして遊び、その記録がそのまま先生の授業準備の材料になります。</b>
+        「誰がどの問題で詰まっているか」を、授業が始まる前に把握できるのがいちばんの目的です。
+      </p>
+      <div class="try">
+        <a href="../juku/?screen=quiz">🎮 生徒の画面を触ってみる</a>
+        <a class="sub" href="../juku/?screen=analytics">📊 つまずきを見る画面</a>
+        <a class="sub" href="../juku/?screen=admin">📚 教材をつくる画面</a>
+        <a class="sub" href="../juku/?screen=booking">📅 予約をさばく画面</a>
+        <a class="sub" href="../juku/?screen=billing">💰 月謝を請求する画面</a>
+        <a class="sub" href="../juku/?screen=hp">🌐 この塾のホームページ</a>
+      </div>
+      <p class="note">クイズは最後まで遊べます。クリアすると順位表に載り、その記録が分析画面にもすぐ反映されます。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">受託・店舗向け</span>
+      <h3>精肉店｜注文の電話番がなくなる</h3>
+      <p class="who">お客さんの注文画面／店主の管理画面</p>
+      <p class="body">
+        電話で受けていた予約注文を、そのまま画面にしたものです。
+        会員登録もクレジット決済もありません。<b>お支払いは受け取りのときに店頭で。</b>
+        グラム売りなので注文時点では金額が決まらない、という商売の事情に画面のほうを合わせています。
+      </p>
+      <div class="try">
+        <a href="../seiniku/">🥩 注文してみる</a>
+        <a class="sub" href="../seiniku/kanri.html">店主の画面を見る</a>
+      </div>
+      <p class="note">注文すると、店主の画面に「未対応」として並びます。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">受託・個人事業主向け</span>
+      <h3>個人事業主｜月末の集計がなくなる</h3>
+      <p class="who">スマホからの入力／月次の収支</p>
+      <p class="body">
+        いくつも事業をやっている個人事業主が、日々の売上と経費をその場で入れるための画面です。
+        <b>3タップで1件。</b>よく使う勘定科目が上に来るので、指が覚えます。
+        月末には事業ごとの収支と年度累計がそのまま出ます。
+      </p>
+      <div class="try">
+        <a href="../uriage/">🧾 入力してみる</a>
+      </div>
+      <p class="note">「今月の収支」タブを開くと、入れた分がすぐ集計に反映されます。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">受託・販促の企画</span>
+      <h3>パン屋｜子どもが、もう一度来る</h3>
+      <p class="who">レジ横のタブレット／名簿／成果のダッシュボード</p>
+      <p class="body">
+        子どもに「また来たい」と思ってもらうための企画です。
+        会員証のQRをかざすと、その子の学年の問題が<b>1日1問だけ</b>出ます。
+        正解を貯めるとお店でごほうびと交換。効いているかどうかは、正答率ではなくリピート率で見ます。
+      </p>
+      <div class="try">
+        <a href="../quiz-kikaku/">🥐 クイズを解いてみる</a>
+        <a class="sub" href="../quiz-kikaku/dashboard.html">成果を見る</a>
+        <a class="sub" href="../quiz-kikaku/kanri.html">名簿を見る</a>
+      </div>
+      <p class="note">答えた記録は、そのまま名簿画面の「本日の結果」に出ます。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">受託・その場で使う道具</span>
+      <h3>幹事｜割り勘の計算と集金が、その場で終わる</h3>
+      <p class="who">幹事がその場で開く1画面</p>
+      <p class="body">
+        均等割りではない飲み会のための画面です。
+        <b>「先輩は多め・学生は少なめ」を係数で決められ、端数は100円単位に切り上げます。</b>
+        受け渡しは幹事にまとめるので、参加者どうしの送金が発生しません。アプリの用意も登録も要りません。
+      </p>
+      <div class="try">
+        <a href="../nomikai/">🍻 精算してみる</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="sec-h"><span class="n">02</span><h2>どんなことができるか</h2></div>
+  <p class="sec-lead">
+    上のデモはどれも既製品ではなく、そのお店のやり方に合わせて作ったものです。
+    よくお引き受けするのは、こういう作業です。
+  </p>
+  <dl class="can">
+    <div><dt>お店のホームページを作る</dt><dd>スマホでも崩れず、検索で見つけてもらえる形に。料金表・よくある質問・問い合わせまでを1ページにまとめます。<a href="../juku/?screen=hp">実物を見る</a></dd></div>
+    <div><dt>注文・予約を受ける</dt><dd>電話とLINEで受けていたものを、画面から受けられるようにする。締切や定休日も自動で反映。</dd></div>
+    <div><dt>売上・経費を記録する</dt><dd>紙の伝票やレシートを、その場でスマホから入力。月末の集計を自動にする。</dd></div>
+    <div><dt>お客さまに知らせる</dt><dd>注文が入ったらお店へ通知。予約の前日にお客さまへリマインド。</dd></div>
+    <div><dt>手作業の変換をなくす</dt><dd>注文データを、別のソフトが読める形式へ自動で変換。転記のまちがいがなくなります。</dd></div>
+    <div><dt>紙をスキャンして、システムと突き合わせる</dt><dd>発送のときに手元へ残る伝票の控えを、スキャナーに通すだけ。写真から追跡番号と注文番号を読み取り、ネットショップ側の注文と突き合わせて、お客さまへの発送のお知らせまで自動で出します。読み取りが正しいかは機械が検算し、人が見るべきものだけを一覧に出します。<span class="side">ネット通販の発送で稼働中（お客さまのシステムのため画面は非公開）</span></dd></div>
+    <div><dt>紙に印刷する</dt><dd>画面のデータを、そのまま崩れない体裁で印刷。品書き・案内・帳票など。</dd></div>
+    <div><dt>数字を見えるようにする</dt><dd>「どれが売れているか」「誰が来なくなったか」を、判断に使える形で出す。</dd></div>
+  </dl>
+</section>
+
+<section>
+  <div class="sec-h"><span class="n">03</span><h2>作るときに決めていること</h2></div>
+  <div class="think">
+    <div>
+      <h3>安く始められる形から考える</h3>
+      <p>多くの案件は、Googleのスプレッドシートを土台にしています。
+        毎月のサーバー代がかからず、いま使っているGoogleアカウントの中で完結します。
+        規模が大きくなってから、本格的な作りへ移せばよいと考えています。</p>
+    </div>
+    <div>
+      <h3>渡したあと、自分で運用できること</h3>
+      <p>商品を足す、値段を変える、受付を止める。
+        こういう日常の操作は、必ず画面から自分でできるようにしています。
+        そのたびに連絡をいただく形にすると、続きません。</p>
+    </div>
+    <div>
+      <h3>静かに壊れないようにする</h3>
+      <p>いちばん困るのは「動いているように見えて、実は記録されていない」状態です。
+        どの案件にも、異常があればすぐ分かる自己診断の仕組みを入れています。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p class="deep">
+    技術的な中身（設計の判断・つまずいた点・どう直したか）は、
+    <a href="../shikumi/">開発の中身</a> にまとめています。
+  </p>
+  <p>
+    このページのデモはすべて架空のデータで動いています。
+    ご相談・お見積りは、このページをお渡しした際の連絡先までお願いいたします。
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
