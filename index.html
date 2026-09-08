@@ -11,22 +11,49 @@
 
 <script>
 /* ------------------------------------------------------------------
-   実績カードに出す「月◯時間分の手作業がなくなりました」の数字。
+   実績カードに出す「削減できた時間」の数字。
 
-   ⚠ 実測した値だけ入れること。
-      見込み・概算・「たぶんこれくらい」は入れない。null のままなら、
-      そのカードには時間の行が出ない（出ないことは問題ではない）。
+   書き方は2通りある。
+     ① 数値だけ（例：seiniku: 6）… 【実測】として出る。
+        「月6時間分の手作業がなくなりました」
+     ② { hours: 7, basis: '…' } … 【推定】として出る。
+        「月およそ7時間分の手作業がなくなる見込みです（推定）」＋ 前提の1行
 
-   例：seiniku: 6  と書くと、精肉店のカードに
-       「月6時間分の手作業がなくなりました」が1行出る。
+   ⚠ ①の数値だけを書いてよいのは、実行記録などで実際に測った値だけ。
+      測っていない数字は必ず②の形で書き、basis に前提（1件◯分×月◯件）を
+      書ききること。null のままなら、そのカードには時間の行が出ない。
+
+   🔑 2026-09-08 の決定＝実測が取れていない案件も、推定として載せる
+      （前提を必ず併記する）。それまでは「実測が無いので載せない」だった。
    ------------------------------------------------------------------ */
 var CASE_HOURS = {
   juku:    null,   // 学習塾（自社運用）
   seiniku: null,   // 精肉店の注文受付
   uriage:  null,   // 個人事業主の売上管理
   quiz:    null,   // パン屋の会員企画
-  ec:      null,   // ネット通販の発送
-  nomikai: null    // 幹事の精算
+  nomikai: null,   // 幹事の精算
+
+  // ネット通販の発送。1件あたり約1分＝控えから12桁と18桁を読み、
+  // 注文を探して貼り、見直すまで。1日22件は 2026-08-11 の実物1日分
+  // （控え27枚→出荷22件）。月20発送日は仮定。22×20×1分＝440分＝約7.3時間。
+  ec: {
+    hours: 7,
+    basis: '1件あたり約1分（控えから番号を読み、注文を探して貼り、見直す）×'
+         + ' 1日22件（実物1日分の記録＝控え27枚・出荷22件）×'
+         + ' 月20発送日（仮定）。'
+  },
+
+  // 手書きの仕入伝票。1枚あたり約2分＝紙を見て、品目・合計kg・検査日・
+  // 等級ごとのkgをエクセルへ打ち込むまで。見比べるだけでも1枚約30秒
+  // （72枚を35分で全数確認した実測）なので、打ち込みはその数倍と置いた。
+  // 1日15枚は 2026-09-05〜07 の実物（19枚・33枚・15枚）と手順書の見込み
+  // （1日10〜15枚）から。月20日は仮定。15×20×2分＝600分＝10時間。
+  denpyo: {
+    hours: 10,
+    basis: '1枚あたり約2分（紙を見て、品目・重さ・検査日・等級ごとの数量を打ち込む）×'
+         + ' 1日約15枚（直近の実物＝19枚・33枚・15枚）× 月20日（仮定）。'
+         + ' 紙と画面を見比べるだけでも1枚あたり約30秒でした（72枚を35分で全数確認）。'
+  }
 };
 </script>
 
@@ -173,6 +200,16 @@ section{padding:46px 0 0}
 .card .hours{
   margin:0 0 14px;font-size:13.5px;font-weight:700;color:var(--midori);
 }
+/* 推定として出すとき（実測と見分けがつくよう、前提を必ず下に添える） */
+.card .hours.est{
+  margin:0 0 14px;padding:11px 13px;border-radius:10px;
+  background:transparent;border:1px dashed var(--kei);
+}
+.card .hours.est .n{display:block}
+.card .hours.est .basis{
+  display:block;margin-top:5px;
+  font-size:12px;font-weight:400;line-height:1.7;color:var(--sumi-3);
+}
 
 .card .try{margin-top:auto;display:flex;flex-wrap:wrap;gap:9px}
 .card .try a{
@@ -312,6 +349,11 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     どれも既製品ではなく、その会社・その店のやり方に合わせて作ったものです。
     「触ってみる」を押すと、実際に納品して動いているシステムそのものが開きます（中の氏名・金額・商品はすべて架空です）。
   </p>
+  <p class="sec-lead">
+    ⏱ 「月およそ◯時間」と書いてある数字は<b>推定</b>です。自動化する前に人がしていた作業の中身から、
+    1件あたりの時間と月の件数を見積もったもので、実際に測った値ではありません。
+    どう見積もったかは、それぞれのカードの中に書いてあります。
+  </p>
 
   <div class="cards">
 
@@ -413,6 +455,24 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       </div>
       <p class="hours" data-case="ec" hidden></p>
       <p class="note">お客さまのシステムのため、画面は公開していません。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">受託・仕入の記録／構築中</span>
+      <h3>手書きの伝票｜エクセルへの打ち込みがなくなる</h3>
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>手書きの伝票を1枚ずつ見て、品目・重さ・検査日・等級ごとの数量をエクセルに打ち込む</span></div>
+        <div class="after"><span class="m">後</span><span>スキャンした紙がそのまま台帳に貯まり、人は印の付いた紙だけを画面で見比べる</span></div>
+      </div>
+      <div class="fact">
+        <ul>
+          <li>人が目で確かめるのは<b>印の付いた紙だけ</b>（直近の例＝18枚のうち13枚、15枚のうち7枚）</li>
+          <li>読み取った値は機械で検算し、合わないものは台帳に入れず「要確認」に分けます</li>
+          <li>同じ紙が2回スキャンされたときは、中身を見比べて止めます</li>
+        </ul>
+      </div>
+      <p class="hours" data-case="denpyo" hidden></p>
+      <p class="note">構築中の案件です。お客さまのシステムのため、画面は公開していません。</p>
     </div>
 
     <div class="card">
@@ -576,13 +636,35 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
   var price = document.getElementById('price');
   if (price && price.getAttribute('data-show') === 'false') price.hidden = true;
 
-  /* ---------- 02 「月◯時間分の手作業がなくなりました」 ---------- */
+  /* ---------- 02 削減できた時間（実測 or 推定） ---------- */
   var hourEls = document.querySelectorAll('.hours[data-case]');
   for (var i = 0; i < hourEls.length; i++) {
     var el = hourEls[i];
     var v = CASE_HOURS[el.getAttribute('data-case')];
+
     if (typeof v === 'number' && isFinite(v) && v > 0) {
+      /* 実測 */
       el.textContent = '月' + v + '時間分の手作業がなくなりました';
+      el.hidden = false;
+
+    } else if (v && typeof v === 'object' &&
+               typeof v.hours === 'number' && isFinite(v.hours) && v.hours > 0) {
+      /* 推定。前提を必ず一緒に出す（前提が無いときは数字も出さない） */
+      if (!v.basis) continue;
+
+      var head = document.createElement('span');
+      head.className = 'n';
+      head.textContent = '月およそ' + v.hours + '時間分の手作業がなくなる見込みです（推定）';
+
+      var basis = document.createElement('span');
+      basis.className = 'basis';
+      basis.textContent = '推定の前提＝' + v.basis
+        + ' 実際に測った値ではなく、自動化する前の手作業の内容から見積もった数字です。';
+
+      el.textContent = '';
+      el.appendChild(head);
+      el.appendChild(basis);
+      el.classList.add('est');
       el.hidden = false;
     }
   }
