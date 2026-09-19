@@ -223,6 +223,36 @@ section{padding:46px 0 0}
 .card .try a.sub:hover{background:var(--ai-usu);filter:none}
 .card .note{margin-top:12px;font-size:12px;color:var(--sumi-3)}
 
+/* 全幅カードに画面写真を並べるとき（.card.wide.visual）。
+   他のカードに当たらないよう、必ず .card.wide.visual から書く。 */
+.card.wide.visual .vis{display:grid;gap:22px;grid-template-columns:1fr minmax(0,400px);align-items:start}
+@media (max-width:720px){.card.wide.visual .vis{grid-template-columns:1fr;gap:16px}}
+.card.wide.visual .txt{min-width:0}
+.card.wide.visual .txt .fact{margin-bottom:0}
+.card.wide.visual .shots{display:grid;gap:14px}
+.card.wide.visual .shot{margin:0}
+.card.wide.visual .shot img{
+  display:block;width:100%;height:auto;
+  border:1px solid var(--kei);border-radius:11px;background:var(--men-2);
+}
+.card.wide.visual .shot figcaption{margin-top:6px;font-size:12px;line-height:1.6;color:var(--sumi-3)}
+
+/* カードの中の流れ図（横並び・スマホでは折り返す）。
+   03「進め方」の .flow とは別物なので、必ず .card .flow から書いて上書きする。 */
+.card .flow{
+  display:flex;flex-wrap:wrap;align-items:center;gap:7px 0;margin:0 0 14px;
+  background:transparent;border:0;border-radius:0;overflow:visible;
+}
+.card .flow > div{display:flex;align-items:center;background:transparent;padding:0}
+.card .flow > div > span{
+  display:inline-block;padding:7px 11px;border-radius:9px;
+  background:var(--kami);border:1px solid var(--kei-2);
+  font-size:12.5px;line-height:1.5;color:var(--sumi-2);
+}
+.card .flow > div:not(:last-child)::after{
+  content:'→';margin:0 7px;font-size:12px;color:var(--sumi-3);
+}
+
 /* ---------- 03 進め方 ---------- */
 .flow{display:grid;gap:2px;grid-template-columns:1fr;background:var(--kei);
   border:1px solid var(--kei);border-radius:13px;overflow:hidden}
@@ -494,34 +524,75 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p class="note">家族のページのため、リンクは載せていません。</p>
     </div>
 
-    <div class="card">
+    <div class="card wide visual">
       <span class="tag">家族のために・無償</span>
-      <h3>舞台の記録｜DVDとカセットの舞台が、スマホで演目ごとに見られる</h3>
-      <div class="ba">
-        <div class="before"><span class="m">前</span><span>日本舞踊の舞台の記録が DVD やカセットのまま棚にあり、再生機がないと見られない</span></div>
-        <div class="after"><span class="m">後</span><span>取り込んで演目ごとに並べた書庫。スマホから開いて、その場で再生できる</span></div>
-      </div>
-      <div class="fact">
-        <ul>
-          <li>動画・音声の配信は Cloudflare R2 です。Google ドライブは配信用ではなく、途中で止まるのを実機で確かめてから切り替えました。</li>
-          <li>取り込みは手元の Mac で行い、台帳はスプレッドシートです。家族が自分で足していけます。</li>
-        </ul>
+      <h3>映像と音声の書庫｜棚の DVD とカセットが、スマホで演目ごとに見られる</h3>
+      <div class="vis">
+        <div class="txt">
+          <div class="ba">
+            <div class="before"><span class="m">前</span><span>日本舞踊の舞台の記録が DVD やカセットのまま棚にあり、再生機がないと見られない</span></div>
+            <div class="after"><span class="m">後</span><span>取り込んで演目ごとに並べた書庫。スマホから開いて、その場で再生できる。家族が自分で足していける</span></div>
+          </div>
+          <div class="flow">
+            <div><span>DVD・カセット・ビデオ</span></div>
+            <div><span>Mac で変換（HandBrake・ffmpeg）</span></div>
+            <div><span>台帳に登録（スプレッドシート）</span></div>
+            <div><span>Cloudflare R2 に置く（Worker が配信）</span></div>
+            <div><span>スマホで演目ごとに再生</span></div>
+          </div>
+          <div class="fact">
+            <ul>
+              <li>実績＝<b>DVD 4 枚から 13 本・約 1.2GB を 1 日で取り込み、台帳は 24 件</b>（2026年9月19日時点）。</li>
+              <li>配信は Cloudflare R2。Google ドライブは配信用ではなく、再生が途中で止まるのを実機で確かめてから切り替えました。</li>
+              <li>配信の前に Worker を置き、途中から再生できる・送り込みと削除には鍵が要る・消したものを 30 日は戻せる、を持たせています。</li>
+              <li>取り込みは 1 本のコマンドにまとめ、ダブルクリック1回で 変換・配信・台帳への登録まで通ります。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="assets/buyo-shoko.png" alt="書庫の画面。演目名・種別・長さ・日付・場所が並んだ一覧" loading="lazy" width="750" height="1200">
+            <figcaption>書庫の画面（架空の台帳で表示）</figcaption>
+          </figure>
+        </div>
       </div>
       <p class="note">家族のページのため、リンクは載せていません。</p>
     </div>
 
-    <div class="card">
+    <div class="card wide visual">
       <span class="tag">自社・試作中</span>
-      <h3>スポーツ指導｜「どこの筋肉を使うか」が、3Dの体に色で出る</h3>
-      <div class="ba">
-        <div class="before"><span class="m">前</span><span>素振りや打ち込みで使う筋肉は、言葉と実演でしか伝えられない</span></div>
-        <div class="after"><span class="m">後</span><span>3Dの人体が動作を再生し、そのとき働く筋肉が色と濃淡で光る。指導者は自分で教材を作って書き出せる</span></div>
-      </div>
-      <div class="fact">
-        <ul>
-          <li>ブラウザだけで動きます（アプリの入れ物なし）。筋肉の形は、公開されている解剖学のデータを使い、出典を画面に明記しています。</li>
-          <li>いまは指導者に見てもらい、色の実感と子どもへの伝わり方を確かめている段階です。</li>
-        </ul>
+      <h3>スポーツ指導の 3D 教材｜「どこの筋肉を使うか」が、3D の体に色で出る</h3>
+      <div class="vis">
+        <div class="txt">
+          <div class="ba">
+            <div class="before"><span class="m">前</span><span>素振りや打ち込みで使う筋肉は、言葉と実演でしか伝えられない</span></div>
+            <div class="after"><span class="m">後</span><span>3D の人体が動作を再生し、そのとき働く筋肉が色と濃淡で光る。指導者は自分で教材を作って書き出せる</span></div>
+          </div>
+          <div class="flow">
+            <div><span>公開されている解剖学のデータ（筋肉の形）</span></div>
+            <div><span>3D の素体に載せる</span></div>
+            <div><span>動作を局面ごとに作る</span></div>
+            <div><span>局面ごとに使う筋肉を色で指定</span></div>
+            <div><span>ブラウザで再生・教材を書き出し</span></div>
+          </div>
+          <div class="fact">
+            <ul>
+              <li>筋肉の形は、公開されている解剖学の 3D データ（BodyParts3D・CC BY 4.0）を使い、出典を画面に明記しています。素体は MakeHuman（CC0）。<b>18 群・33 筋</b>で持ち、うち 31 筋は実際の形のメッシュです。</li>
+              <li>ブラウザだけで動きます（three.js・アプリの入れ物なし）。教材は JSON で書き出し・読み込みでき、指導者どうしで共有できます。</li>
+              <li>いまは<b>教材 2 本</b>（正面素振り・面打ち）。指導者に見てもらい、色の実感と子どもへの伝わり方を確かめている段階です。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="assets/kendo-3d.png" alt="3D の人体が 2 体並び、働いている筋肉が色で出ている画面" loading="lazy" width="1000" height="636">
+            <figcaption>動作の途中で、働く筋肉が色で出る</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/kendo-tsukuru.png" alt="教材を作る画面。関節の角度をスライダーで動かしている" loading="lazy" width="1000" height="636">
+            <figcaption>教材を作る画面</figcaption>
+          </figure>
+        </div>
       </div>
       <p class="note">試作中のため、画面は公開していません。</p>
     </div>
