@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<!-- ------------------------------------------------------------------
+     知り合い・お世話になった方に送る入口ページ。
+
+     本体（../index.html）は発注を検討する方に向けた案内で、時給の計算機・
+     費用・進め方まで載せてある。知り合いに同じものを送ると売り込みに見えるので、
+     このページでは「これまでに作ったもの」と「作るときに決めていること」だけを
+     近況報告の口調で見せる。
+
+     🔑 実績カードは本体から fetch で取り込む（2か所で持たない）。
+        本体のカードを直せば、このページも自動で追いつく。
+        そのため本体の id="works" と id="policy" は消さないこと。
+
+     <base href="../"> を入れてあるので、取り込んだカードの相対リンク
+     （seiniku/ など）はそのまま動く。このページ自身は外部ファイルを持たない。
+     ------------------------------------------------------------------ -->
+<base href="../">
+<link rel="icon" href="assets/favicon.svg">
+<title>作れるようになったもの</title>
+<style>
+/* 取り込みが終わるまでの最小限。色は本体の style を取り込んで当てるので、
+   ここには書かない（2か所で持つと本体を直したときに食い違うため）。 */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:0 22px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">近況のご報告</p>
+  <h1 class="mincho">塾を続けながら、<br><span class="em">こんなものを作れるようになりました。</span></h1>
+  <p class="sub">
+    塾を回すために自分で作っていた仕組みを、お店や家族のためにも作るようになりました。
+    実際に納めたものを、架空のデータで触れる形で置いています。
+  </p>
+</header>
+
+<!-- 本体の「これまでに作ったもの」がここに入る。
+     取り込みに失敗したとき（JS が動かない・fetch がはじかれた）は、
+     下のリンクがそのまま残って本体ページへ飛べる。 -->
+<section id="works-slot">
+  <div class="sec-h"><h2>これまでに作ったもの</h2></div>
+  <p class="sec-lead">
+    実績は <a href="#works">こちら（本体ページ）</a> にまとめています。
+  </p>
+</section>
+<noscript>
+  <p class="sec-lead">
+    実績は <a href="#works">こちら（本体ページ）</a> にまとめています。
+  </p>
+</noscript>
+
+<!-- 本体の「作るときに決めていること」がここに入る（失敗したときは何も出さない）。 -->
+<div id="policy-slot"></div>
+
+<section>
+  <div class="sec-h"><h2>困りごとがあれば、声をかけてください</h2></div>
+  <p class="sec-lead">
+    「毎月の集計を手でやっている」「注文を電話と紙で受けている」「ホームページを持ちたい」
+    「作ったものを一度見てほしい」。こんな話があれば、気軽に声をかけてください。
+    まず話を聞いて、試作を作るところから始めます。お金の話は、中身が決まってから相談させてください。
+  </p>
+</section>
+
+<footer>
+  <p>
+    このページの体験版はすべて架空のデータで動いています。
+    ご相談は、このページをお渡しした際の連絡先までお願いいたします。
+  </p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* 本体を読んで、<style> 全部と #works・#policy の節をこのページへ差す。
+     失敗したら何もしない＝最初から置いてある本体へのリンクが残る。 */
+  fetch('index.html', { cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(function (html) {
+      var src = new DOMParser().parseFromString(html, 'text/html');
+
+      /* 1. 見た目（本体の style をそのまま head の末尾へ＝このページの最小限を上書きする） */
+      var styles = src.querySelectorAll('style');
+      if (!styles.length) throw new Error('style が見つからない');
+      Array.prototype.forEach.call(styles, function (st) {
+        var el = document.createElement('style');
+        el.textContent = st.textContent;
+        document.head.appendChild(el);
+      });
+
+      /* 節番号（<span class="n">02</span>）を消す */
+      var dropNum = function (sec) {
+        var n = sec.querySelector('.sec-h .n');
+        if (n) n.remove();
+      };
+
+      /* 2. 実績カード */
+      var works = src.querySelector('#works');
+      var slot = document.getElementById('works-slot');
+      if (works && slot) {
+        dropNum(works);
+
+        /* 本体の sec-lead 2本は計算機の文脈なので消し、このページの1本に差し替える。 */
+        Array.prototype.forEach.call(works.querySelectorAll(':scope > .sec-lead'), function (p) {
+          p.remove();
+        });
+        var lead = document.createElement('p');
+        lead.className = 'sec-lead';
+        lead.textContent = '「触ってみる」を押すと、実際に納めたシステムが架空のデータで開きます'
+                         + '（氏名・金額・商品は架空です）。';
+        var head = works.querySelector('.sec-h');
+        if (head && head.nextSibling) works.insertBefore(lead, head.nextSibling);
+        else works.insertBefore(lead, works.firstChild);
+
+        /* 「月およそ◯時間」の推定は本体の計算機と組みの話なので、このページでは出さない
+           （本体末尾の CASE_HOURS のスクリプトを取り込まないので hidden のまま）。 */
+        Array.prototype.forEach.call(works.querySelectorAll('.hours'), function (p) {
+          p.hidden = true;
+        });
+
+        slot.parentNode.replaceChild(document.adoptNode(works), slot);
+      }
+
+      /* 3. 作るときに決めていること */
+      var policy = src.querySelector('#policy');
+      var pslot = document.getElementById('policy-slot');
+      if (policy && pslot) {
+        dropNum(policy);
+        pslot.parentNode.replaceChild(document.adoptNode(policy), pslot);
+      }
+    })
+    .catch(function () { /* 本体へのリンクが残るので、ここでは何もしない */ });
+})();
+</script>
+
+</body>
+</html>
