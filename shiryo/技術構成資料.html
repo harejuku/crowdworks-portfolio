@@ -183,8 +183,8 @@
       <tr>
         <th>オンライン注文受付</th>
         <td>精肉店の予約注文</td>
-        <td>GAS HTML Service（HTML／CSS／JavaScript）</td>
-        <td>Google Apps Script</td>
+        <td>Cloudflare Pages（HTML／CSS／JavaScript）／店主の管理画面は GAS HTML Service</td>
+        <td>Google Apps Script（注文を受けるAPI・管理画面）</td>
         <td>Googleスプレッドシート</td>
         <td>Googleドライブ（商品写真）</td>
         <td>稼働中</td>
@@ -223,7 +223,7 @@
         <td>Google Apps Script／Node.js（手元での検算）</td>
         <td>Googleスプレッドシート／Googleドライブ</td>
         <td>Google Cloud Vision API／AIによる読み取り（溜まった紙の一度きり）</td>
-        <td>構築中</td>
+        <td>試験運用中</td>
       </tr>
       <tr>
         <th>精算ウェブアプリ</th>
@@ -233,6 +233,33 @@
         <td>閲覧している端末の中だけ（外部へ送信しない）</td>
         <td>—</td>
         <td>公開中</td>
+      </tr>
+      <tr>
+        <th>作品ギャラリー</th>
+        <td>家族の作品の紹介ページ（無償）</td>
+        <td>Cloudflare Pages（HTML／CSS／JavaScript）</td>
+        <td>Google Apps Script（API）</td>
+        <td>Googleスプレッドシート／Googleドライブ（写真）</td>
+        <td>Cloudflare Pages（配信）／検索避け（noindex）</td>
+        <td>公開中（URLを知る人のみ）</td>
+      </tr>
+      <tr>
+        <th>舞台の記録</th>
+        <td>家族の舞台記録（映像・音声）の保管と閲覧（無償）</td>
+        <td>GAS HTML Service</td>
+        <td>Google Apps Script／Node.js（手元のMacでの取り込み）</td>
+        <td>Googleスプレッドシート（台帳）／Cloudflare R2（映像・音声）</td>
+        <td>Cloudflare R2＋Worker（配信）／ffmpeg・HandBrake（変換）</td>
+        <td>稼働中</td>
+      </tr>
+      <tr>
+        <th>スポーツ指導の3D教材</th>
+        <td>指導者向けの動作と筋肉の可視化（自社）</td>
+        <td>HTML＋JavaScript／three.js</td>
+        <td>なし（ブラウザの中だけで動く構成）</td>
+        <td>教材データ（JSON形式で書き出し・読み込み）</td>
+        <td>Cloudflare Pages（配信）／MakeHuman 素体（CC0）／BodyParts3D（CC BY 4.0）</td>
+        <td>試作中</td>
       </tr>
       <tr>
         <th>店舗ホームページ</th>
@@ -311,7 +338,7 @@
   <h2>4. 企業へ展開できる構成</h2>
   <p class="lead">
     規模と要件によって、次の3段階から選びます。①は上の一覧の多くで実際に運用しているものです。
-    ②③は対応できる構成として挙げており、③については学習塾のシステムで稼働実績があります。
+    ②は精肉店の注文ページと作品ギャラリーで、③は学習塾のシステムで稼働実績があります。
   </p>
   <table class="t-stage">
     <colgroup><col class="s1"><col class="s2"><col class="s3"><col class="s4"></colgroup>
@@ -324,14 +351,14 @@
         <td>Googleスプレッドシート＋Google Apps Script</td>
         <td>月額0円で始めたい。データを表計算の形で自分でも直接見たい。
             利用者が社内と常連のお客さまに限られる。</td>
-        <td>稼働実績あり（一覧の4件＋構築中1件）</td>
+        <td>稼働実績あり（一覧の4件＋試験運用中1件）</td>
       </tr>
       <tr>
         <th>②</th>
         <td>独自ドメイン＋静的ホスティング＋Google Apps Script（データ置き場・API として）</td>
         <td>お客さまに配る画面から、Googleの帯・長いURLを消したい。
             自社ドメインの短いURLで案内したい。データの持ち方は①のままでよい。</td>
-        <td>対応できる構成（①からの移行を想定）</td>
+        <td>稼働実績あり（精肉店の注文ページ・作品ギャラリー。独自ドメインは任意で、無料のURLでも動く）</td>
       </tr>
       <tr>
         <th>③</th>

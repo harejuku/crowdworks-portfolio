@@ -392,6 +392,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p class="fact">
         会員登録もクレジット決済もありません。お支払いは受け取りのときに店頭で。
         <b>グラム売りなので注文時点では金額が決まらない</b>、という商売の事情に画面のほうを合わせています。
+        2026年9月、お客さまが触る注文ページを Cloudflare Pages へ移しました。Google のお知らせ帯が消え、開くまでが速くなりました。店主の管理画面はこれまでのままです。
       </p>
       <p class="hours" data-case="seiniku" hidden></p>
       <div class="try">
@@ -429,6 +430,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p class="fact">
         効いているかどうかは、正答率ではなく<b>リピート率</b>で見ます。
         追加の月額費用をかけずに、会員制の仕組みをGoogleアカウントの範囲だけで動かしています。
+        2026年9月の改修＝小学3年生までの「あそび問題」（かげ・かぞえて・なかまはずれ）を足しました。同じ子が別の名前で登録された時に、押すだけでまとめられる名寄せ画面も付けています。QRカードは名刺用紙で自宅印刷できる型にしました。
       </p>
       <p class="hours" data-case="quiz" hidden></p>
       <div class="try">
@@ -458,7 +460,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     </div>
 
     <div class="card">
-      <span class="tag">受託・仕入の記録／構築中</span>
+      <span class="tag">受託・仕入の記録／試験運用中</span>
       <h3>手書きの伝票｜エクセルへの打ち込みがなくなる</h3>
       <div class="ba">
         <div class="before"><span class="m">前</span><span>手書きの伝票を1枚ずつ見て、品目・重さ・検査日・等級ごとの数量をエクセルに打ち込む</span></div>
@@ -469,10 +471,74 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
           <li>人が目で確かめるのは<b>印の付いた紙だけ</b>（直近の例＝18枚のうち13枚、15枚のうち7枚）</li>
           <li>読み取った値は機械で検算し、合わないものは台帳に入れず「要確認」に分けます</li>
           <li>同じ紙が2回スキャンされたときは、中身を見比べて止めます</li>
+          <li>試験運用の実績＝2026年9月16日時点で台帳 278 件。人が紙と見比べたのは、印の付いた 7 件だけです。</li>
         </ul>
       </div>
       <p class="hours" data-case="denpyo" hidden></p>
-      <p class="note">構築中の案件です。お客さまのシステムのため、画面は公開していません。</p>
+      <p class="note">試験運用中の案件です。お客さまのシステムのため、画面は公開していません。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">家族のために・無償</span>
+      <h3>作品ギャラリー｜押し入れの作品が、親戚みんなのスマホに届く</h3>
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>祖父が作った粘土のレリーフ画50点あまりは、実家に来た人しか見られない</span></div>
+        <div class="after"><span class="m">後</span><span>写真を1枚ずつ載せた紹介ページ。見た人は♥やひとことを残せて、撮った写真をその場から投稿できる</span></div>
+      </div>
+      <div class="fact">
+        <ul>
+          <li>画面は Cloudflare Pages、台帳はスプレッドシートです。写真は合言葉なしで誰でも投稿でき、届いた瞬間に並びます。</li>
+          <li>別々の場所に置いた画面とデータをつなぐ所（CORS）で一度つまずき、実機で通るまで確かめてから公開しました。</li>
+        </ul>
+      </div>
+      <p class="note">家族のページのため、リンクは載せていません。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">家族のために・無償</span>
+      <h3>舞台の記録｜DVDとカセットの舞台が、スマホで演目ごとに見られる</h3>
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>日本舞踊の舞台の記録が DVD やカセットのまま棚にあり、再生機がないと見られない</span></div>
+        <div class="after"><span class="m">後</span><span>取り込んで演目ごとに並べた書庫。スマホから開いて、その場で再生できる</span></div>
+      </div>
+      <div class="fact">
+        <ul>
+          <li>動画・音声の配信は Cloudflare R2 です。Google ドライブは配信用ではなく、途中で止まるのを実機で確かめてから切り替えました。</li>
+          <li>取り込みは手元の Mac で行い、台帳はスプレッドシートです。家族が自分で足していけます。</li>
+        </ul>
+      </div>
+      <p class="note">家族のページのため、リンクは載せていません。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">自社・試作中</span>
+      <h3>スポーツ指導｜「どこの筋肉を使うか」が、3Dの体に色で出る</h3>
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>素振りや打ち込みで使う筋肉は、言葉と実演でしか伝えられない</span></div>
+        <div class="after"><span class="m">後</span><span>3Dの人体が動作を再生し、そのとき働く筋肉が色と濃淡で光る。指導者は自分で教材を作って書き出せる</span></div>
+      </div>
+      <div class="fact">
+        <ul>
+          <li>ブラウザだけで動きます（アプリの入れ物なし）。筋肉の形は、公開されている解剖学のデータを使い、出典を画面に明記しています。</li>
+          <li>いまは指導者に見てもらい、色の実感と子どもへの伝わり方を確かめている段階です。</li>
+        </ul>
+      </div>
+      <p class="note">試作中のため、画面は公開していません。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">受託・点検（作らない仕事）</span>
+      <h3>アプリの点検｜作ったものを、公開する前に見てもらえる</h3>
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>自分で作ったアプリが安全かどうか、判断できる人が周りにいない</span></div>
+        <div class="after"><span class="m">後</span><span>コードを読んで、直すべき箇所を重い順に並べた報告書にする。直す作業は作った本人が行う</span></div>
+      </div>
+      <div class="fact">
+        <ul>
+          <li>初回の点検では、他人のデータが見えてしまう作りと、入力欄からの攻撃に関わる箇所を、優先して3件指摘しました。</li>
+        </ul>
+      </div>
+      <p class="note">相手のアプリのため、画面は公開していません。</p>
     </div>
 
     <div class="card">
