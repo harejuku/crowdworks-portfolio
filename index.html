@@ -110,6 +110,16 @@ header h1 .em{
   background:linear-gradient(transparent 64%, var(--shu-usu) 64%);
   box-decoration-break:clone;-webkit-box-decoration-break:clone;
 }
+/* h1 の下に置く「できること」の帯。スマホ幅では折り返す。 */
+header .scope{
+  list-style:none;margin:18px 0 0;padding:0;
+  display:flex;flex-wrap:wrap;gap:7px 8px;
+}
+header .scope li{
+  font-size:12px;letter-spacing:.04em;line-height:1.6;color:var(--sumi-2);
+  background:var(--men);border:1px solid var(--kei);border-radius:999px;
+  padding:4px 12px;
+}
 header .sub{
   margin-top:20px;max-width:640px;font-size:15.5px;color:var(--sumi-2);
 }
@@ -315,10 +325,16 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
 <header>
   <p class="eyebrow">会社ごとに作る業務システム</p>
   <h1 class="mincho">社長の時間を、<br><span class="em">社長の仕事に戻す。</span></h1>
+  <ul class="scope">
+    <li>業務の画面</li>
+    <li>紙・写真・映像のデジタル化</li>
+    <li>3D の教材</li>
+    <li>既にあるアプリの点検</li>
+  </ul>
   <p class="sub">
     既製品に合わせて仕事のやり方を変えるのではなく、<b>いまのやり方に画面のほうを合わせて</b>作ります。
-    転記・電話番・月末の集計といった、社長や事務の手が止まっている作業を引き受ける画面です。
-    作ったものは、このページの下で実際に触れます。
+    転記、電話番、月末の集計。紙の伝票、たまった写真や映像。社長や家族が手でやっている仕事を、一つずつシステムに渡します。
+    作ったものは、このページの下にあります。半分はそのまま触れます。残りは画面と流れ図で示します。
   </p>
   <p class="lead-act">
     <a href="#works">これまでに作ったものを見る</a>
@@ -388,7 +404,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
   <div class="cards">
 
     <div class="card wide">
-      <span class="tag mine">自分の事業で開発・運用中／6か月以上</span>
+      <span class="tag mine">自分の事業で開発・運用中／8か月以上</span>
       <h3>学習塾｜授業の準備が、教室に入る前に終わる</h3>
       <div class="ba">
         <div class="before"><span class="m">前</span><span>誰がどこで詰まっているかは、授業が始まってから分かる</span></div>
@@ -398,7 +414,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       </div>
       <p class="fact">
         自分が経営する学習塾のために作り、実際の生徒・保護者・スタッフが毎日使っています。
-        規模は<b>コミット565件・TypeScript 約31,000行</b>（2026年9月時点の実測）。
+        規模は<b>コミット957件・TypeScript 約42,800行</b>（2026年9月20日時点の実測）。
       </p>
       <p class="hours" data-case="juku" hidden></p>
       <div class="try">
@@ -459,7 +475,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       </div>
       <p class="fact">
         効いているかどうかは、正答率ではなく<b>リピート率</b>で見ます。
-        追加の月額費用をかけずに、会員制の仕組みをGoogleアカウントの範囲だけで動かしています。
+        追加の月額費用をかけずに、台帳はGoogleの中、お客さんが読み取る入口の画面は Cloudflare Pages に置いて動かしています。
         2026年9月の改修＝小学3年生までの「あそび問題」（かげ・かぞえて・なかまはずれ）を足しました。同じ子が別の名前で登録された時に、押すだけでまとめられる名寄せ画面も付けています。QRカードは名刺用紙で自宅印刷できる型にしました。
       </p>
       <p class="hours" data-case="quiz" hidden></p>
@@ -498,10 +514,10 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       </div>
       <div class="fact">
         <ul>
-          <li>人が目で確かめるのは<b>印の付いた紙だけ</b>（直近の例＝18枚のうち13枚、15枚のうち7枚）</li>
+          <li>人が目で確かめるのは<b>印の付いた紙だけ</b>（直近の3日＝5枚のうち3枚、11枚のうち7枚、13枚のうち6枚）</li>
           <li>読み取った値は機械で検算し、合わないものは台帳に入れず「要確認」に分けます</li>
           <li>同じ紙が2回スキャンされたときは、中身を見比べて止めます</li>
-          <li>試験運用の実績＝2026年9月16日時点で台帳 278 件。人が紙と見比べたのは、印の付いた 7 件だけです。</li>
+          <li>試験運用の実績＝2026年9月20日時点で<b>台帳 306 枚・累計およそ 12.7 トン分の仕入れ</b>。検算に合わず「要確認」へ回っているのは 10 枚です。</li>
         </ul>
       </div>
       <p class="hours" data-case="denpyo" hidden></p>
@@ -509,17 +525,50 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     </div>
 
     <div class="card">
-      <span class="tag">家族のために・無償</span>
-      <h3>作品ギャラリー｜押し入れの作品が、親戚みんなのスマホに届く</h3>
+      <span class="tag">受託・点検（作らない仕事）</span>
+      <h3>アプリの点検｜作ったものを、公開する前に見てもらえる</h3>
       <div class="ba">
-        <div class="before"><span class="m">前</span><span>祖父が作った粘土のレリーフ画50点あまりは、実家に来た人しか見られない</span></div>
-        <div class="after"><span class="m">後</span><span>写真を1枚ずつ載せた紹介ページ。見た人は♥やひとことを残せて、撮った写真をその場から投稿できる</span></div>
+        <div class="before"><span class="m">前</span><span>自分で作ったアプリが安全かどうか、判断できる人が周りにいない</span></div>
+        <div class="after"><span class="m">後</span><span>コードを読んで、直すべき箇所を重い順に並べた報告書にする。直す作業は作った本人が行う</span></div>
       </div>
       <div class="fact">
         <ul>
-          <li>画面は Cloudflare Pages、台帳はスプレッドシートです。写真は合言葉なしで誰でも投稿でき、届いた瞬間に並びます。</li>
-          <li>別々の場所に置いた画面とデータをつなぐ所（CORS）で一度つまずき、実機で通るまで確かめてから公開しました。</li>
+          <li>初回の点検では、<b>重大な問題 0 件・直すべき点 3 件</b>を報告書にしました。3件の中身は、他人のデータが見えてしまう作りと、入力欄からの攻撃に関わる箇所です。</li>
         </ul>
+      </div>
+      <p class="note">相手のアプリのため、画面は公開していません。</p>
+    </div>
+
+    <div class="card wide visual">
+      <span class="tag">家族のために・無償</span>
+      <h3>作品ギャラリー｜押し入れの作品が、親戚みんなのスマホに届く</h3>
+      <div class="vis">
+        <div class="txt">
+          <div class="ba">
+            <div class="before"><span class="m">前</span><span>祖父が作った粘土のレリーフ画50点あまりは、実家に来た人しか見られない</span></div>
+            <div class="after"><span class="m">後</span><span>写真を1枚ずつ載せた紹介ページ。見た人は♥やひとことを残せて、撮った写真をその場から投稿できる。回転台で撮った写真は、画面の上で左右に回して見られる（左右30°・5°刻み・13枚）</span></div>
+          </div>
+          <div class="flow">
+            <div><span>撮影（回転台）</span></div>
+            <div><span>名前付け</span></div>
+            <div><span>取込</span></div>
+            <div><span>回転画像を生成</span></div>
+            <div><span>公開</span></div>
+          </div>
+          <div class="fact">
+            <ul>
+              <li>画面は Cloudflare Pages、台帳はスプレッドシートです。写真は合言葉なしで誰でも投稿でき、届いた瞬間に並びます。</li>
+              <li>別々の場所に置いた画面とデータをつなぐ所（CORS）で一度つまずき、実機で通るまで確かめてから公開しました。</li>
+              <li>回して見られるのは、13枚が揃った作品だけです。揃っていない作品は1枚の写真のまま出るので、回せる作品を代表作から順に増やしていきます。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="assets/sofu-gallery.png" alt="作品ギャラリーの一覧画面。題名・年・♥の数・ひとことの数が並んでいる" loading="lazy" width="1200" height="1150">
+            <figcaption>一覧の画面（架空の作品で表示）</figcaption>
+          </figure>
+        </div>
       </div>
       <p class="note">家族のページのため、リンクは載せていません。</p>
     </div>
@@ -598,21 +647,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     </div>
 
     <div class="card">
-      <span class="tag">受託・点検（作らない仕事）</span>
-      <h3>アプリの点検｜作ったものを、公開する前に見てもらえる</h3>
-      <div class="ba">
-        <div class="before"><span class="m">前</span><span>自分で作ったアプリが安全かどうか、判断できる人が周りにいない</span></div>
-        <div class="after"><span class="m">後</span><span>コードを読んで、直すべき箇所を重い順に並べた報告書にする。直す作業は作った本人が行う</span></div>
-      </div>
-      <div class="fact">
-        <ul>
-          <li>初回の点検では、他人のデータが見えてしまう作りと、入力欄からの攻撃に関わる箇所を、優先して3件指摘しました。</li>
-        </ul>
-      </div>
-      <p class="note">相手のアプリのため、画面は公開していません。</p>
-    </div>
-
-    <div class="card">
       <span class="tag">受託・その場で使う道具</span>
       <h3>幹事｜割り勘の計算と集金が、その場で終わる</h3>
       <div class="ba">
@@ -622,6 +656,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p class="fact">
         「先輩は多め・学生は少なめ」を係数で決められ、端数は100円単位に切り上げます。
         元にした表計算と<b>2,639項目の数値が全一致</b>することを突き合わせて確認しました。
+        2026年8月、15人の会で実際に精算に使いました。
       </p>
       <p class="hours" data-case="nomikai" hidden></p>
       <div class="try">
@@ -646,17 +681,20 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     <div>
       <p class="n">STEP 2</p>
       <h3>試作を触ってもらう</h3>
-      <p>先に動くものをお出しします。画面を見ていただくと「そこは違う」が具体的に出ます。</p>
+      <p>先に動くものをお出しします。画面を見ていただくと「そこは違う」が具体的に出ます。
+        本番と同じ画面を、架空のデータで先に触っていただく形です。</p>
     </div>
     <div>
       <p class="n">STEP 3</p>
       <h3>本番へ反映する</h3>
-      <p>実際の業務のデータで動かして確かめてから切り替えます。使い方もその場でお渡しします。</p>
+      <p>実際の業務のデータで動かして確かめてから切り替えます。使い方もその場でお渡しします。
+        反映したら公開中の版の番号を突き合わせ、実データで確かめたうえで「反映しました」とお伝えします。</p>
     </div>
     <div>
       <p class="n">STEP 4</p>
       <h3>毎月1回、まとめて改修を反映する</h3>
-      <p>使ううちに出た要望は月に1度まとめて反映します。毎月アップデートが届く形です。</p>
+      <p>使ううちに出た要望は月に1度まとめて反映します。毎月アップデートが届く形です。
+        システム自身が異常を見つけて知らせる作りなので（05 参照）、壊れてから気づくことがありません。</p>
     </div>
   </div>
   <p class="burden">
@@ -716,8 +754,11 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
   <div class="think">
     <div>
       <h3>安く始められる形から考える</h3>
-      <p>多くの案件は、Googleのスプレッドシートを土台にしています。
-        毎月のサーバー代がかからず、いま使っているGoogleアカウントの中で完結します。
+      <p>土台はGoogleのスプレッドシートです。店の中で使う道具はそのままGoogleの中に置き、
+        お客さんの目に触れる画面だけを Cloudflare Pages（無料）に置きます。
+        どちらも月々のサーバー代はかかりません。
+        この型で動いているもの＝精肉店の注文ページ・パン屋の入口・作品ギャラリー。
+        写真や映像を配るものだけ、置き場に Cloudflare R2（使った分だけの少額）を足します（映像と音声の書庫で稼働中）。
         規模が大きくなってから、本格的な作りへ移せばよいと考えています。</p>
     </div>
     <div>
@@ -746,16 +787,16 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p class="d">納品したシステムを架空のデータで触れる形にしたものを、まとめて置いています。</p>
     </a>
     <a href="shikumi/">
-      <p class="t">開発の中身</p>
-      <p class="d">設計をどう判断したか、どこでつまずき、どう直したかの記録です。</p>
+      <p class="t">開発の中身（学習塾システム）</p>
+      <p class="d">学習塾の統合管理システム1件について、設計をどう判断したか、どこでつまずき、どう直したかの記録です。</p>
     </a>
   </div>
 </section>
 
 <footer>
   <p class="deep">
-    技術的な中身（設計の判断・つまずいた点・どう直したか）は、
-    <a href="shikumi/">開発の中身</a> にまとめています。
+    学習塾のシステム1件について、技術的な中身（設計の判断・つまずいた点・どう直したか）を
+    <a href="shikumi/">開発の中身（学習塾システム）</a> にまとめています。
   </p>
   <p>
     このページの体験版はすべて架空のデータで動いています。

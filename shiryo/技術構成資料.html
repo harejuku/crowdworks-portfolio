@@ -6,9 +6,9 @@
 <style>
   /* ── ページ数が合わないときは、ここだけ動かす ────────── */
   :root {
-    --fs: 10.5pt;    /* 本文サイズ */
-    --lh: 1.6;       /* 行間 */
-    --gap: 4.5mm;    /* セクション間隔 */
+    --fs: 9.8pt;    /* 本文サイズ */
+    --lh: 1.5;       /* 行間 */
+    --gap: 2.4mm;    /* セクション間隔 */
     --tfs: 8pt;      /* 表の文字サイズ */
   }
   @page { size: A4 portrait; margin: 16mm 16mm 14mm; }
@@ -103,8 +103,8 @@
   .tbl-note { margin-top: 2mm; font-size: calc(var(--fs) * 0.84); color: #444; line-height: 1.6; }
 
   .closing {
-    margin-top: 3.5mm;
-    padding-top: 2.4mm;
+    margin-top: 2.2mm;
+    padding-top: 2.0mm;
     border-top: 0.8pt solid #ccc;
     text-align: justify;
     font-size: calc(var(--fs) * 0.9);
@@ -201,7 +201,7 @@
       <tr>
         <th>会員制クイズ企画</th>
         <td>飲食店の販促・会員企画</td>
-        <td>GAS HTML Service（QRコードから起動）</td>
+        <td>Cloudflare Pages（入口）／GAS HTML Service（クイズ本体）</td>
         <td>Google Apps Script</td>
         <td>Googleスプレッドシート</td>
         <td>QRコード（印刷して配布）</td>
@@ -222,7 +222,7 @@
         <td>GAS HTML Service／確認用の画面（HTML＋JavaScript）</td>
         <td>Google Apps Script／Node.js（手元での検算）</td>
         <td>Googleスプレッドシート／Googleドライブ</td>
-        <td>Google Cloud Vision API／AIによる読み取り（溜まった紙の一度きり）</td>
+        <td>生成AIによる画像読取</td>
         <td>試験運用中</td>
       </tr>
       <tr>
@@ -236,7 +236,7 @@
       </tr>
       <tr>
         <th>作品ギャラリー</th>
-        <td>家族の作品の紹介ページ（無償）</td>
+        <td>家族の作品の紹介ページ（無償・回して見る）</td>
         <td>Cloudflare Pages（HTML／CSS／JavaScript）</td>
         <td>Google Apps Script（API）</td>
         <td>Googleスプレッドシート／Googleドライブ（写真）</td>
@@ -282,7 +282,7 @@
     <li>発送業務の自動化：伝票の控え27枚を61秒で処理。
       <span class="desc">1桁の誤読が最終出力まで通り抜ける経路は、3段構成の検算により14,040通り中0通り。構築にかかった時間は実作業11時間＋打合せ2時間。</span></li>
     <li>精算ウェブアプリ：元にした表計算ファイルと、2,639項目の数値が全一致することを確認。</li>
-    <li>学習塾 統合管理システム：Gitコミット565件、TypeScript 約31,000行（2026年9月時点）。
+    <li>学習塾 統合管理システム：Gitコミット957件、TypeScript 約42,800行（2026年9月20日時点）。
       <span class="desc">2026年1月から継続して開発し、実際の生徒・保護者・スタッフが日常的に利用しています。</span></li>
   </ul>
 </section>
@@ -338,7 +338,7 @@
   <h2>4. 企業へ展開できる構成</h2>
   <p class="lead">
     規模と要件によって、次の3段階から選びます。①は上の一覧の多くで実際に運用しているものです。
-    ②は精肉店の注文ページと作品ギャラリーで、③は学習塾のシステムで稼働実績があります。
+    ②は精肉店の注文ページ・作品ギャラリー・会員制クイズの入口で、③は学習塾のシステムで稼働実績があります。
   </p>
   <table class="t-stage">
     <colgroup><col class="s1"><col class="s2"><col class="s3"><col class="s4"></colgroup>
@@ -351,14 +351,14 @@
         <td>Googleスプレッドシート＋Google Apps Script</td>
         <td>月額0円で始めたい。データを表計算の形で自分でも直接見たい。
             利用者が社内と常連のお客さまに限られる。</td>
-        <td>稼働実績あり（一覧の4件＋試験運用中1件）</td>
+        <td>稼働実績あり（一覧の3件＋試験運用中1件）</td>
       </tr>
       <tr>
         <th>②</th>
         <td>独自ドメイン＋静的ホスティング＋Google Apps Script（データ置き場・API として）</td>
         <td>お客さまに配る画面から、Googleの帯・長いURLを消したい。
             自社ドメインの短いURLで案内したい。データの持ち方は①のままでよい。</td>
-        <td>稼働実績あり（精肉店の注文ページ・作品ギャラリー。独自ドメインは任意で、無料のURLでも動く）</td>
+        <td>稼働実績あり（精肉店の注文ページ・作品ギャラリー・会員制クイズの入口。独自ドメインは任意で、無料のURLでも動く）</td>
       </tr>
       <tr>
         <th>③</th>
