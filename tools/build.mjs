@@ -230,9 +230,7 @@ jobs.push(
     scripts: ['fake-server.js'],
     home: '../taiken/',
     replacements: QUIZ_REPLACE('register', ''),
-    // 名簿の画面のタブは v2.13 で 5 つになり、折り返さない作りのため幅375pxで横に約90pxはみ出す（納品コードのまま）。
-    // 画面のコードは直さず、体験版の側で狭い幅のときだけ 2 段に折り返す
-    extraCss: '  @media (max-width:560px){ .tabs{flex-wrap:wrap} .tab{flex:1 1 30%;padding:10px 6px;font-size:14px} }',
+    // 名簿の画面のタブの横はみ出し（幅375pxで約90px）は、2026-10-21 に納品コード側（v2.15.1）で直したので、体験版で隠す CSS は外した
     note: 'これは<b>体験版</b>です。名簿も記録もすべて架空で、実在の店舗にはつながっていません。',
     about: {
       title: '会員の登録と、今日の結果を見る画面',

@@ -160,6 +160,8 @@ td.num,th.num{text-align:right;font-weight:800;white-space:nowrap}
 .tab.on{background:var(--green);color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.12)}
 .tab-badge{background:var(--red);color:#fff;border-radius:999px;font-size:11px;
   padding:1px 7px;font-weight:900}
+/* v2.15.1 タブが 5 つ（v2.13〜）になり、幅 375px のスマホで横に約 90px はみ出していた＝狭い画面だけ 2 段に折り返す */
+@media (max-width:560px){ .tabs{flex-wrap:wrap} .tab{flex:1 1 30%;padding:10px 6px;font-size:14px} }
 .tab.on .tab-badge{background:#fff;color:var(--red)}
 .pane{width:100%}
 .issuebox{background:var(--orange-l);border:2px solid #f2d3a8;border-radius:12px;
