@@ -414,7 +414,8 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       </div>
       <p class="fact">
         自分が経営する学習塾のために作り、実際の生徒・保護者・スタッフが毎日使っています。
-        規模は<b>コミット957件・TypeScript 約42,800行</b>（2026年9月20日時点の実測）。
+        規模は<b>コミット1,960件・TypeScript 約58,900行</b>（2026年10月21日時点の実測）。
+        ホームページも自分で作っており、2026年10月に見た目と文面を作り直しました（下のボタンでは架空の塾名で表示します）。
       </p>
       <p class="hours" data-case="juku" hidden></p>
       <div class="try">
@@ -438,7 +439,8 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p class="fact">
         会員登録もクレジット決済もありません。お支払いは受け取りのときに店頭で。
         <b>グラム売りなので注文時点では金額が決まらない</b>、という商売の事情に画面のほうを合わせています。
-        2026年9月、お客さまが触る注文ページを Cloudflare Pages へ移しました。Google のお知らせ帯が消え、開くまでが速くなりました。店主の管理画面はこれまでのままです。
+        2026年9月、お客さまが触る注文ページを Cloudflare Pages へ移しました。Google のお知らせ帯が消え、開くまでが速くなりました。
+        店主の画面では、お知らせのメールが届かなかった注文に赤い印が付きます。
       </p>
       <p class="hours" data-case="seiniku" hidden></p>
       <div class="try">
@@ -476,15 +478,36 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p class="fact">
         効いているかどうかは、正答率ではなく<b>リピート率</b>で見ます。
         追加の月額費用をかけずに、台帳はGoogleの中、お客さんが読み取る入口の画面は Cloudflare Pages に置いて動かしています。
-        2026年9月の改修＝小学3年生までの「あそび問題」（かげ・かぞえて・なかまはずれ）を足しました。同じ子が別の名前で登録された時に、押すだけでまとめられる名寄せ画面も付けています。QRカードは名刺用紙で自宅印刷できる型にしました。
+        その後の改修＝字がまだ読めない子には絵の「あそび問題」（かげ・かぞえて・なかまはずれ）、中学生には定期テストの範囲の問題を先に出します。
+        学年が分からない子には1日1回だけ学年を聞き、お店が名簿で確かめます。同じ子の二重登録は「おなじ子／べつの子」を押すだけで片付きます。
       </p>
       <p class="hours" data-case="quiz" hidden></p>
       <div class="try">
         <a href="quiz-kikaku/">触ってみる</a>
         <a class="sub" href="quiz-kikaku/dashboard.html">成果を見る</a>
         <a class="sub" href="quiz-kikaku/kanri.html">名簿を見る</a>
+        <a class="sub" href="quiz-kikaku/nayose.html">二重登録をまとめる</a>
       </div>
       <p class="note">答えた記録は、そのまま名簿画面の「本日の結果」に出ます。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">受託・飲食店の販促／稼働中</span>
+      <h3>ジューススタンド｜「どれにしよう」が、6問で決まる</h3>
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>メニューが多く、初めてのお客さんほど何を頼めばいいか迷う</span></div>
+        <div class="after"><span class="m">後</span><span>メニューのQRから6問に答えると、その人に合う1杯と次の2杯が理由つきで出る</span></div>
+      </div>
+      <p class="fact">
+        答え方は全部で<b>1,441通り</b>。その全部を機械で試し、どの答え方でも1位がしっかり合う（相性80点以上）ことを確かめてから、お店と答え合わせをして公開しました。
+        メニューの入れ替えは、お店が自分の画面から行います。
+        同じ型で、コーヒー豆の診断も作っています（7問・5タイプ）。
+      </p>
+      <div class="try">
+        <a href="drink/">触ってみる</a>
+        <a class="sub" href="https://shindan-mihon.pages.dev" target="_blank" rel="noopener">コーヒー豆の診断（見本）</a>
+      </div>
+      <p class="note">店名とメニューは架空のものに差し替えています。</p>
     </div>
 
     <div class="card">
@@ -514,10 +537,10 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       </div>
       <div class="fact">
         <ul>
-          <li>人が目で確かめるのは<b>印の付いた紙だけ</b>（直近の3日＝5枚のうち3枚、11枚のうち7枚、13枚のうち6枚）</li>
+          <li>人が目で確かめるのは<b>印の付いた紙だけ</b>（直近の3回＝10枚のうち5枚、5枚のうち1枚、7枚のうち0枚）</li>
           <li>読み取った値は機械で検算し、合わないものは台帳に入れず「要確認」に分けます</li>
           <li>同じ紙が2回スキャンされたときは、中身を見比べて止めます</li>
-          <li>試験運用の実績＝2026年9月20日時点で<b>台帳 306 枚・累計およそ 12.7 トン分の仕入れ</b>。検算に合わず「要確認」へ回っているのは 10 枚です。</li>
+          <li>試験運用の実績＝2026年10月20日時点で<b>台帳 631 枚・累計およそ 30.6 トン分の仕入れ</b>。検算に合わず「要確認」へ回っているのは 17 枚です。</li>
         </ul>
       </div>
       <p class="hours" data-case="denpyo" hidden></p>
@@ -537,6 +560,59 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         </ul>
       </div>
       <p class="note">相手のアプリのため、画面は公開していません。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag mine">自社・公開中</span>
+      <h3>韓国語の練習アプリ｜文字の読み方から、4択で少しずつ</h3>
+      <div class="ba">
+        <div class="before"><span class="m">前</span><span>ゼロから始めると、ハングルの読み方でつまずいて続かない</span></div>
+        <div class="after"><span class="m">後</span><span>読み方から 1 問ずつ進み、単語は 読む → 聞く → 言える の順に重ねていく</span></div>
+      </div>
+      <p class="fact">
+        自分で韓国語を学びながら、その順番をそのまま教材にしているアプリです。
+        2026年9月24日に作り始め、<b>267 コース・5,591 問</b>（10月21日時点の実測）。
+        学習塾のシステムと同じ土台（Next.js・Supabase）の上に作り、問題はデータとして足していく作りです。
+      </p>
+      <div class="try">
+        <a href="https://kankokugo-steps.com" target="_blank" rel="noopener">触ってみる</a>
+      </div>
+      <p class="note">公開中の本物が開きます。</p>
+    </div>
+
+    <div class="card wide visual">
+      <span class="tag">地域の協力・無償</span>
+      <h3>地域の紹介地図｜投稿で流れていったお店が、地図で探せる</h3>
+      <div class="vis">
+        <div class="txt">
+          <div class="ba">
+            <div class="before"><span class="m">前</span><span>地域のお店の紹介は SNS の投稿に積み重なるだけで、近くの店や同じジャンルの店を後から探せない</span></div>
+            <div class="after"><span class="m">後</span><span>紹介したお店が地図に並び、地域・ジャンル・イベントで絞り込める。会場ごとの QR から、その場の近くの店が開く</span></div>
+          </div>
+          <div class="flow">
+            <div><span>紹介の投稿を集める</span></div>
+            <div><span>店名・地域・ジャンルを起こす</span></div>
+            <div><span>住所から位置を出す</span></div>
+            <div><span>閉店を調べて反映</span></div>
+            <div><span>地図で公開</span></div>
+          </div>
+          <div class="fact">
+            <ul>
+              <li>集めた投稿 578 件から、お店でないもの 96 件を除いて<b>紹介店 235 か所</b>を地図に起こしました（営業中 213・閉店 22）。</li>
+              <li>閉店した店は消さず、灰色の印で記録として残します。住所があいまいな店は印を薄くし「位置は目安」と出します。</li>
+              <li>イベントの会場 8 か所に、それぞれの QR を用意。協賛の印は期間中だけ出し、金額は出しません。</li>
+              <li>画面は静的なページで、Cloudflare Pages に置いています（月々の費用なし）。地図の部品は Leaflet、背景は国土地理院の地図です。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="assets/machi-map.png" alt="地図の画面。地域の丸ボタン、ジャンルとイベントの絞り込み、色分けした地域の上にお店の印が並んでいる" loading="lazy" width="750" height="1460">
+            <figcaption>地図の画面（地名・店名はすべて架空）</figcaption>
+          </figure>
+        </div>
+      </div>
+      <p class="note">見本の段階のため、リンクは載せていません。</p>
     </div>
 
     <div class="card wide visual">
@@ -559,7 +635,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
             <ul>
               <li>画面は Cloudflare Pages、台帳はスプレッドシートです。写真は合言葉なしで誰でも投稿でき、届いた瞬間に並びます。</li>
               <li>別々の場所に置いた画面とデータをつなぐ所（CORS）で一度つまずき、実機で通るまで確かめてから公開しました。</li>
-              <li>回して見られるのは、13枚が揃った作品だけです。揃っていない作品は1枚の写真のまま出るので、回せる作品を代表作から順に増やしていきます。</li>
+              <li>いま公開している<b>9 点は、すべて回して見られます</b>。撮影の手順（角度の目盛り紙を敷く・正面を必ず1枚）を決めてあり、撮り足すたびに取り込んで増やせます。</li>
             </ul>
           </div>
         </div>
@@ -583,18 +659,18 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
             <div class="after"><span class="m">後</span><span>取り込んで演目ごとに並べた書庫。スマホから開いて、その場で再生できる。家族でも足していける作り</span></div>
           </div>
           <div class="flow">
-            <div><span>DVD・カセット・ビデオ</span></div>
-            <div><span>Mac で変換（HandBrake・ffmpeg）</span></div>
-            <div><span>台帳に登録（スプレッドシート）</span></div>
-            <div><span>Cloudflare R2 に置く（Worker が配信）</span></div>
+            <div><span>DVD・ビデオ・カセットを Mac に入れる</span></div>
+            <div><span>変換（HandBrake・ffmpeg）</span></div>
+            <div><span>題字から演目名の候補を読む</span></div>
+            <div><span>台帳に登録・R2 に置く</span></div>
             <div><span>スマホで演目ごとに再生</span></div>
           </div>
           <div class="fact">
             <ul>
-              <li>実績＝<b>DVD 4 枚から 13 本・約 1.2GB を 1 日で取り込み、台帳は 24 件</b>（2026年9月19日時点）。</li>
-              <li>配信は Cloudflare R2。Google ドライブは配信用ではなく、再生が途中で止まるのを実機で確かめてから切り替えました。</li>
-              <li>配信の前に Worker を置き、途中から再生できる・送り込みと削除には鍵が要る・消したものを 30 日は戻せる、を持たせています。</li>
-              <li>取り込みは 1 本のコマンドにまとめ、ダブルクリック1回で 変換・配信・台帳への登録まで通ります。</li>
+              <li>実績＝<b>台帳 408 件</b>（2026年10月20日時点）。9月に DVD 4 枚・台帳 24 件から始め、DVD・ビデオテープ・カセットの音声を順に取り込みました。</li>
+              <li>祖父の家に置いた Mac は、<b>DVD を入れるだけ</b>で 変換・配信・台帳への登録まで進みます。取り込みの道具は自分で新しい版に入れ替わり、失敗したら前の版に戻ります。</li>
+              <li>演目名は、映像の冒頭の題字から候補を読み取って台帳に入れます。確かでないものは空のまま残し、推定では埋めません。</li>
+              <li>配信は Cloudflare R2、画面は Cloudflare Pages。Google ドライブは配信用ではなく、再生が途中で止まるのを実機で確かめてから切り替えました。Worker を前に置き、途中から再生できる・送り込みと削除には鍵が要る・消したものを 30 日は戻せる、を持たせています。</li>
             </ul>
           </div>
         </div>
@@ -757,7 +833,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p>土台はGoogleのスプレッドシートです。店の中で使う道具はそのままGoogleの中に置き、
         お客さんの目に触れる画面だけを Cloudflare Pages（無料）に置きます。
         どちらも月々のサーバー代はかかりません。
-        この型で動いているもの＝精肉店の注文ページ・パン屋の入口・作品ギャラリー。
+        この型で動いているもの＝精肉店の注文ページ・パン屋の入口・ジューススタンドの診断・作品ギャラリー・映像と音声の書庫。
         写真や映像を配るものだけ、置き場に Cloudflare R2（使った分だけの少額）を足します（映像と音声の書庫で稼働中）。
         規模が大きくなってから、本格的な作りへ移せばよいと考えています。</p>
     </div>

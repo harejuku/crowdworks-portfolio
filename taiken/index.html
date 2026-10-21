@@ -234,8 +234,23 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <a href="../quiz-kikaku/">🥐 クイズを解いてみる</a>
         <a class="sub" href="../quiz-kikaku/dashboard.html">成果を見る</a>
         <a class="sub" href="../quiz-kikaku/kanri.html">名簿を見る</a>
+        <a class="sub" href="../quiz-kikaku/nayose.html">二重登録をまとめる</a>
       </div>
       <p class="note">答えた記録は、そのまま名簿画面の「本日の結果」に出ます。</p>
+    </div>
+
+    <div class="card">
+      <span class="tag">受託・飲食店の販促</span>
+      <h3>ジューススタンド｜「どれにしよう」が、6問で決まる</h3>
+      <p class="who">メニューのQRから開くお客さんの画面</p>
+      <p class="body">
+        6問に答えると、その人に合う<b>1杯と次の2杯</b>が理由つきで出ます。
+        答え方は全部で1,441通り。その全部を機械で試し、どの答え方でも1位がしっかり合うことを確かめてから公開しました。
+      </p>
+      <div class="try">
+        <a href="../drink/">🥤 診断してみる</a>
+      </div>
+      <p class="note">店名とメニューは架空のものに差し替えています。</p>
     </div>
 
     <div class="card">
@@ -272,6 +287,8 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
     <div><dt>紙に印刷する</dt><dd>画面のデータを、そのまま崩れない体裁で印刷。品書き・案内・帳票など。</dd></div>
     <div><dt>数字を見えるようにする</dt><dd>「どれが売れているか」「誰が来なくなったか」を、判断に使える形で出す。</dd></div>
     <div><dt>動画・音声を家族に配る書庫</dt><dd>棚に眠っているDVD・ビデオ・カセットを取り込み、演目ごとに並べる。スマホから開いて、その場で再生できる形にします。<span class="side">家族の舞台記録で稼働中（家族のページのためリンクは非公開）</span></dd></div>
+    <div><dt>お店のメニューから選ぶ手伝い</dt><dd>いくつかの質問に答えると、その人に合う商品が理由つきで出る。メニューの入れ替えはお店が自分の画面から行えます。<a href="../drink/">実物を見る</a></dd></div>
+    <div><dt>紹介したお店を地図にまとめる</dt><dd>SNSで紹介してきたお店を地図に起こし、地域・ジャンル・イベントで絞り込めるようにする。閉店した店も記録として残します。<span class="side">地域の紹介地図で見本を公開中（リンクは非公開）</span></dd></div>
     <div><dt>3Dで動きを見せる教材</dt><dd>動作を3Dの人体で再生し、そのとき働く筋肉を色で示す。指導者が自分で教材を作って書き出せます。<span class="side">自社で試作中</span></dd></div>
   </dl>
 </section>
@@ -284,7 +301,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p>土台はGoogleのスプレッドシートです。店の中で使う道具はそのままGoogleの中に置き、
         お客さんの目に触れる画面だけを Cloudflare Pages（無料）に置きます。
         どちらも月々のサーバー代はかかりません。
-        この型で動いているもの＝精肉店の注文ページ・パン屋の入口・作品ギャラリー。
+        この型で動いているもの＝精肉店の注文ページ・パン屋の入口・ジューススタンドの診断・作品ギャラリー・映像と音声の書庫。
         写真や映像を配るものだけ、置き場に Cloudflare R2（使った分だけの少額）を足します（映像と音声の書庫で稼働中）。
         規模が大きくなってから、本格的な作りへ移せばよいと考えています。</p>
     </div>
