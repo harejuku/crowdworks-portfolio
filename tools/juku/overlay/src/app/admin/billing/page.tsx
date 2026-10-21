@@ -26,7 +26,8 @@ import { useEffect, useState } from 'react';
 import { getBillingData, getSystemSettings, MESSAGE_TEMPLATE_CATALOG, type BillingRecord } from '@/src/utils/supabase/billing';
 import { computeMonthlyTotals } from '@/src/utils/billing/calc';
 import SchoolGuard from '@/src/components/SchoolGuard';
-import AdminNav from '@/src/components/AdminNav';
+// 帯は本番と同じ部品（2026-09-21 に本番が AdminNav から AdminHeader へ移ったのに合わせた・2026-10-21）
+import AdminHeader from '@/src/components/admin/AdminHeader';
 
 function defaultMonth() {
   const today = new Date();
@@ -79,7 +80,7 @@ export default function BillingDashboard() {
   return (
     <SchoolGuard>
     <div className="p-8 max-w-7xl mx-auto font-sans">
-      <AdminNav />
+      <AdminHeader className="mb-6" />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">請求管理ダッシュボード</h1>
 

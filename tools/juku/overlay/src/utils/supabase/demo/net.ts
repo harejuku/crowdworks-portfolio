@@ -7,6 +7,8 @@
    ・/api/booking/generate … 固定枠から1か月ぶんの予約を作る（体験版でも実際に作る）
    ・/api/booking/notify   … 予約が入ったことの通知（体験版では飛ばさない）
    ・/api/booking/calendar-sync … Googleカレンダーへの反映（体験版ではつながない）
+   ・/api/mendan/notify    … 面談の予約の通知（体験版では飛ばさない）
+   ・/api/kanken-daily・/api/eiken-daily … 生徒ごとの「1日10字／20語」（体験版では作らない）
    ------------------------------------------------------------------ */
 import type { DemoStore } from './engine';
 
@@ -114,6 +116,19 @@ export function installFetchShim(store: DemoStore, school: string) {
     /* --- 予約が入ったことの通知 --- */
     if (path.endsWith('/api/booking/notify')) {
       return json({ ok: true, skipped: 'demo' });
+    }
+
+    /* --- 面談の予約が入ったことの通知（2026-10 に本番へ追加） --- */
+    if (path.endsWith('/api/mendan/notify')) {
+      return json({ ok: true, skipped: 'demo' });
+    }
+
+    /* --- 漢検・英検の「きみの1日10字／20語」（2026-10 に本番へ追加）。
+       本番は生徒画面を開くたびに、診断の結果から生徒ごとのコースを作る。
+       体験版の生徒は診断を受けていない扱い＝何も作らず、「次はこれ」も出さない。
+       答えないと画面がエラーをコンソールに出す（中身はそのまま動く）。 --- */
+    if (path.endsWith('/api/kanken-daily') || path.endsWith('/api/eiken-daily')) {
+      return json({ created: 0, status: null });
     }
 
     /* --- Googleカレンダーへの反映 --- */

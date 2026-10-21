@@ -54,6 +54,10 @@ const DROP = [
   'src/app/portal',                   // 同上
   'src/app/setsugekka',               // 飲食店のメニュー。別の案件
   'src/app/booking',                  // 生徒が予約を取る画面（URLに合言葉が要るので後日）
+  'src/app/admin/students',           // 生徒の名簿（2026-10 に追加）。保護者の連絡先を扱う画面で、
+                                      // サーバーで組み立てる（force-dynamic）ので静的に書き出せない
+  'src/app/admin/booking/week',       // 授業枠の週の表（2026-10 に追加）。同上・サーバーで組み立てる。
+                                      // 予約管理から入口があるので、overlay に「何の画面か」だけの1枚を置く
   'src/app/robots.ts',
   'src/app/sitemap.ts',
   // このほかに外すもの（実在の塾の公開サイトと、その写真フォルダ）は
@@ -72,10 +76,36 @@ rmSync(WORK, { recursive: true, force: true });
 mkdirSync(WORK, { recursive: true });
 cpSync(REPO, WORK, {
   recursive: true,
-  filter: (src) => !/(^|\/)(node_modules|\.git|\.next|out|\.claude)(\/|$)/.test(src.replace(REPO, '')),
+  // .env* は持ち込まない（本番の鍵が一時フォルダに残るうえ、NEXT_PUBLIC_ の付く値は書き出しに埋まる）
+  filter: (src) => !/(^|\/)(node_modules|\.git|\.next|out|\.claude|\.env[^/]*)(\/|$)/.test(src.replace(REPO, '')),
 });
-// node_modules はコピーせず、本番のものを見に行かせる（コピーすると数分かかる）
-try { symlinkSync(join(REPO, 'node_modules'), join(WORK, 'node_modules'), 'dir'); } catch (e) { /* 既にある */ }
+// node_modules はコピーせず、本番のものを見に行かせる（コピーすると数分かかる）。
+// ただし丸ごとの symlink にはしない（2026-10-21）。本番は 2026-09 に画面の部品を
+// packages/*（npm workspaces・名前は @<スコープ>/quiz-core など）へ切り出しており、
+// 丸ごと symlink だとそれが本番の packages/ に解決され、③-2 の置き換えを通らない
+// 素のソースがビルドに入る。中身を1つずつ symlink し、workspaces のスコープだけは
+// 一時フォルダの packages/（置き換え済み）へ向ける。
+const WS_SCOPES = new Set();
+mkdirSync(join(WORK, 'node_modules'), { recursive: true });
+readdirSync(join(REPO, 'node_modules')).forEach((name) => {
+  const src = join(REPO, 'node_modules', name);
+  if (name.startsWith('@')) {
+    const inner = readdirSync(src);
+    const isWs = inner.some((p) => existsSync(join(WORK, 'packages', p)) &&
+      JSON.parse(readFileSync(join(WORK, 'packages', p, 'package.json'), 'utf8')).name === `${name}/${p}`);
+    if (isWs) {
+      WS_SCOPES.add(name);
+      mkdirSync(join(WORK, 'node_modules', name), { recursive: true });
+      inner.forEach((p) => {
+        const local = join(WORK, 'packages', p);
+        // packages/ に無いもの（apps/ の公開アプリ）は塾の画面から使わないので繋がない
+        if (existsSync(local)) symlinkSync(local, join(WORK, 'node_modules', name, p), 'dir');
+      });
+      return;
+    }
+  }
+  symlinkSync(src, join(WORK, 'node_modules', name));
+});
 
 console.log('② サーバーが要る画面と、実在の塾の素材を外す…');
 DROP.forEach((p) => rmSync(join(WORK, p), { recursive: true, force: true }));
@@ -100,6 +130,23 @@ if (existsSync(join(WORK, 'src/app', HP_ROUTE))) {
 console.log('③ 偽データベースを上書き…');
 cpSync(join(HERE, 'overlay'), WORK, { recursive: true });
 
+/* ③-1 管理画面の帯（ナビ）から、外した画面への行き先を抜く。
+   2026-09-21 に本番のナビが AdminNav（overlay に体験版用の写しがある）から
+   src/components/admin/AdminHeader.tsx に置き換わり、写しが効かなくなった。
+   写しを増やすと本番とずれるので、ここで「外した画面」と「Super」の行だけを消す
+   （Super は 2026-08-26 の判断どおり＝見学者に出す意味がない。画面は書き出しには残る）。 */
+const HEADER = join(WORK, 'src/components/admin/AdminHeader.tsx');
+if (existsSync(HEADER)) {
+  // overlay で置き直した画面（請求）は残す＝この時点で実体が無い行き先だけを消す
+  const gone = DROP.filter((p) => p.startsWith('src/app/') && !existsSync(join(WORK, p)))
+    .map((p) => p.slice('src/app'.length));
+  gone.push('/super-admin');
+  const lines = readFileSync(HEADER, 'utf8').split('\n');
+  const kept = lines.filter((l) => !gone.some((r) => l.includes(`href: '${r}'`)));
+  console.log(`   管理画面の帯から ${lines.length - kept.length} 件の行き先を外しました`);
+  writeFileSync(HEADER, kept.join('\n'));
+}
+
 /* ③-2 実名をつぶす。
    本番のコードには、入力例やプレースホルダの形で実在の人名・屋号が入っている
    （「例: ◯◯さん」「生徒: ◯◯ 様」など）。ビルドすると、それがそのまま
@@ -109,6 +156,11 @@ if (ANON.length === 0) {
   console.error('× sources.local.json の juku.anonymize がありません。実名が残るので止めます。');
   process.exit(1);
 }
+/* workspaces のスコープ（import '@xxx/quiz-core'）は置き換えると import が解決できなく
+   なるので、置き換えの間だけ印に逃がす。モジュール名は書き出し後の JS には残らない
+   （本番ビルドはモジュールを番号で呼ぶ）。残っていないかは check-names.mjs が見る。 */
+const SCOPE_MARK = (i) => `\u0000WS${i}\u0000`;
+const SCOPES = [...WS_SCOPES];
 function scrub(dir) {
   readdirSync(dir).forEach((f) => {
     const full = join(dir, f);
@@ -116,11 +168,15 @@ function scrub(dir) {
     if (!/\.(ts|tsx|js|jsx|mjs|css|json|md)$/.test(f)) return;
     const before = readFileSync(full, 'utf8');
     let after = before;
+    SCOPES.forEach((s, i) => { after = after.split(`${s}/`).join(SCOPE_MARK(i)); });
     ANON.forEach(([from, to]) => { after = after.split(from).join(to); });
+    SCOPES.forEach((s, i) => { after = after.split(SCOPE_MARK(i)).join(`${s}/`); });
     if (after !== before) writeFileSync(full, after);
   });
 }
 scrub(join(WORK, 'src'));
+// 画面の部品（packages/）も同じ表で置き換える。ここを通さないと、部品の中の文言が素のまま出る
+if (existsSync(join(WORK, 'packages'))) scrub(join(WORK, 'packages'));
 
 /* ③-3 塾HPだけの後始末。
 

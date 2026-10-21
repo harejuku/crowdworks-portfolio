@@ -413,6 +413,125 @@ export function makeRpc(store: DemoStore, session: { school: string }) {
         .sort((x: any, y: any) => y.student_count - x.student_count || y.total_mistakes - x.total_mistakes);
     },
 
+    /* ---------- 2026-09〜10 に本番で増えた関数（2026-10-21 に体験版へ足した） ----------
+       足していないと、画面は動くがコンソールに「rpc error」が並ぶ。
+       値の形は本番の関数（supabase/schema.sql）と同じ。中身の計算は体験版で意味のある範囲だけ。 */
+
+    // 生徒の学年（名簿のタグから。小5〜中3 のうち最初の1つ）
+    student_read_grade: (a) => {
+      const tags: string[] = (mine('student_directory', a.p_student_id)[0] || {}).tags || [];
+      return ['小5', '小6', '中1', '中2', '中3'].filter((g) => tags.indexOf(g) >= 0)[0] || null;
+    },
+    // 講師のアカウントか（名簿のタグ「講師」）。体験版の8人はみな生徒
+    student_read_is_teacher: (a) =>
+      ((mine('student_directory', a.p_student_id)[0] || {}).tags || []).indexOf('講師') >= 0,
+
+    // 最近遊んだコース（「つづきから」の材料）。1回ぶんの結果の記録から数える
+    student_read_recent_courses: (a) => {
+      const by: Record<string, { last_at: string; attempts: number }> = {};
+      mine('exam_results', a.p_student_id).forEach((r) => {
+        const m = String(r.subject_mode).match(/^dyn_(\d+)/);
+        if (!m) return;
+        const k = m[1];
+        if (!by[k]) by[k] = { last_at: r.created_at, attempts: 0 };
+        by[k].attempts++;
+        if (String(r.created_at) > by[k].last_at) by[k].last_at = r.created_at;
+      });
+      return Object.keys(by)
+        .map((k) => ({ course_menu_id: Number(k), last_at: by[k].last_at, attempts: by[k].attempts }))
+        .sort((x, y) => y.last_at.localeCompare(x.last_at))
+        .slice(0, Number(a.p_limit) || 10);
+    },
+
+    // 「もう一度」の元＝まだ克服していない間違い（90日以内・削除済みの問題は除く）
+    student_read_retry_items: (a) => {
+      const since = Date.now() - 90 * day;
+      return mine('student_mistakes', a.p_student_id)
+        .filter((m) => !m.is_cleared && new Date(m.created_at).getTime() >= since)
+        .map((m) => {
+          const q = T('questions').filter((x) => String(x.id) === String(m.question_id))[0];
+          if (!q || q.is_deleted) return null;
+          return { question_id: q.id, last_missed_at: m.created_at, q_school_id: q.school_id,
+                   tags: q.tags || [], is_active: q.is_active !== false,
+                   question_text: q.question_text, answer_text: q.answer_text };
+        })
+        .filter(Boolean)
+        .sort((x: any, y: any) => String(y.last_missed_at).localeCompare(String(x.last_missed_at)));
+    },
+
+    // 対戦の戦績。体験版では対戦をしていないので空
+    student_read_battle_records: () => ({ status: 'ok', server_now: new Date().toISOString(), records: [] }),
+
+    // 1問ごとの解答の記録（本番は分析用に貯める）。体験版では受け取るだけ
+    student_write_answer_events: () => 'ok',
+
+    // 途中でやめた回の記録（クリアでも失敗でもない1回）
+    student_write_partial_result: (a) => {
+      if ((Number(a.p_miss_count) || 0) <= 0 && (Number(a.p_answered_count) || 0) <= 0) return 'skipped';
+      if (!mine('student_directory', a.p_student_id).length) return 'not_found';
+      const list = T('exam_results');
+      list.push({ id: nextId(list), school_id: session.school, student_id: a.p_student_id,
+                  subject_mode: 'dyn_' + a.p_course_menu_id, clear_time: Math.max(Number(a.p_clear_time) || 0, 0),
+                  miss_count: Math.max(Number(a.p_miss_count) || 0, 0), is_cleared: null,
+                  created_at: new Date().toISOString(), wrong_details: a.p_wrong_details || [] });
+      store.commit();
+      return 'ok';
+    },
+
+    // 習得モードの「何周目か」と、その順位。体験版では周回を記録しない
+    student_write_mastery_ranking: () => ({ status: 'not_complete' }),
+    // 結果画面の「ここまでのミス 累計 n回」＝このコースの全回のミスの合計
+    student_read_mastery_miss_total: (a) =>
+      mine('exam_results', a.p_student_id)
+        .filter((r) => r.subject_mode === 'dyn_' + a.p_course_menu_id)
+        .reduce((n, r) => n + (Number(r.miss_count) || 0), 0),
+    student_read_mastery_rounds: () => [],
+    admin_read_mastery_rounds: () => [],
+    student_reset_mastery: () => ({ status: 'skipped' }),
+    admin_reset_mastery: () => ({ status: 'skipped' }),
+
+    // 習得済み一覧（1語ずつ）。体験版の記録から出す
+    student_read_word_mastery_detail: (a) =>
+      T('student_word_mastery')
+        .filter((w) => w.school_id === session.school && w.student_id === a.p_student_id
+                    && Number(w.course_menu_id) === Number(a.p_course_menu_id))
+        .map((w) => ({ question_id: String(w.question_id), is_mastered: !!w.is_mastered, fast_streak: w.fast_streak || 0 })),
+    student_unmaster_word: (a) => {
+      const ids = (a.p_question_ids || []).map(String);
+      let n = 0;
+      T('student_word_mastery').forEach((w) => {
+        if (w.school_id === session.school && w.student_id === a.p_student_id
+            && Number(w.course_menu_id) === Number(a.p_course_menu_id)
+            && ids.indexOf(String(w.question_id)) >= 0 && w.is_mastered) {
+          w.is_mastered = false; w.fast_streak = 0; n++;
+        }
+      });
+      store.commit();
+      return n;
+    },
+
+    // 歴史の分かれ道の「みんなはどう選んだ？」。本番も5人未満なら出さない＝体験版では出さない
+    student_read_wakaremichi_choices: () => ({ status: 'too_few' }),
+
+    // 先生が持ち点を足し引きする
+    admin_write_points_delta: (a) => {
+      const r = T('student_directory').filter((x) => x.school_id === a.p_school_id && x.student_id === a.p_student_id)[0];
+      if (!r) return null;
+      r.points = Math.max(0, (r.points || 0) + (Number(a.p_delta) || 0));
+      store.commit();
+      return r.points;
+    },
+
+    // 定期テストの分析（テスト画面）。体験版にはテストの紙を入れていないので空
+    admin_read_exam_papers: () => [],
+    admin_read_exam_student_rates: () => [],
+    admin_read_exam_student_subjects: () => [],
+    admin_read_exam_student_units: () => [],
+    admin_read_exam_topic_rates: () => [],
+    admin_read_range_analysis: () => [],
+    admin_read_range_candidates: () => [],
+    admin_read_range_history: () => [],
+
     /* 保護者向けの画面は体験版に入れていないので、空で返す */
     get_household: () => null,
     get_household_students: () => [],

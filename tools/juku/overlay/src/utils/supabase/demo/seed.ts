@@ -226,12 +226,16 @@ export function buildSeed(): Tables {
     id: 1, school_id: SCHOOL, title: '江戸時代を4段でしあげる',
     description: '同じ12問を、やさしい形からむずかしい形へ4回まわします。①をクリアすると②が開きます。',
     icon: '🏯', progression: 'linear', target_student_ids: [],
+    // 置き場（2026-09 に本番へ追加）。curriculum＝生徒画面の上の「カリキュラム」節。
+    // 配信先が空＋学年タグ＝その学年の生徒に自動で届く（2026-10-11 の本番の規則）
+    area: 'curriculum', grade_tags: ['中2'], subject_tag: '教科_社会',
     is_active: true, is_deleted: false, sort_order: 1,
     created_at: new Date(Date.UTC(2026, 4, 1)).toISOString(),
   }, {
     id: 2, school_id: SCHOOL, title: '英単語 Stage1',
     description: '4択で意味を覚えてから、スペルを自分で組み立てます。速く正解できた語から「習得」になります。',
     icon: '🅰️', progression: 'linear', target_student_ids: [],
+    area: 'curriculum', grade_tags: [], subject_tag: '教科_英語',   // 学年タグが空＝全員に届く
     is_active: true, is_deleted: false, sort_order: 2,
     created_at: new Date(Date.UTC(2026, 4, 2)).toISOString(),
   }];
