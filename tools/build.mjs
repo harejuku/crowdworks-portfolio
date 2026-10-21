@@ -1,7 +1,8 @@
 /* ------------------------------------------------------------------
    体験版の画面を、納品したシステムの本物のコードから作り直す。
 
-     node tools/build.mjs
+     node tools/build.mjs            （全部）
+     node tools/build.mjs drink/     （出力先が drink/ で始まるものだけ）
 
    何をしているか：
      ①納品コード（Google Apps Script 用のHTMLの断片）を読む
@@ -38,15 +39,36 @@ if (ANONYMIZE.length === 0) {
   process.exit(1);
 }
 
+/* 本物の宛先（GAS・Pages・Workers・Drive の写真）を「呼ぶ形」で残してはいけない。
+   コメントの中の説明（「GAS の画面は script.googleusercontent.com を…」）は呼び出しではないので対象外にし、
+   URL の形（https://…）で書かれたものだけを止める。 */
+const LIVE_URL = [/https?:\/\/[^\s'"`<>]*(script\.google|googleusercontent|pages\.dev|workers\.dev)/i];
+// 精肉店のお客さん画面（Pages 版）が fetch する宛先。fake-server.js の DEMO_API と同じ文字にする
+const SEINIKU_DEMO_API = 'demo:seiniku-api';
+
 const jobs = [
   {
+    /* お客さん画面は 2026-09-19 に GAS から Cloudflare Pages（静的な index.html・app.js・style.css）へ移った。
+       本物は config.js の window.API（GAS の /exec）へ fetch する（?do=products で商品、POST で注文）。
+       体験版は config.js を読む行を「体験版の宛先（demo: で始まる＝ネットに出ない）」に差し替え、
+       その宛先への fetch だけを fake-server.js が受ける。app.js と style.css は納品物の複製。 */
     out: 'seiniku/index.html',
-    mode: 'fragment',      // GASのHTMLの断片。<!doctype> から自分で組み立てる
-    bootstrap: true,       // <?!= bootstrap ?> に偽サーバーの値を差し込む
-    src: 'seiniku.shop',
+    mode: 'document',
+    bootstrap: false,
+    src: 'seiniku.shopPages',
+    anonymize: 'seiniku.anonymize',
     title: 'みどり精肉店 ご注文（体験版）',
     page: 'shop',
     scripts: ['fake-server.js'],
+    replacements: [
+      [/<script src="config\.js"><\/script>/, `<script>window.API = ${JSON.stringify(SEINIKU_DEMO_API)};</script>`],
+    ],
+    mustReplace: true,
+    forbid: [/<script[^>]*config\.js/, ...LIVE_URL],
+    extraFiles: [
+      { src: 'seiniku.shopApp', out: 'seiniku/app.js', forbid: LIVE_URL },
+      { src: 'seiniku.shopCss', out: 'seiniku/style.css', forbid: LIVE_URL },
+    ],
     home: '../taiken/',
     note: 'これは<b>体験版</b>です。お店も商品も注文もすべて架空で、実在の店舗にはつながっていません。',
     about: {
@@ -58,7 +80,9 @@ const jobs = [
         { t: 'グラム売りの「金額が確定しない」問題',
           d: '精肉店は100gいくらで売るので、注文の時点では金額が決まりません。そこで量り売りの品が1つでも入っていれば「概算」、セット商品だけなら「確定」と、画面・注文控え・お店への通知メールの言葉づかいを1つの判定でそろえています。' },
         { t: '押せない選択肢は最初から出さない',
-          d: '受け取り日のカレンダーには、定休日と、締切時刻を過ぎた当日分が出てきません。選んでから断られるのがいちばん腹立たしいためです。' },
+          d: '受け取り日は一覧から選ぶ形にして、定休日と、締切時刻を過ぎた当日分は最初から並べません。選んでから断られるのがいちばん腹立たしいためです。' },
+        { t: 'お客さんの画面だけ、Googleの外に置いている',
+          d: 'はじめはGoogleの仕組み（Apps Script）の中で画面を出していましたが、上に「Googleのアプリです」という帯が出て、開くのにも数秒かかりました。お客さんが見る画面だけを静的なページとして別の場所に移し、商品と注文の受け付けだけをGoogle側に残しています。' },
         { t: '体験版で省いたこと',
           d: '注文を送るとお店へ通知メールが飛びますが、体験版では飛びません。同じ電話番号からの連続送信をはじく仕組みも、何度も試せるように外しています。' }
       ]
@@ -70,6 +94,7 @@ const jobs = [
     mode: 'fragment',
     bootstrap: true,
     src: 'seiniku.admin',
+    forbid: LIVE_URL,
     title: 'みどり精肉店 注文管理（体験版）',
     page: 'admin',
     scripts: ['fake-server.js'],
@@ -96,6 +121,7 @@ const jobs = [
     mode: 'document',      // それ自体が完成したHTML。head と body に差し込むだけ
     bootstrap: false,      // 最初の値もサーバー呼び出し（初期データ）で取りに行く作り
     src: 'uriage.form',
+    forbid: LIVE_URL,
     title: 'さくら商店 売上入力（体験版）',
     scripts: ['fake-server.js'],
     home: '../taiken/',
@@ -126,14 +152,20 @@ const QUIZ_REPLACE = (mode, studentId) => ([
   [/<\?=\s*studentId\s*\?>/g, studentId],
   [/<\?=\s*scriptUrl\s*\?>/g, '#'],
   [/<\?=\s*quizSeconds\s*\?>/g, '30'],
+  // v2.8：カメラの入口ページ（Cloudflare Pages）から来たときだけそこへ戻す仕組み。体験版は入口ページを持たないので「無し」にする
+  [/<\?=\s*entryUrl\s*\?>/g, ''],
+  [/<\?=\s*viaCam\s*\?>/g, 'false'],
 ]);
+
+// Code.gs の doGet が付けている viewport と同じもの
+const QUIZ_VIEWPORT = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
 
 // 管理画面どうしの行き来。本物は同じURLに ?mode= を付けて開くが、
 // 体験版は静的なページなので、読み込み後にリンク先を書き換える
 const QUIZ_NAV = `
 window.addEventListener('load', function () {
   setTimeout(function () {
-    var map = { 'nav-register': 'kanri.html', 'nav-admin': 'dashboard.html' };
+    var map = { 'nav-register': 'kanri.html', 'nav-admin': 'dashboard.html', 'nav-nayose': 'nayose.html' };
     Object.keys(map).forEach(function (id) {
       var a = document.getElementById(id);
       if (a) a.href = map[id];
@@ -141,7 +173,7 @@ window.addEventListener('load', function () {
     var pr = document.getElementById('nav-print');
     if (pr) pr.addEventListener('click', function (e) {
       e.preventDefault();
-      Demo.toast('会員証のQRコードを、名簿から一括で組版して印刷します（1枚に12人ぶん）。体験版では省いています。');
+      Demo.toast('会員証のQRカードを、名簿から名刺用紙（A4に10枚）に一括で組版して印刷します。体験版では省いています。');
     });
   }, 0);
 });`;
@@ -151,8 +183,10 @@ const QUIZ_ABOUT_POINTS = [
     d: 'QRをかざした時点で、まず「出題中」として記録を1行書きます。答える前に画面を閉じても、その日の権利は使われたことになる作り。これが無いと、むずかしい問題が出た子が閉じて引き直します。' },
   { t: '同じ問題は二度出さない',
     d: 'その子が過去に答えた問題を除いてから出します。全部答えたら、次は「前にまちがえた問題」から出ます。復習が自然に混ざるようにしてあります。' },
-  { t: '学年ごとに問題を分けている',
-    d: '小3までから中3まで7段階。管理画面には「この学年の問題があと何問あるか」が出るので、枯れる前に足せます。' },
+  { t: '学年ごとに問題を分け、その子に合わせて出す',
+    d: '小3までから中3まで7段階。字がまだ読めない子には、影や数で答える絵の問題が先に出ます。中学生は、学校の定期テストの範囲の単元から先に出します。最近5問の正誤で「やさしめ／むずかしめ」も自動で寄せます。' },
+  { t: '学年は毎年4月に自動で上がる',
+    d: '4月1日を過ぎて最初に開いたときに、全員の学年が1つ上がります。学年が分からない小さい子には、レジ横の画面で「なんねんせい？」と1日1回だけ聞き、店の人があとで確かめます。' },
   { t: '同じ子が2つ登録される事故に備える',
     d: '手書きの名前から登録するので、同じ子が2アカウントになることが必ず起きます。「まとめる」機能は記録を1件も消さずに付け替えるだけにしてあり、正解数の集計が変わりません。' },
 ];
@@ -165,10 +199,13 @@ jobs.push(
     mode: 'document',
     bootstrap: false,
     src: 'quizkikaku.app',
+    anonymize: 'quizkikaku.anonymize',
+    viewport: QUIZ_VIEWPORT,
+    forbid: LIVE_URL,
     title: 'まるやまベーカリー クイズ（体験版・レジ横の画面）',
     scripts: ['fake-server.js'],
     home: '../taiken/',
-    replacements: QUIZ_REPLACE('kiosk', 'S07'),
+    replacements: QUIZ_REPLACE('kiosk', 'S0022'),   // 学年がまだ分からない「小3まで」の子（fake-server.js の KIOSK_KID）
     note: 'これは<b>体験版</b>です。お店も子どもの名前も記録もすべて架空で、実在の店舗にはつながっていません。',
     about: {
       title: 'パン屋さんが、子どもをリピーターにするための企画',
@@ -186,17 +223,26 @@ jobs.push(
     mode: 'document',
     bootstrap: false,
     src: 'quizkikaku.app',
+    anonymize: 'quizkikaku.anonymize',
+    viewport: QUIZ_VIEWPORT,
+    forbid: LIVE_URL,
     title: 'まるやまベーカリー クイズ 名簿（体験版）',
     scripts: ['fake-server.js'],
     home: '../taiken/',
     replacements: QUIZ_REPLACE('register', ''),
+    // 名簿の画面のタブは v2.13 で 5 つになり、折り返さない作りのため幅375pxで横に約90pxはみ出す（納品コードのまま）。
+    // 画面のコードは直さず、体験版の側で狭い幅のときだけ 2 段に折り返す
+    extraCss: '  @media (max-width:560px){ .tabs{flex-wrap:wrap} .tab{flex:1 1 30%;padding:10px 6px;font-size:14px} }',
     note: 'これは<b>体験版</b>です。名簿も記録もすべて架空で、実在の店舗にはつながっていません。',
     about: {
       title: '会員の登録と、今日の結果を見る画面',
       sub: 'お店の人が、レジの合間にスマホで開くことを前提にしています。',
       points: QUIZ_ABOUT_POINTS,
     },
-    footerLinks: [{ href: './', label: 'レジ横の画面（子どもがさわる側）をひらく →' }],
+    footerLinks: [
+      { href: './', label: 'レジ横の画面（子どもがさわる側）をひらく →' },
+      { href: 'nayose.html', label: '同じ子の2つ目の登録をまとめる画面をひらく →' },
+    ],
     extraScript: QUIZ_NAV,
   },
   {
@@ -204,6 +250,9 @@ jobs.push(
     mode: 'document',
     bootstrap: false,
     src: 'quizkikaku.app',
+    anonymize: 'quizkikaku.anonymize',
+    viewport: QUIZ_VIEWPORT,
+    forbid: LIVE_URL,
     title: 'まるやまベーカリー クイズ 成果（体験版）',
     scripts: ['fake-server.js'],
     home: '../taiken/',
@@ -224,6 +273,36 @@ jobs.push(
       ],
     },
     footerLinks: [{ href: './', label: 'レジ横の画面（子どもがさわる側）をひらく →' }],
+    extraScript: QUIZ_NAV,
+  },
+  {
+    out: 'quiz-kikaku/nayose.html',
+    mode: 'document',
+    bootstrap: false,
+    src: 'quizkikaku.app',
+    anonymize: 'quizkikaku.anonymize',
+    viewport: QUIZ_VIEWPORT,
+    forbid: LIVE_URL,
+    title: 'まるやまベーカリー クイズ おなじ子をまとめる（体験版）',
+    scripts: ['fake-server.js'],
+    home: '../taiken/',
+    replacements: QUIZ_REPLACE('nayose', ''),
+    note: 'これは<b>体験版</b>です。名簿も記録もすべて架空で、実在の店舗にはつながっていません。',
+    about: {
+      title: '「同じ子の2つ目の登録」を、押すだけで片付ける画面',
+      sub: '手書きの名前から登録するので、同じ子が2つになるのは避けられません。どれが同じ子かを決められるのは、顔を知っているお店の人だけです。',
+      points: [
+        { t: '1組ずつ「おなじ子／べつの子」を押すだけ',
+          d: '名前が重なっている組ごとに、登録日・遊んだ回数・最後に来た日を並べます。残す方は「いちばん最近遊んでいる方（＝今その子が持っているQR）」を最初から選んでおきます。' },
+        { t: '「べつの子」と決めた組は二度と出さない',
+          d: '同じ名前の別の子は実際に多いので、決めた組を覚えておかないと毎回同じ組が並びます。「べつの子」はあとから「もどす」で取り消せます。' },
+        { t: 'まとめても記録は1件も消えない',
+          d: '「おなじ子」にすると、遊んだ記録を残す方へ付け替えてから、もう片方を名簿から外します。正解数やダッシュボードの集計は変わりません。' },
+        { t: 'ここが終わってからQRカードを刷る',
+          d: '先にカードを刷ると、片付けた方の子のカードが使えなくなるためです。' },
+      ],
+    },
+    footerLinks: [{ href: 'kanri.html', label: 'お店の人が見る名簿の画面をひらく →' }],
     extraScript: QUIZ_NAV,
   },
 );
@@ -266,6 +345,99 @@ jobs.push({
 })();`,
 });
 
+/* ドリンクおすすめ診断。画面（index.html）と診断の本体（app.js）は納品コードの複製。
+   メニュー（drink/data.js）だけは納品先のものを写さず、体験版のために手で書いた架空のものを置いている
+   （build はこのファイルに触らない）。
+   本番はメニューを API から取る作りだが、API の宛先（config.js）を読み込む行を「宛先なし」に差し替えるので、
+   取りに行く処理そのものが走らない＝どこにも接続しない。
+   保存先のキーは、同じサイト（オリジン）にある他の体験版と混ざらないよう、すべて drinkdemo. で始まる名前に
+   付け替える（付け替えの表は sources.local.json の drink.anonymize。キーの元の名前が屋号を含むため）。 */
+const DRINK_KEY_PREFIX = 'drinkdemo.';
+jobs.push({
+  out: 'drink/index.html',
+  mode: 'document',
+  bootstrap: false,
+  src: 'drink.index',
+  anonymize: 'drink.anonymize',
+  title: 'ジューススタンド ことり ドリンク診断（体験版）',
+  scripts: [],
+  home: '../taiken/',
+  replacements: [
+    // API の宛先を読み込む行 → 宛先なし（メニューは drink/data.js の架空のものだけを使う）
+    [/<script src="config\.js"><\/script>/, '<script>window.API = \'\';</script>'],
+    // 画面の下の1行（本番にはお店用の入力画面へのリンクがある。体験版には入れていない）
+    [/<footer id="foot">[\s\S]*?<\/footer>/, '<footer id="foot">見本です。お店・メニューの名前と値段は架空のものです。</footer>'],
+  ],
+  // 結果のチケットの左右の切り欠き（飾り）が、幅375pxで画面の外へ1〜4pxはみ出し、横に少し揺れる（納品コードのまま）。
+  // 画面のコードは直さず、体験版の側で切り落とす（clip は sticky の帯を壊さない。hidden は壊す）
+  extraCss: '  main{overflow-x:clip}',
+  mustReplace: true,       // 差し替え先が見つからなければ止める（納品コードの形が変わった時に、宛先が残ったまま出さない）
+  forbid: [/config\.js/, /admin\.html/i, /script\.google/i, /pages\.dev/i, /instagram/i],
+  extraFiles: [
+    { src: 'drink.app', out: 'drink/app.js',
+      forbid: [/script\.google/i, /pages\.dev/i, /instagram/i],
+      storagePrefix: DRINK_KEY_PREFIX },
+  ],
+  note: 'これは<b>体験版</b>です。お店もメニューも値段もすべて架空で、実在のお店にはつながっていません。',
+  about: {
+    title: 'メニューのQRから、6回のタップで「今日の1杯」を出す',
+    sub: 'ジュースとスムージーのお店で、注文に迷うお客さんのための画面です。お店の人は、メニューの入れ替えだけをします。',
+    points: [
+      { t: '質問は6つ、味は「メニューの言葉」で聞く',
+        d: '温度・甘さ・好きな果物・野菜の味・飲み口・今日のテーマ。「酸味の強さは？」のような専門的な聞き方はせず、メニューの分け方（果物か野菜か、ジュースかスムージーか）と同じ言葉で聞いています。' },
+      { t: '1杯を大きく、残り2杯は「タイプ違い」で',
+        d: '2位には、点差が小さければ1位と種類の違うもの（ジュースが1位ならスムージー）を出します。3杯とも似た味になって、選ぶ意味がなくなるのを防ぐためです。' },
+      { t: '全部の答え方で偏りを確かめてある',
+        d: '答え方の組み合わせ（つめたい側だけで1,440通り）を全部まわして、3杯がそろわない答え方が0であること、1つの品が出すぎないことを確かめてから、お店に渡しています。' },
+      { t: 'メニューはお店がスマホで入れ替える',
+        d: '本番では、お店の人が専用の入力画面で「提供中／お休み」や期間限定の日付を切り替えると、その日のうちに診断に反映されます。体験版では入力画面を外し、架空のメニューを焼き込んでいます。' },
+    ],
+  },
+  extraScript: `
+// 帯の「最初から」で、この体験版が覚えている答え（drinkdemo. で始まるキー）も消す
+(function () {
+  var b = document.querySelector('.ss-reset');
+  if (!b) return;
+  b.addEventListener('click', function () {
+    [window.sessionStorage, window.localStorage].forEach(function (s) {
+      try {
+        var doomed = [];
+        for (var i = 0; i < s.length; i++) { var k = s.key(i); if (k && k.indexOf(${JSON.stringify(DRINK_KEY_PREFIX)}) === 0) doomed.push(k); }
+        doomed.forEach(function (k) { s.removeItem(k); });
+      } catch (e) {}
+    });
+  }, true);
+})();`,
+});
+
+/* 置き換え表（案件ごとの分も含む）を正規表現にする */
+function toRegexPairs(list) {
+  return (list || []).map(([from, to]) => [new RegExp(from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), to]);
+}
+
+/* 公開物に残ってはいけない語・保存キーの決まりを確かめる（見つかったら止める） */
+function assertClean(label, text, forbid, storagePrefix) {
+  for (const re of (forbid || [])) {
+    if (re.test(text)) {
+      console.error(`× ${label}: 残ってはいけない語が残っています（${re}）`);
+      process.exit(1);
+    }
+  }
+  if (storagePrefix) {
+    // 保存キーらしい文字列（…-v数字）は、すべて決めた頭文字で始まっていること
+    const keys = [...text.matchAll(/['"]([\w.-]+-v\d+)['"]/g)].map((m) => m[1]);
+    const bad = keys.filter((k) => !k.startsWith(storagePrefix));
+    if (bad.length) {
+      console.error(`× ${label}: 保存キーが ${storagePrefix} で始まっていません：${bad.join(', ')}`);
+      process.exit(1);
+    }
+    if (keys.length === 0) {
+      console.error(`× ${label}: 保存キーが1つも見つかりません（納品コードの形が変わった？）`);
+      process.exit(1);
+    }
+  }
+}
+
 function pick(path) {
   return path.split('.').reduce((o, k) => (o == null ? o : o[k]), sources);
 }
@@ -281,7 +453,7 @@ function head(job) {
     font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
     font-size:15px;font-weight:700;text-align:center;
   }
-</style>`;
+${job.extraCss ? job.extraCss + '\n' : ''}</style>`;
 }
 function headScripts(job) {
   return [
@@ -310,8 +482,15 @@ const KEEP_OUT = `<!-- =========================================================
      （tools/build.mjs が自動で作っています。直接直さないこと）
      ============================================================ -->`;
 
+/* 引数を付けると、出力先がその文字で始まる体験版だけを作り直す（例：node tools/build.mjs drink/）。
+   納品物は案件ごとに直る時期が違うので、1つ足すたびに全部を作り直すと、
+   見るつもりのなかった他の体験版まで中身が変わる（2026-10-21 に踏みかけた）。 */
+const only = process.argv.slice(2);
+const targets = only.length ? jobs.filter((j) => only.some((o) => j.out.startsWith(o))) : jobs;
+if (only.length && targets.length === 0) { console.error(`× ${only.join(' ')} に当たる体験版がありません`); process.exit(1); }
+
 let built = 0;
-for (const job of jobs) {
+for (const job of targets) {
   const src = pick(job.src);
   if (!src) { console.error(`× ${job.out}: sources.local.json に ${job.src} がありません`); process.exit(1); }
   if (!existsSync(src)) { console.error(`× ${job.out}: 素材が見つかりません ${src}`); process.exit(1); }
@@ -329,10 +508,21 @@ for (const job of jobs) {
   }
 
   // ②案件ごとの差し替え（サーバーから差し込まれる値・サーバーでしか通らない分岐）
-  for (const [re, to] of (job.replacements || [])) html = html.replace(re, to);
+  for (const [re, to] of (job.replacements || [])) {
+    if (job.mustReplace && !re.test(html)) {
+      console.error(`× ${job.out}: 差し替え先（${re}）が見つかりません（納品コードの形が変わった？）`);
+      process.exit(1);
+    }
+    html = html.replace(re, to);
+  }
 
-  // ③実名をつぶす
-  for (const [re, to] of ANONYMIZE) html = html.replace(re, to);
+  // ③実名をつぶす（案件ごとの表があれば先に。そのあと全体の表）
+  const jobAnon = job.anonymize ? toRegexPairs(pick(job.anonymize)) : [];
+  if (job.anonymize && jobAnon.length === 0) {
+    console.error(`× ${job.out}: sources.local.json に ${job.anonymize} がありません。実名が残ったまま公開されるので止めます。`);
+    process.exit(1);
+  }
+  for (const [re, to] of [...jobAnon, ...ANONYMIZE]) html = html.replace(re, to);
 
   // ③差し込みの取りこぼしを機械的に見つける。GASの記法が残っていたら画面が壊れる
   if (/<\?(?!xml)/.test(html)) {
@@ -348,8 +538,12 @@ for (const job of jobs) {
       console.error(`× ${job.out}: head/body が見つかりません（mode:'document' の前提が崩れています）`);
       process.exit(1);
     }
+    // 本物は GAS の doGet が addMetaTag('viewport', …) で付けている（HTML の中には無い）。
+    // 体験版は静的なページなので、同じものをここで足す（無いとスマホで横に 3 倍の幅で描かれる）
+    const vp = job.viewport && !/<meta[^>]+name=["']viewport["']/i.test(html)
+      ? `<meta name="viewport" content="${job.viewport}">\n` : '';
     out = html
-      .replace(/<\/head>/i, `<meta name="robots" content="noindex">\n${head(job)}\n</head>`)
+      .replace(/<\/head>/i, `${vp}<meta name="robots" content="noindex">\n${head(job)}\n</head>`)
       .replace(/(<body[^>]*>)/i, `$1\n${headScripts(job)}\n${KEEP_OUT}`)
       .replace(/<\/body>/i, `${tail(job)}\n</body>`);
     // タイトルは体験版と分かるものに差し替える
@@ -374,6 +568,22 @@ ${tail(job)}
 </body>
 </html>
 `;
+  }
+
+  assertClean(job.out, out, job.forbid);
+
+  // 画面が読み込む別ファイル（診断の本体の .js など）も、同じ置き換え表を通して写す
+  for (const ef of (job.extraFiles || [])) {
+    const efSrc = pick(ef.src);
+    if (!efSrc || !existsSync(efSrc)) { console.error(`× ${ef.out}: 素材が見つかりません ${efSrc || ef.src}`); process.exit(1); }
+    let text = readFileSync(efSrc, 'utf8');
+    for (const [re, to] of [...jobAnon, ...ANONYMIZE]) text = text.replace(re, to);
+    assertClean(ef.out, text, ef.forbid, ef.storagePrefix);
+    const efDest = join(ROOT, ef.out);
+    mkdirSync(dirname(efDest), { recursive: true });
+    writeFileSync(efDest, text);
+    console.log(`○ ${ef.out}  ← ${efSrc}`);
+    built++;
   }
 
   const dest = join(ROOT, job.out);

@@ -1,0 +1,106 @@
+/* みどり商店 精肉ご注文ページ（Cloudflare Pages 版）── 元は 画面.html.txt の <style>（2026-09-19 に site/ へ分けた） */
+  :root{
+    --ink:#2b211c; --sub:#7a6b62; --line:#e6ded5;
+    --bg:#faf7f2; --card:#ffffff; --accent:#b3352c; --accent-d:#8f271f;
+    --ok:#2f7d4f; --warn:#8a6d1f; --warn-bg:#fff8e1;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    line-height:1.7;font-size:16px;padding-bottom:104px}
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+  header{background:var(--ink);color:#fff;padding:18px 0 16px;text-align:center}
+  header h1{margin:0;font-size:20px;letter-spacing:.08em}
+  header p{margin:4px 0 0;font-size:12px;color:#cbbfb5;letter-spacing:.04em}
+
+  .banner{margin:14px 0;padding:12px 14px;border-radius:10px;font-size:14px}
+  .banner.notice{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent)}
+  .banner.warn{background:var(--warn-bg);border:1px solid #f0e2b0;color:var(--warn)}
+  .banner.closed{background:#fff;border:1px solid var(--line);text-align:center;padding:28px 16px}
+
+  .lead{margin:16px 0 8px;font-size:13px;color:var(--sub)}
+  .weigh{margin:12px 0 18px;padding:12px 14px;background:#fff;border:1px dashed var(--accent);
+    border-radius:10px;font-size:13px;color:var(--accent-d)}
+  .weigh b{display:block;font-size:14px;margin-bottom:2px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    margin-bottom:12px;overflow:hidden}
+  .card .thumb{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#eee}
+  .card .body{padding:14px}
+  .card h3{margin:0;font-size:17px}
+  .price{margin:2px 0 0;font-size:14px;color:var(--sub)}
+  .price b{font-size:21px;color:var(--accent);font-weight:700}
+  .desc{margin:8px 0 0;font-size:13px;color:var(--sub)}
+
+  .picker{display:flex;align-items:center;gap:10px;margin-top:12px;
+    padding-top:12px;border-top:1px solid var(--line)}
+  .step{width:44px;height:44px;flex:0 0 44px;border:1px solid var(--line);background:#fff;
+    border-radius:10px;font-size:22px;color:var(--ink);cursor:pointer;line-height:1}
+  .step:disabled{opacity:.3;cursor:default}
+  /* 単位が「g」から「パック」に変わると、この行の横幅が足りなくなることがあります（iPhone SE 幅で
+     44+88+単位+44+小計）。数の欄だけを縮ませ、単位と小計は折り返さないようにしています。
+     縮んでも押せるよう下限を決めてあります */
+  .gram{width:88px;min-width:64px;height:44px;text-align:center;font-size:17px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink);font-family:inherit}
+  .unit{font-size:14px;color:var(--sub);white-space:nowrap}
+  .sub{margin-left:auto;font-size:15px;font-weight:700;white-space:nowrap}
+  .sub.zero{color:#c3b8b0;font-weight:400}
+
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:20}
+  .bar .inner{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px}
+  .bar .amt{font-size:12px;color:var(--sub);line-height:1.4}
+  .bar .amt b{display:block;font-size:22px;color:var(--ink)}
+
+  button.go{flex:1;min-height:52px;border:0;border-radius:12px;background:var(--accent);color:#fff;
+    font-size:16px;font-weight:700;font-family:inherit;cursor:pointer}
+  button.go:disabled{background:#d5cbc3;cursor:default}
+  button.ghost{width:100%;min-height:48px;margin-top:10px;border:1px solid var(--line);
+    border-radius:12px;background:#fff;color:var(--sub);font-size:15px;font-family:inherit;cursor:pointer}
+
+  h2.sec{font-size:16px;margin:22px 0 10px;padding-left:10px;border-left:4px solid var(--accent)}
+  label{display:block;margin:14px 0 4px;font-size:14px;font-weight:700}
+  label .req{color:var(--accent);font-size:12px;margin-left:6px}
+  .hint{font-size:12px;color:var(--sub);font-weight:400;margin-top:2px}
+  input[type=text],input[type=tel],input[type=date],select,textarea{
+    width:100%;padding:13px;font-size:16px;font-family:inherit;color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;background:#fff}
+  textarea{min-height:88px;resize:vertical}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+  .review{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:8px}
+  .review dl{margin:0;display:grid;grid-template-columns:88px 1fr;gap:6px 10px;font-size:14px}
+  .review dt{color:var(--sub)}
+  .review dd{margin:0;word-break:break-word}
+  .review .row{display:flex;justify-content:space-between;gap:10px;font-size:14px;
+    padding:8px 0;border-bottom:1px solid var(--line)}
+  .review .row:last-of-type{border-bottom:0}
+  .review .total{display:flex;justify-content:space-between;align-items:baseline;
+    margin-top:10px;padding-top:10px;border-top:2px solid var(--ink);font-weight:700}
+  .review .total b{font-size:21px}
+
+  .err{margin:12px 0 0;padding:11px 13px;background:#fdecea;border:1px solid #f5c6c2;
+    border-radius:10px;color:var(--accent-d);font-size:14px}
+
+  .done{text-align:center;padding:26px 16px}
+  .done .mark{font-size:44px;color:var(--ok);line-height:1}
+  .done h2{margin:10px 0 4px;font-size:20px}
+  .no{display:inline-block;margin:10px 0;padding:8px 18px;background:#fff;border:1px solid var(--line);
+    border-radius:999px;font-size:17px;font-weight:700;letter-spacing:.06em}
+
+  footer{margin:34px 0 0;padding:20px 0 30px;border-top:1px solid var(--line);
+    text-align:center;font-size:13px;color:var(--sub)}
+  footer a{color:var(--accent);font-weight:700;text-decoration:none}
+
+  /* 規約（ご注文について／プライバシーポリシー）。footer のリンクから開きます */
+  .doc{font-size:14px;color:var(--ink)}
+  .doc h2{font-size:19px;margin:22px 0 4px}
+  .doc h3{font-size:15px;margin:20px 0 4px;padding-left:10px;border-left:4px solid var(--accent)}
+  .doc p{margin:6px 0}
+  .doc ul{margin:6px 0;padding-left:1.2em}
+  .doc li{margin:5px 0}
+  .doc .box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px}
+  .doc .meta{font-size:12px;color:var(--sub);margin-top:18px}
+
+  .hidden{display:none}

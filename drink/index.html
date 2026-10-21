@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffd84d">
+<title>ジューススタンド ことり ドリンク診断（体験版）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M14 18h36l-4 40a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4z' fill='%23f39a2b' stroke='%23222' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<script>window.API = '';</script>
+<style>
+  /* 2026-10-09 作り替え：アメリカンダイナーの注文チケットとレシート。太いポップ体・黒縁のステッカー・かたい影。
+     ⚠ コーヒー版（別のお店）は明朝・お品書き・伝票。見た目と言い回しを重ねない。 */
+  :root { --bg:#fff4dc; --ink:#222; --pink:#ef5a78; --teal:#1f5a55; --yellow:#ffd84d; --orange:#f39a2b; --paper:#fff;
+          --sub:#5d5048; --mint:#cdeee3; }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--bg); color:var(--ink); line-height:1.6; min-height:100vh;
+         font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif; font-weight:500;
+         background-image:radial-gradient(rgba(239,90,120,.13) 2px, transparent 2.5px); background-size:22px 22px; }
+  .pop-font, h1, h2, h3, h4, .logo, .count, .your, .also, .num, .sticker b, .go { font-family:"Dela Gothic One","Hiragino Sans",sans-serif; font-weight:400; }
+  main { max-width:460px; margin:0 auto; padding:max(14px,env(safe-area-inset-top)) 16px 24px; }
+  button { font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; color:var(--ink); }
+  .go { display:block; width:100%; border:3px solid var(--ink); border-radius:16px; padding:14px; font-size:1.3rem;
+        background:var(--yellow); box-shadow:5px 5px 0 var(--ink); letter-spacing:.04em; }
+  .go:active { transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink); }
+  .go.small { font-size:1.05rem; padding:11px; margin-top:14px; background:var(--pink); color:#fff; }
+  .go.ghost { background:var(--paper); font-size:1rem; margin-top:12px; }
+  .pop { animation:pop .4s cubic-bezier(.3,1.6,.6,1) both; }
+  @keyframes pop { from { opacity:0; transform:scale(.92); } }
+  @media (prefers-reduced-motion:reduce) { .pop, .straw, .fill .juice { animation:none !important; } }
+
+  /* はじめ */
+  .start { text-align:center; }
+  .checker { height:22px; margin:-14px -16px 16px; border-bottom:3px solid var(--ink);
+             background:conic-gradient(var(--pink) 25%, #fff 0 50%, var(--pink) 0 75%, #fff 0) 0 0/22px 22px; }
+  .logo { margin:0; font-size:1.7rem; color:var(--yellow); -webkit-text-stroke:1.5px var(--ink); paint-order:stroke fill;
+          text-shadow:3px 3px 0 var(--ink); letter-spacing:.03em; }
+  .start h1 { font-size:2.5rem; line-height:1.25; margin:14px 0 6px; transform:rotate(-2deg); }
+  .glass.big svg { width:110px; height:110px; }
+  .straw { animation:straw 2s ease-in-out infinite; transform-origin:34px 24px; }
+  @keyframes straw { 50% { transform:rotate(-7deg); } }
+  .lead { margin:4px 0 18px; font-size:1.02rem; }
+  .lead b { background:linear-gradient(transparent 60%, var(--yellow) 0); }
+  .meta { color:var(--sub); font-size:.8rem; margin:16px 0 0; }
+
+  /* 質問 */
+  .qtop { display:flex; align-items:center; gap:12px; }
+  .back { width:42px; height:42px; border:3px solid var(--ink); border-radius:50%; background:var(--paper); font-size:1.1rem; font-weight:800; }
+  .mini-glass { width:30px; height:38px; border:3px solid var(--ink); border-top:0; border-radius:0 0 8px 8px; position:relative; overflow:hidden; background:var(--paper); margin-left:auto; }
+  .mini-glass i { position:absolute; left:0; right:0; bottom:0; background:var(--orange); transition:height .4s; }
+  .count { font-size:1.6rem; }
+  .count small { font-size:.9rem; }
+  .bubble { position:relative; background:var(--paper); border:3px solid var(--ink); border-radius:22px; padding:18px 18px 16px;
+            margin:20px 0 22px; box-shadow:5px 5px 0 var(--ink); }
+  .bubble::after { content:""; position:absolute; left:34px; bottom:-15px; width:22px; height:22px; background:var(--paper);
+                   border-right:3px solid var(--ink); border-bottom:3px solid var(--ink); transform:rotate(45deg); }
+  .bubble h2 { margin:0; font-size:1.55rem; line-height:1.35; }
+  .bubble .hint { margin:6px 0 0; font-size:.85rem; color:var(--sub); }
+  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tiles.odd .tile:last-child { grid-column:1/-1; flex-direction:row; justify-content:center; min-height:0; padding:12px; }
+  .tile { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:118px; padding:12px 8px;
+          border:3px solid var(--ink); border-radius:18px; background:var(--paper); box-shadow:4px 4px 0 var(--ink);
+          font-weight:800; font-size:1rem; line-height:1.3; text-align:center; transition:background .12s; }
+  .tile:active { transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
+  .tile .ic { font-size:2.2rem; line-height:1; }
+  .tiles.odd .tile:last-child .ic { font-size:1.6rem; }
+  .tile small { font-size:.75rem; color:var(--sub); font-weight:500; }
+  .tile.sel { background:var(--yellow); }
+
+  .thinking { text-align:center; padding-top:20vh; font-size:1.4rem; font-family:"Dela Gothic One",sans-serif; }
+  .glass.fill svg { width:120px; height:120px; }
+  .fill .juice { animation:fillup 1.2s ease-in-out both; }
+  @keyframes fillup { from { transform:translateY(34px); } }
+
+  /* 結果 */
+  .sticker { display:block; width:fit-content; max-width:100%; margin:10px auto 0; padding:12px 22px; border:3px solid var(--ink); border-radius:18px;
+             background:var(--tc); color:#fff; text-align:center; transform:rotate(-2.5deg); box-shadow:5px 5px 0 var(--ink); }
+  .sticker small { display:block; font-weight:800; font-size:.85rem; }
+  .sticker b { font-size:1.7rem; line-height:1.3; -webkit-text-stroke:.5px var(--ink); }
+  .tdesc { text-align:center; margin:18px 4px 6px; font-size:.95rem; }
+  .box { background:var(--yellow); border:3px solid var(--ink); border-radius:14px; padding:10px 12px; font-size:.9rem; font-weight:700; }
+  .your { margin:22px 0 8px; font-size:1.5rem; color:var(--pink); -webkit-text-stroke:1px var(--ink); text-align:center; letter-spacing:.06em; }
+  .ticket { position:relative; background:var(--paper); border:3px solid var(--ink); border-radius:20px; padding:18px 18px 16px;
+            box-shadow:6px 6px 0 var(--ink); }
+  .ticket::before, .ticket::after { content:""; position:absolute; top:88px; width:22px; height:22px; border-radius:50%; background:var(--bg); border:3px solid var(--ink); }
+  .ticket::before { left:-14px; border-left-color:transparent; border-bottom-color:transparent; transform:rotate(45deg); }
+  .ticket::after { right:-14px; border-right-color:transparent; border-top-color:transparent; transform:rotate(45deg); }
+  .thead { display:flex; gap:12px; align-items:center; padding-bottom:12px; border-bottom:3px dashed var(--ink); }
+  .num { flex:none; display:grid; place-items:center; width:58px; height:58px; border:3px solid var(--ink); border-radius:50%;
+         background:var(--yellow); font-size:1.7rem; }
+  .ticket h3 { margin:0; font-size:1.3rem; line-height:1.3; }
+  .en { margin:2px 0 0; font-size:.78rem; color:var(--sub); }
+  .sub { margin:12px 0 4px; font-size:.85rem; color:var(--sub); display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center; }
+  .sub b { font-family:"Dela Gothic One",sans-serif; font-weight:400; color:var(--ink); font-size:1.15rem; margin-left:auto; }
+  .eatin { font-style:normal; background:var(--pink); color:#fff; border-radius:999px; padding:1px 9px; font-size:.75rem; font-weight:800; }
+  .fitrow { margin:4px 0 8px; font-size:.82rem; font-weight:800; display:flex; align-items:center; gap:6px; }
+  .fit i { font-style:normal; font-size:1.05rem; filter:grayscale(1); opacity:.25; }
+  .fit i.on { filter:none; opacity:1; }
+  .items { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .items span { border:2px solid var(--ink); border-radius:999px; padding:1px 10px 1px 6px; font-size:.85rem; font-weight:700; background:#fffbea; }
+  .items i { font-style:normal; margin-right:3px; }
+  .desc { margin:0 0 6px; }
+  .tags { margin:0 0 6px; display:flex; flex-wrap:wrap; gap:4px 10px; }
+  .tags span { color:var(--teal); font-weight:800; font-size:.85rem; }
+  .effect { margin:10px 0 0; padding:9px 12px; background:var(--mint); border:2px solid var(--ink); border-radius:12px; font-size:.88rem; }
+  .effect b { display:block; font-size:.72rem; color:var(--teal); }
+  .stars { color:var(--pink); letter-spacing:1px; }
+  .note2 { margin:8px 0 0; font-size:.85rem; color:var(--sub); }
+  .meter { margin:18px 0 0; background:var(--paper); border:3px solid var(--ink); border-radius:16px; padding:12px 14px; }
+  .mt { margin:0 0 6px; font-weight:800; font-size:.9rem; }
+  .mt small { font-weight:500; color:var(--sub); font-size:.72rem; margin-left:6px; }
+  .mt small b { display:inline-grid; place-items:center; width:16px; height:16px; border-radius:50%; background:var(--yellow); border:2px solid var(--ink); font-size:.6rem; color:var(--ink); }
+  .mbar { display:flex; align-items:center; gap:8px; font-size:.75rem; font-weight:800; margin:10px 0; }
+  .ml, .mr { width:4.2em; flex:none; }
+  .mr { text-align:right; }
+  .track { position:relative; flex:1; height:10px; border:2px solid var(--ink); border-radius:999px;
+           background:linear-gradient(90deg, #ffb35c, #fff 50%, #8ed18a); }
+  .track b { position:absolute; top:50%; transform:translate(-50%,-50%); display:grid; place-items:center; }
+  .track .you { color:var(--pink); font-size:1.25rem; -webkit-text-stroke:1px var(--ink); z-index:2; }
+  .track .it { width:20px; height:20px; border-radius:50%; background:var(--yellow); border:2px solid var(--ink); font-size:.6rem; }
+  .also { margin:24px 0 8px; font-size:1.25rem; text-align:center; transform:rotate(-1.5deg); }
+  .mini-card { display:flex; gap:12px; align-items:center; background:var(--paper); border:3px solid var(--ink); border-radius:16px;
+               padding:12px; margin-bottom:12px; box-shadow:4px 4px 0 var(--ink); }
+  .mini-card .num { width:44px; height:44px; font-size:1.25rem; background:var(--mint); }
+  .mc { flex:1; min-width:0; }
+  .mc h4 { margin:0; font-size:1rem; line-height:1.3; }
+  .mc .sub { margin:4px 0 0; }
+  .mc .sub b { font-size:.95rem; }
+  .mc .fitrow { margin:2px 0; }
+  .mc .tags { margin:0; }
+  .bye { text-align:center; margin:22px 0 4px; font-size:.85rem; color:var(--sub); }
+  .bye .big { font-family:"Dela Gothic One",sans-serif; font-size:1.15rem; color:var(--ink); margin:0 0 4px; }
+  .bye p { margin:2px 0; }
+  .actions { margin-top:6px; }
+
+  .nw { display:inline-block; }
+  body.asking footer { display:none; }
+  footer { text-align:center; font-size:.72rem; color:var(--sub); padding:10px 16px calc(16px + env(safe-area-inset-bottom)); }
+  footer a { color:var(--sub); }
+</style>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/demo.css">
+<style>
+  .ss-next{
+    display:block;max-width:640px;margin:26px auto 34px;padding:15px 18px;
+    background:#161a20;color:#fff;border-radius:12px;text-decoration:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-size:15px;font-weight:700;text-align:center;
+  }
+  main{overflow-x:clip}
+</style>
+</head>
+<body>
+<script src="../assets/demo.js"></script>
+<!-- ============================================================
+     ここから下は、実際に納品したシステムのコードをそのまま置いたもの。
+     体験版のために向け先を変えているのは、サーバーを呼ぶところだけ。
+     （tools/build.mjs が自動で作っています。直接直さないこと）
+     ============================================================ -->
+<main id="app"></main>
+<footer id="foot">見本です。お店・メニューの名前と値段は架空のものです。</footer>
+<script src="data.js"></script>
+<script src="app.js"></script>
+
+<script>
+Demo.init({
+  home: "../taiken/",
+  note: "これは<b>体験版</b>です。お店もメニューも値段もすべて架空で、実在のお店にはつながっていません。",
+  about: {"title":"メニューのQRから、6回のタップで「今日の1杯」を出す","sub":"ジュースとスムージーのお店で、注文に迷うお客さんのための画面です。お店の人は、メニューの入れ替えだけをします。","points":[{"t":"質問は6つ、味は「メニューの言葉」で聞く","d":"温度・甘さ・好きな果物・野菜の味・飲み口・今日のテーマ。「酸味の強さは？」のような専門的な聞き方はせず、メニューの分け方（果物か野菜か、ジュースかスムージーか）と同じ言葉で聞いています。"},{"t":"1杯を大きく、残り2杯は「タイプ違い」で","d":"2位には、点差が小さければ1位と種類の違うもの（ジュースが1位ならスムージー）を出します。3杯とも似た味になって、選ぶ意味がなくなるのを防ぐためです。"},{"t":"全部の答え方で偏りを確かめてある","d":"答え方の組み合わせ（つめたい側だけで1,440通り）を全部まわして、3杯がそろわない答え方が0であること、1つの品が出すぎないことを確かめてから、お店に渡しています。"},{"t":"メニューはお店がスマホで入れ替える","d":"本番では、お店の人が専用の入力画面で「提供中／お休み」や期間限定の日付を切り替えると、その日のうちに診断に反映されます。体験版では入力画面を外し、架空のメニューを焼き込んでいます。"}]}
+});
+
+// 帯の「最初から」で、この体験版が覚えている答え（drinkdemo. で始まるキー）も消す
+(function () {
+  var b = document.querySelector('.ss-reset');
+  if (!b) return;
+  b.addEventListener('click', function () {
+    [window.sessionStorage, window.localStorage].forEach(function (s) {
+      try {
+        var doomed = [];
+        for (var i = 0; i < s.length; i++) { var k = s.key(i); if (k && k.indexOf("drinkdemo.") === 0) doomed.push(k); }
+        doomed.forEach(function (k) { s.removeItem(k); });
+      } catch (e) {}
+    });
+  }, true);
+})();
+</script>
+</body>
+</html>

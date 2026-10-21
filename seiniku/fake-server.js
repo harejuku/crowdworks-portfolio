@@ -42,7 +42,7 @@
         電話番号: '06-0000-0000',
         住所: 'みどり市さくら町1-2-3',
         受付: 'ON',
-        お知らせ: '9月のご案内：毎週金曜日は「コロッケの日」。手作りコロッケが1パック100円引きです。',
+        お知らせ: '毎週金曜日は「コロッケの日」。手作りコロッケが1パック100円引きです。',
         停止中メッセージ: 'ただいま、ご注文の受付を停止しております。お手数ですがお電話にてご相談ください。',
         通知先メール: 'midori-seiniku@example.com',
         受取時間帯: '10:00〜13:00, 15:00〜18:00',
@@ -120,7 +120,9 @@
       { row:6, orderNo:no(0,2), at:at(0,10,20), name:'渡辺 千夏', tel:'09000000005',
         date:d(2), slot:'10:00〜11:00',
         detail:'自家製 味付けカルビ 500g（100gあたり¥498／概算¥2,490）\n手作りコロッケ（5個入） 1パック（1パックあたり¥450／¥450）',
-        amount:2940, note:'', status:'未対応', estimated:true },
+        amount:2940, note:'', status:'未対応', estimated:true,
+        // 管理画面 1.3 の「通知メール失敗」の赤い印を見せるための1件（本物は送信に失敗した注文に付く）
+        mailed:'送信失敗' },
       { row:7, orderNo:no(0,3), at:at(0,12,2), name:'伊藤 大輔', tel:'09000000006',
         date:d(3), slot:'17:00〜18:00',
         detail:'若鶏 もも肉 1000g（100gあたり¥158／概算¥1,580）',
@@ -587,6 +589,41 @@
   window.google = window.google || {};
   window.google.script = window.google.script || {};
   Object.defineProperty(window.google.script, 'run', { get: makeRunner });
+
+  /* ------------------------------------------------------------------
+     fetch の偽物（お客さん画面＝Cloudflare Pages 版のため）。
+     本物のお客さん画面は静的なページで、GAS の API へ
+       GET  API?do=products  … 店名・商品・受取可能日（buildBootstrap_ と同じ形＋ok）
+       POST API（本文＝JSON の文字列・do:'order'）… 注文（submitOrder と同じ答え）
+     を fetch する。体験版では window.API を DEMO_API（demo: で始まる＝ネットに出ない宛先）に
+     差し替えてあり（tools/build.mjs）、その宛先への fetch だけをここで受ける。それ以外の fetch は本物に渡す。
+     ------------------------------------------------------------------ */
+  var DEMO_API = 'demo:seiniku-api';   // tools/build.mjs の SEINIKU_DEMO_API と同じ文字
+  var realFetch = window.fetch ? window.fetch.bind(window) : null;
+  window.fetch = function (input, init) {
+    var url = typeof input === 'string' ? input : String((input && input.url) || '');
+    if (url.indexOf(DEMO_API) !== 0) {
+      return realFetch ? realFetch(input, init) : Promise.reject(new Error('fetch がありません'));
+    }
+    return new Promise(function (resolve) {
+      Demo.later(function () {
+        var res;
+        if (init && String(init.method || '').toUpperCase() === 'POST') {
+          var body = null;
+          try { body = JSON.parse(String(init.body || '{}')); } catch (e) { body = null; }
+          if (!body) res = { ok: false, message: '本文が JSON ではありません' };
+          else if (body['do'] !== 'order') res = { ok: false, message: 'do が order ではありません' };
+          else res = submitOrder(body);
+        } else if (/[?&]do=products(&|$)/.test(url)) {
+          res = bootstrapForShop();
+          res.ok = true;
+        } else {
+          res = { ok: false, message: 'do が products ではありません' };
+        }
+        resolve(new Response(JSON.stringify(res), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      });
+    });
+  };
 
   // テンプレートの <?!= bootstrap ?> に差し込まれる値
   window.DEMO_BOOTSTRAP = (window.DEMO_PAGE === 'admin') ? adminData() : bootstrapForShop();

@@ -201,7 +201,8 @@
 </div>
 
 <script>
-var 状態 = { 事業:'', 種別:'', 科目:'', 画像:null, 科目一覧:[], よく使う:{}, 送信中:false, 今日:'' };
+// 読込中・読込番号 は写真の読み込み／縮小が非同期なため（→「レシート写真」・版 2.2）
+var 状態 = { 事業:'', 種別:'', 科目:'', 画像:null, 科目一覧:[], よく使う:{}, 送信中:false, 今日:'', 読込中:false, 読込番号:0 };
 
 function $(id){ return document.getElementById(id); }
 function 表示(el, 出す){ el.classList.toggle('hide', !出す); }
@@ -327,15 +328,34 @@ $('kingaku').addEventListener('input', function(){
 });
 
 // ---- レシート写真（送る前に小さくする） ----
-$('shashin').addEventListener('change', function(){
-  var f = this.files && this.files[0];
+// 🚨 読み込みと縮小は【非同期】（FileReader → Image.onload → canvas）。
+//   その間 状態.画像 は null なので、待たずに「登録する」を押せてしまうと
+//   **写真を撮ったのに写真の付かない行が入る**。人には何も起きていないように見えます（2026-09-05・版 2.2）。
+//   守りは2つ：
+//     ・読込中 … true の間は「登録する」を止める（→ 登録する()）
+//     ・読込番号 … 選び直し・登録の完了で進める。番号が変わっていたら、
+//       **遅れて届いた onload の結果は捨てる**（前の写真が後から紛れ込まない）
+function 写真を選んだ(f){
+  var 番号 = ++状態.読込番号;
   状態.画像 = null;
+  状態.読込中 = false;
   if (!f) { $('shashinInfo').textContent = '撮ると自動で小さくしてから送ります。'; return; }
+  状態.読込中 = true;
   $('shashinInfo').textContent = '読み込み中…';
+  var いまの読み込みか = function(){ return 番号 === 状態.読込番号; };
+  var しくじった = function(){
+    if (!いまの読み込みか()) return;
+    状態.読込中 = false;
+    $('shashinInfo').textContent = '⚠ 画像を読めませんでした。';
+  };
   var reader = new FileReader();
+  reader.onerror = しくじった;
   reader.onload = function(){
+    if (!いまの読み込みか()) return;
     var img = new Image();
+    img.onerror = しくじった;
     img.onload = function(){
+      if (!いまの読み込みか()) return;   // 遅れて来た＝状態.画像 に触らない
       var 最大 = 1600;
       var w = img.width, h = img.height;
       if (w > 最大 || h > 最大) { var r = 最大 / Math.max(w, h); w = Math.round(w*r); h = Math.round(h*r); }
@@ -343,19 +363,30 @@ $('shashin').addEventListener('change', function(){
       c.width = w; c.height = h;
       c.getContext('2d').drawImage(img, 0, 0, w, h);
       var url = c.toDataURL('image/jpeg', 0.7);
+      状態.読込中 = false;
       状態.画像 = { base64: url.split(',')[1], mime: 'image/jpeg' };
       $('shashinInfo').textContent = '✓ 写真を準備しました（約 ' +
         Math.round(状態.画像.base64.length * 0.75 / 1024) + ' KB）';
     };
-    img.onerror = function(){ $('shashinInfo').textContent = '⚠ 画像を読めませんでした。'; };
     img.src = reader.result;
   };
   reader.readAsDataURL(f);
-});
+}
+/** 選んだ写真を手放す。**読込番号を進めるので、遅れて届いた onload は捨てられます** */
+function 写真を捨てる(){
+  状態.読込番号++;
+  状態.読込中 = false;
+  状態.画像 = null;
+  $('shashinInfo').textContent = '撮ると自動で小さくしてから送ります。';
+}
+$('shashin').addEventListener('change', function(){ 写真を選んだ(this.files && this.files[0]); });
 
 // ---- 登録 ----
-$('submit').onclick = function(){
+function 登録する(ボタン){
   if (状態.送信中) return;
+  // 🚨 写真の縮小が終わる前に押されたら止める。ここを通すと**写真の無い行**が入り、
+  //   撮った本人には成功にしか見えません（2026-09-05・版 2.2）。
+  if (状態.読込中) return 知らせる('写真を準備中です。少し待ってください', true);
   var 金額 = $('kingaku').value.replace(/[^0-9]/g, '');
   if (!状態.事業)  return 知らせる('事業を選んでください', true);
   if (!状態.科目)  return 知らせる('勘定科目を選んでください', true);
@@ -363,8 +394,8 @@ $('submit').onclick = function(){
   if (!$('hizuke').value) return 知らせる('日付を選んでください', true);
 
   状態.送信中 = true;
-  this.disabled = true; this.textContent = '登録中…';
-  var 私 = this;
+  ボタン.disabled = true; ボタン.textContent = '登録中…';
+  var 私 = ボタン;
   var 終わり = function(){ 状態.送信中 = false; 私.disabled = false; 私.textContent = '登録する'; };
 
   呼ぶ('登録', {
@@ -377,11 +408,11 @@ $('submit').onclick = function(){
     直近を描く(d.直近 || []);
     // 日付と事業は残す（同じ日・同じ事業を続けて入れることが多い）
     $('kingaku').value = ''; $('torihiki').value = ''; $('bikou').value = '';
-    $('shashin').value = ''; 状態.画像 = null;
-    $('shashinInfo').textContent = '撮ると自動で小さくしてから送ります。';
+    $('shashin').value = ''; 写真を捨てる();
     表示($('again'), true);
   }, function(err){ 終わり(); 知らせる(err, true); });
-};
+}
+$('submit').onclick = function(){ 登録する(this); };
 
 $('again').onclick = function(){ 表示($('again'), false); $('kingaku').focus(); };
 

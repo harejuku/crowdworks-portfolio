@@ -77,6 +77,9 @@
   .tag{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff;white-space:nowrap}
   .tag.wait{background:var(--amber)} .tag.ok{background:var(--blue)}
   .tag.fin{background:var(--sub)}    .tag.cxl{background:#9ca3af}
+  /* 1.3＝通知メールが届かなかった注文の印。店主さんが気づく手段はメール1本だけなので、
+     カードの先頭に赤い印を出す（シートの「通知」列は誰も開かない） */
+  .tag.mailng{background:#dc2626}
   .no{margin-left:auto;font-size:12px;color:var(--sub);letter-spacing:.03em}
 
   .nm{font-size:20px;font-weight:700;margin:0}
@@ -453,7 +456,17 @@
       var no = document.createElement('span');
       no.className = 'no';
       no.textContent = (o.orderNo || '手入力') + '　' + o.at;
-      top.appendChild(tag); top.appendChild(no);
+      top.appendChild(tag);
+      // 1.3＝通知メールが送れていない注文を目に見えるようにする。
+      //   注文はシートに入り、お客さんは完了画面を見ているのに、店主さんには何も届いていない状態。
+      if (o.mailed === '送信失敗' || o.mailed === '未送信') {
+        var mng = document.createElement('span');
+        mng.className = 'tag mailng';
+        mng.textContent = o.mailed === '未送信' ? '通知メール未送信' : '通知メール失敗';
+        mng.title = 'この注文の通知メールは届いていません（注文そのものは入っています）';
+        top.appendChild(mng);
+      }
+      top.appendChild(no);
       c.appendChild(top);
 
       var nm = document.createElement('p');
