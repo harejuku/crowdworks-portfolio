@@ -44,7 +44,6 @@ body{
   <h1 class="mincho">塾を続けながら、<br><span class="em">こんなものを作れるようになりました。</span></h1>
   <p class="sub">
     塾を回すために自分で作っていた仕組みを、お店や家族のためにも作るようになりました。
-    実際に納めたものを、架空のデータで触れる形で置いています。
   </p>
 </header>
 
@@ -77,7 +76,7 @@ body{
 
 <footer>
   <p>
-    このページの体験版はすべて架空のデータで動いています。
+    画面と体験版の氏名・店名・金額は、すべて架空です。
     ご相談は、このページをお渡しした際の連絡先までお願いいたします。
   </p>
 </footer>
@@ -122,8 +121,7 @@ body{
         });
         var lead = document.createElement('p');
         lead.className = 'sec-lead';
-        lead.textContent = '「触ってみる」を押すと、実際に納めたシステムが架空のデータで開きます'
-                         + '（氏名・金額・商品は架空です）。';
+        lead.textContent = '「触ってみる」で、納めたシステムが架空のデータで開きます。';
         var head = works.querySelector('.sec-h');
         if (head && head.nextSibling) works.insertBefore(lead, head.nextSibling);
         else works.insertBefore(lead, works.firstChild);

@@ -52,7 +52,6 @@ var CASE_HOURS = {
     hours: 10,
     basis: '1枚あたり約2分（紙を見て、品目・重さ・検査日・等級ごとの数量を打ち込む）×'
          + ' 1日約15枚（直近の実物＝19枚・33枚・15枚）× 月20日（仮定）。'
-         + ' 紙と画面を見比べるだけでも1枚あたり約30秒でした（72枚を35分で全数確認）。'
   }
 };
 </script>
@@ -334,7 +333,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
   <p class="sub">
     既製品に合わせて仕事のやり方を変えるのではなく、<b>いまのやり方に画面のほうを合わせて</b>作ります。
     転記、電話番、月末の集計。紙の伝票、たまった写真や映像。社長や家族が手でやっている仕事を、一つずつシステムに渡します。
-    作ったものは、このページの下にあります。半分はそのまま触れます。残りは画面と流れ図で示します。
   </p>
   <p class="lead-act">
     <a href="#works">これまでに作ったものを見る</a>
@@ -346,7 +344,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
   <div class="sec-h"><span class="n">01</span><h2>社長の1時間は、いくらか</h2></div>
   <p class="sec-lead">
     手作業そのものより、その時間に社長が本来やれたはずのことのほうが高くつきます。
-    ご自身の数字を入れてみてください。計算はこの画面の中だけで行われ、どこにも送信されません。
   </p>
 
   <div class="calc">
@@ -357,7 +354,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
           <input id="wage" type="range" min="1000" max="30000" step="500" value="5000">
           <span class="numunit"><input id="wage-n" type="number" min="0" max="200000" step="500" value="5000" inputmode="numeric"><span class="unit">円</span></span>
         </div>
-        <p class="hint">例として5,000円を入れてあります。ご自身の数字に変えてください。</p>
       </div>
       <div class="field">
         <label for="hours">毎月、手作業や転記・電話番に使っている時間</label>
@@ -365,7 +361,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
           <input id="hours" type="range" min="0" max="80" step="1" value="10">
           <span class="numunit"><input id="hours-n" type="number" min="0" max="500" step="1" value="10" inputmode="numeric"><span class="unit">時間</span></span>
         </div>
-        <p class="hint">例として月10時間を入れてあります。社長ご本人と事務の分を合わせても構いません。</p>
       </div>
     </div>
 
@@ -378,7 +373,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <div class="line">
         <p class="k">同じ業務をシステムに置き換えた場合（ベーシック・年一括）</p>
         <p class="v"><span id="out-plan">121,000</span><small>円／年（月額換算 11,000円）</small></p>
-        <p class="sub">下の04に3つのプランを載せています。</p>
       </div>
       <div class="line">
         <p class="k">差額</p>
@@ -392,13 +386,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
 <section id="works">
   <div class="sec-h"><span class="n">02</span><h2>これまでに作ったもの</h2></div>
   <p class="sec-lead">
-    どれも既製品ではなく、その会社・その店のやり方に合わせて作ったものです。
-    「触ってみる」を押すと、実際に納品して動いているシステムそのものが開きます（中の氏名・金額・商品はすべて架空です）。
-  </p>
-  <p class="sec-lead">
-    ⏱ 「月およそ◯時間」と書いてある数字は<b>推定</b>です。自動化する前に人がしていた作業の中身から、
-    1件あたりの時間と月の件数を見積もったもので、実際に測った値ではありません。
-    どう見積もったかは、それぞれのカードの中に書いてあります。
+    「触ってみる」で、納品したシステムが架空のデータで開きます。
   </p>
 
   <div class="cards">
@@ -415,7 +403,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <p class="fact">
         自分が経営する学習塾のために作り、実際の生徒・保護者・スタッフが毎日使っています。
         規模は<b>コミット1,960件・TypeScript 約58,900行</b>（2026年10月21日時点の実測）。
-        ホームページも自分で作っており、2026年10月に見た目と文面を作り直しました（下のボタンでは架空の塾名で表示します）。
+        ホームページも自分で作り、2026年10月に見た目と文面を作り直しました。
       </p>
       <p class="hours" data-case="juku" hidden></p>
       <div class="try">
@@ -426,7 +414,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <a class="sub" href="juku/?screen=billing">月謝を請求する画面</a>
         <a class="sub" href="juku/?screen=hp">この塾のホームページ</a>
       </div>
-      <p class="note">クイズは最後まで遊べます。クリアすると順位表に載り、その記録が分析画面にもすぐ反映されます。</p>
     </div>
 
     <div class="card">
@@ -447,7 +434,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <a href="seiniku/">触ってみる</a>
         <a class="sub" href="seiniku/kanri.html">店主の画面</a>
       </div>
-      <p class="note">注文すると、店主の画面に「未対応」として並びます。</p>
     </div>
 
     <div class="card">
@@ -465,7 +451,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <div class="try">
         <a href="uriage/">触ってみる</a>
       </div>
-      <p class="note">「今月の収支」タブを開くと、入れた分がすぐ集計に反映されます。</p>
     </div>
 
     <div class="card">
@@ -488,7 +473,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <a class="sub" href="quiz-kikaku/kanri.html">名簿を見る</a>
         <a class="sub" href="quiz-kikaku/nayose.html">二重登録をまとめる</a>
       </div>
-      <p class="note">答えた記録は、そのまま名簿画面の「本日の結果」に出ます。</p>
     </div>
 
     <div class="card">
@@ -507,7 +491,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <a href="drink/">触ってみる</a>
         <a class="sub" href="https://shindan-mihon.pages.dev" target="_blank" rel="noopener">コーヒー豆の診断（見本）</a>
       </div>
-      <p class="note">店名とメニューは架空のものに差し替えています。</p>
     </div>
 
     <div class="card">
@@ -525,7 +508,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         </ul>
       </div>
       <p class="hours" data-case="ec" hidden></p>
-      <p class="note">お客さまのシステムのため、画面は公開していません。</p>
     </div>
 
     <div class="card">
@@ -544,7 +526,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         </ul>
       </div>
       <p class="hours" data-case="denpyo" hidden></p>
-      <p class="note">試験運用中の案件です。お客さまのシステムのため、画面は公開していません。</p>
     </div>
 
     <div class="card">
@@ -559,7 +540,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
           <li>初回の点検では、<b>重大な問題 0 件・直すべき点 3 件</b>を報告書にしました。3件の中身は、他人のデータが見えてしまう作りと、入力欄からの攻撃に関わる箇所です。</li>
         </ul>
       </div>
-      <p class="note">相手のアプリのため、画面は公開していません。</p>
     </div>
 
     <div class="card">
@@ -577,7 +557,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
       <div class="try">
         <a href="https://kankokugo-steps.com" target="_blank" rel="noopener">触ってみる</a>
       </div>
-      <p class="note">公開中の本物が開きます。</p>
     </div>
 
     <div class="card wide visual">
@@ -608,11 +587,10 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <div class="shots">
           <figure class="shot">
             <img src="assets/machi-map.png" alt="地図の画面。地域の丸ボタン、ジャンルとイベントの絞り込み、色分けした地域の上にお店の印が並んでいる" loading="lazy" width="750" height="1460">
-            <figcaption>地図の画面（地名・店名はすべて架空）</figcaption>
+            <figcaption>地図の画面</figcaption>
           </figure>
         </div>
       </div>
-      <p class="note">見本の段階のため、リンクは載せていません。</p>
     </div>
 
     <div class="card wide visual">
@@ -642,11 +620,10 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <div class="shots">
           <figure class="shot">
             <img src="assets/sofu-gallery.png" alt="作品ギャラリーの一覧画面。題名・年・♥の数・ひとことの数が並んでいる" loading="lazy" width="1200" height="1150">
-            <figcaption>一覧の画面（架空の作品で表示）</figcaption>
+            <figcaption>一覧の画面</figcaption>
           </figure>
         </div>
       </div>
-      <p class="note">家族のページのため、リンクは載せていません。</p>
     </div>
 
     <div class="card wide visual">
@@ -677,11 +654,10 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
         <div class="shots">
           <figure class="shot">
             <img src="assets/buyo-shoko.png" alt="書庫の画面。演目名・種別・長さ・日付・場所が並んだ一覧" loading="lazy" width="750" height="1200">
-            <figcaption>書庫の画面（架空の台帳で表示）</figcaption>
+            <figcaption>書庫の画面</figcaption>
           </figure>
         </div>
       </div>
-      <p class="note">家族のページのため、リンクは載せていません。</p>
     </div>
 
     <div class="card wide visual">
@@ -719,7 +695,6 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
           </figure>
         </div>
       </div>
-      <p class="note">試作中のため、画面は公開していません。</p>
     </div>
 
     <div class="card">
@@ -870,12 +845,8 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
 </section>
 
 <footer>
-  <p class="deep">
-    学習塾のシステム1件について、技術的な中身（設計の判断・つまずいた点・どう直したか）を
-    <a href="shikumi/">開発の中身（学習塾システム）</a> にまとめています。
-  </p>
   <p>
-    このページの体験版はすべて架空のデータで動いています。
+    画面と体験版の氏名・店名・金額は、すべて架空です。
     ご相談・お見積りは、このページをお渡しした際の連絡先までお願いいたします。
   </p>
 </footer>
@@ -912,8 +883,7 @@ footer .deep{margin-bottom:10px;font-size:13.5px;color:var(--sumi-2)}
 
       var basis = document.createElement('span');
       basis.className = 'basis';
-      basis.textContent = '推定の前提＝' + v.basis
-        + ' 実際に測った値ではなく、自動化する前の手作業の内容から見積もった数字です。';
+      basis.textContent = '推定の前提＝' + v.basis;
 
       el.textContent = '';
       el.appendChild(head);
