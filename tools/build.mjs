@@ -155,6 +155,9 @@ const QUIZ_REPLACE = (mode, studentId) => ([
   // v2.8：カメラの入口ページ（Cloudflare Pages）から来たときだけそこへ戻す仕組み。体験版は入口ページを持たないので「無し」にする
   [/<\?=\s*entryUrl\s*\?>/g, ''],
   [/<\?=\s*viaCam\s*\?>/g, 'false'],
+  // 子ども向けの表示のシェフの絵は、そのお店だけの絵＝見ればお店が分かるので体験版では外す（2026-10-23）。
+  // r-chef は JS 側が有無を確かめてから触るので、外しても落ちない
+  [/<img class="chef[^"]*"[^>]*>/g, ''],
 ]);
 
 // Code.gs の doGet が付けている viewport と同じもの

@@ -77,6 +77,21 @@
     };
   }
 
+  /* ---------- 名刺からの入口 ----------
+     名刺の QR の先のページからは ?from=meishi 付きで開く。
+     その時だけ「◀ 体験版一覧」を出さない（一覧は受注向けで、名刺の相手には迷う先になる）。
+     体験版の中の別ページ（kanri.html など）では URL に印が無いので、タブ内に覚えておく。
+     鍵は NS の外に置く＝「最初から」（clearAll）で消えない。 */
+  var FROM_KEY = 'ss:from';
+  function fromMeishi() {
+    var hit = /[?&]from=meishi(&|$)/.test(location.search);
+    try {
+      if (hit) sessionStorage.setItem(FROM_KEY, 'meishi');
+      else hit = sessionStorage.getItem(FROM_KEY) === 'meishi';
+    } catch (e) { /* 保存できない時は URL の印だけで決める */ }
+    return hit;
+  }
+
   /* ---------- 体験版の帯 ---------- */
   function init(opts) {
     opts = opts || {};
@@ -87,7 +102,7 @@
     bar.className = 'ss-bar';
     bar.innerHTML =
       '<div class="ss-bar-in">' +
-        '<a class="ss-home" href="' + home + '">◀ 体験版一覧</a>' +
+        (fromMeishi() ? '' : '<a class="ss-home" href="' + home + '">◀ 体験版一覧</a>') +
         '<span class="ss-note">' + note + '</span>' +
         '<span class="ss-spacer"></span>' +
         (opts.about ? '<button type="button" class="ss-about">しくみ</button>' : '') +
