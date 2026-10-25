@@ -201,6 +201,17 @@ if (existsSync(HP)) {
          </p>`);
   writeFileSync(HP, hp);
 }
+// (1) の続き：塾HPの配下のページ（公式LINEの入口 /line など・2026-10-26 に追加）も、画像の src に配信先のパスを補う
+const HP_DIR = join(WORK, 'src/app/demo');
+if (existsSync(HP_DIR)) {
+  for (const name of readdirSync(HP_DIR)) {
+    const sub = join(HP_DIR, name, 'page.tsx');
+    if (!existsSync(sub)) continue;
+    const before = readFileSync(sub, 'utf8');
+    const after = before.split('src="/demo/').join(`src="${BASE}/demo/`);
+    if (after !== before) writeFileSync(sub, after);
+  }
+}
 
 writeFileSync(join(WORK, 'next.config.mjs'), `/** 体験版だけの設定（tools/juku/build-juku.mjs が作っています） */
 const nextConfig = {
